@@ -1,0 +1,79 @@
+group = "com.xebialabs.deployit.ci"
+//version = "3.9.4"
+version = "3.9.5-SNAPSHOT"
+description = "Deployit Jenkins plugin"
+
+apply plugin: 'jpi'
+apply plugin: 'java'
+
+build.dependsOn jpi
+
+repositories {
+    mavenCentral()
+    maven {
+        url "${projectDir}/repo"
+    }
+}
+
+buildscript {
+    repositories {
+        maven {
+            name "jenkins"
+            delegate.url("http://maven.jenkins-ci.org/content/repositories/releases/")
+        }
+        // The plugin is currently only available via the Jenkins
+        // Maven repository, but has dependencies in Maven Central.
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.4.0'
+    }
+}
+
+
+jenkinsPlugin {
+    coreVersion = '1.509.1' // we need to support LTS versions
+    displayName = project.description
+    url = 'http://www.xebialabs.com'
+    gitHubUrl = 'https://github.com/xebialabs/jenkins-deployit-plugin'
+
+
+    developers {
+        developer {
+            id 'bmoussaud'
+            name 'Benoit Moussaud'
+            email 'bmoussaud@xebialabs.com'
+        }
+        developer {
+            id 'demobox'
+            name 'Andrew Phillips'
+            email 'aphillips@xebialabs.com'
+        }
+        developer {
+            id 'mkotsur'
+            name 'Mike Kotsur'
+            email 'mkotsur@xebialabs.com'
+        }
+    }
+}
+
+configurations {
+    compile.transitive = true
+    all*.exclude group: 'com.thoughtworks.xstream', module: "xstream"
+    // this artifact lives in a netbeans repository which behaves flakey
+    // it's not used so exclude it.
+    testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
+}
+
+dependencies {
+    compile "com.xebialabs.deployit:deployit-java-client:3.9.3"
+    compile "com.xebialabs.deployit.engine:packager:3.9.3"
+    compile "com.xebialabs.deployit:engine-api:3.9.3"
+    compile "com.xebialabs.deployit.engine:remote-booter:3.9.3"
+
+    compile "de.schlichtherle.truezip:truezip-file:7.4.3"
+    compile "de.schlichtherle.truezip:truezip-driver-file:7.4.3"
+    
+    testCompile "junit:junit:4.11"
+    testCompile "org.mockito:mockito-all:1.9.5"
+}

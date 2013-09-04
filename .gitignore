@@ -1,2 +1,41 @@
 # use glob syntax.
 syntax: glob
+.gradle/
+
+# Gradle environment specific properties
+gradle.properties
+
+# Build output
+build/
+out/
+target/
+bin/
+src/main/resources/web/help/onlinehelp
+
+# Eclipse
+.metadata/
+.settings/
+.classpath
+.project
+.pydevproject
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+*.log
+s101plugin.state
+
+# If you have these in your workspace you need to clean up!
+*.hdb*
+build-number.txt
+atlassian-ide-plugin.xml
+
+#Mac
+.DS_Store
+
+#tests working folders
+integration-test
+ui-integration-test
+work

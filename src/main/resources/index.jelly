@@ -1,0 +1,6 @@
+<!--
+  This view is used to render the installed plugins page.
+-->
+<div>
+  A plugin to add post-build tasks to Jenkins to deploy via XebiaLabs Deployit (<a href="http://www.xebialabs.com" target="_new">http://www.xebialabs.com</a>)
+</div>

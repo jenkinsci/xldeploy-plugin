@@ -1,0 +1,57 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry title="${%Credential}" field="credential" help="/plugin/deployit-plugin/help-credential.html">
+        <f:select/>
+    </f:entry>
+
+    <f:entry title="${%Application}" field="application" help="/plugin/deployit-plugin/help-application.html">
+        <f:textbox default="Applications/"/>
+    </f:entry>
+
+    <f:entry title="${%Version}" field="version" help="/plugin/deployit-plugin/help-version.html">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Verbose}" field="verbose">
+        <f:checkbox/>
+    </f:entry>
+
+    <f:block>
+        <table width="100%">
+            <f:optionalBlock name="packageOptions" checked="${instance.packageOptions != null}" title="Package application" inline="false">
+                <j:set var="field" value="packageOptions"/>
+
+                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
+                <j:set var="instance" value="${instance[field]}"/>
+                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+            </f:optionalBlock>
+        </table>
+    </f:block>
+
+
+    <f:block>
+        <table width="100%">
+            <f:optionalBlock field="importOptions" checked="${instance.importOptions != null}" title="Publish package to Deployit">
+                <j:set var="field" value="importOptions"/>
+
+                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
+                <j:set var="instance" value="${instance[field]}"/>
+                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+            </f:optionalBlock>
+        </table>
+    </f:block>
+
+
+    <f:block>
+        <table width="100%">
+            <f:optionalBlock field="deploymentOptions" checked="${instance.deploymentOptions != null}" title="Deploy application">
+                <j:set var="field" value="deploymentOptions"/>
+
+                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
+                <j:set var="instance" value="${instance[field]}"/>
+                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+            </f:optionalBlock>
+        </table>
+    </f:block>
+
+</j:jelly>

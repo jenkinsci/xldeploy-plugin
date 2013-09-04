@@ -1,0 +1,9 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:entry title="${%Location}" field="location" help="/plugin/deployit-plugin/help-location.html">
+        <f:textbox default="**/*.dar"/>
+    </f:entry>
+    <f:entry title="${%workingDirectory}" field="workingDirectory" help="/plugin/deployit-plugin/help-workingDirectory.html">
+        <f:textbox/>
+    </f:entry>
+
+</j:jelly>

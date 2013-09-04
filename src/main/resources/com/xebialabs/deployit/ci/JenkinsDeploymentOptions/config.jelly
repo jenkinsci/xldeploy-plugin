@@ -1,0 +1,24 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry title="${%Environment}" field="environment" help="/plugin/deployit-plugin/help-environment.html">
+        <f:select id="environment"/>
+    </f:entry>
+
+    <f:entry title="${%Version}" field="versionKind">
+        <f:enum>${it.label}</f:enum>
+    </f:entry>
+
+    <f:entry title="${%Update Mappings}" field="generateDeployedOnUpgrade" help="/plugin/deployit-plugin/help-generate-deployeds-on-update.html">
+        <f:checkbox default="true" />
+    </f:entry>
+    <f:entry title="${%SkipMode}" field="skipMode" help="/plugin/deployit-plugin/help-skipmode.html">
+        <f:checkbox/>
+    </f:entry>
+    <f:entry title="${%Dry Run}" field="testMode" help="/plugin/deployit-plugin/help-dryrun.html">
+        <f:checkbox/>
+    </f:entry>
+    <f:entry title="${%Rollback on Error}" field="rollbackOnError" help="/plugin/deployit-plugin/help-rollbackonerror.html">
+        <f:checkbox/>
+    </f:entry>
+
+</j:jelly>

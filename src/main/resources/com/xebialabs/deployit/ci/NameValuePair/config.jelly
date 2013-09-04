@@ -1,0 +1,10 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <f:entry title="${%Name}" field="name" help="/plugin/deployit-plugin/help-prop-name.html">
+        <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Value}" field="value" help="/plugin/deployit-plugin/help-prop-value.html">
+        <f:textbox/>
+    </f:entry>
+</j:jelly>

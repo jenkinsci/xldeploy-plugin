@@ -1,0 +1,25 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:section title="Deployit">
+        <f:entry title="${%ServerUrl}" field="deployitServerUrl">
+            <f:textbox/>
+        </f:entry>
+        <f:entry title="${%ProxyUrl}" field="deployitClientProxyUrl">
+            <f:textbox/>
+        </f:entry>
+
+        <f:entry title="Credentials" field="credentials">
+            <f:repeatable field="credentials" minimum="${1}">
+                <table style="width:100%">
+                    <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+                    <f:entry>
+                        <div align="right">
+                            <input type="button" value="${%Add}" class="repeatable-add show-if-last"/>
+                            <f:repeatableDeleteButton/>
+                        </div>
+                    </f:entry>
+                </table>
+            </f:repeatable>
+        </f:entry>
+
+    </f:section>
+</j:jelly>
