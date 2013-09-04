@@ -1,5 +1,5 @@
 #Build#
-Jekins build is powered by <a href="https://github.com/jenkinsci/gradle-jpi-plugin">gradle-jpi-plugin</a>. Jenkins-style wiki is located <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">here</a>.
+The Jenkins plugin build is powered by <a href="https://github.com/jenkinsci/gradle-jpi-plugin">gradle-jpi-plugin</a>. Jenkins-style wiki is located <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">here</a>.
 
 There are following targets defined:
 
