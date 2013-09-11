@@ -39,19 +39,9 @@ jenkinsPlugin {
 
     developers {
         developer {
-            id 'bmoussaud'
-            name 'Benoit Moussaud'
-            email 'bmoussaud@xebialabs.com'
-        }
-        developer {
-            id 'demobox'
-            name 'Andrew Phillips'
-            email 'aphillips@xebialabs.com'
-        }
-        developer {
-            id 'mkotsur'
-            name 'Mike Kotsur'
-            email 'mkotsur@xebialabs.com'
+            id 'XebiaLabsCI'
+            name 'XebiaLabs'
+            email 'xl-developers (at) xebialabs (dot) com'
         }
     }
 }
