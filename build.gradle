@@ -1,6 +1,6 @@
 group = "com.xebialabs.deployit.ci"
 version = "3.9.5-alpha-1"
-description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs Deployit&lt;/a&gt;."
+description = "XebiaLabs Deployit plugin"
 
 apply plugin: 'jpi'
 apply plugin: 'java'
