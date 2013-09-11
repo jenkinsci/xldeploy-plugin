@@ -1,6 +1,6 @@
 group = "com.xebialabs.deployit.ci"
 version = "3.9.5-alpha-1"
-description = "XebiaLabs Deployit plugin"
+description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs Deployit&lt;/a&gt;."
 
 apply plugin: 'jpi'
 apply plugin: 'java'
@@ -32,7 +32,7 @@ buildscript {
 
 jenkinsPlugin {
     coreVersion = '1.509.1' // we need to support LTS versions
-    displayName = project.description
+    displayName = "XebiaLabs Deployit Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/Deployit+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/deployit-plugin'
 
