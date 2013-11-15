@@ -34,12 +34,13 @@ import com.xebialabs.deployit.ci.dar.RemoteLookup;
 import com.xebialabs.deployit.ci.util.DeployitTypes;
 import com.xebialabs.deployit.ci.util.FileFinder;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-import com.xebialabs.deployit.engine.packager.content.DarMember;
+import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
+import com.xebialabs.deployit.plugin.api.udm.artifact.Artifact;
+import com.xebialabs.overthere.local.LocalFile;
 
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.util.IOException2;
 import hudson.util.ListBoxModel;
 
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
@@ -55,17 +56,16 @@ public class ArtifactView extends DeployableView {
         this.location = location;
     }
 
-    @Override
-    public DarMember newDarMember(DeployitTypes deployitTypes, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
-        final DarMember deployable = super.newDarMember(deployitTypes, workspace, envVars, listener);
+    public ConfigurationItem toConfigurationItem(DeployitTypes deployitTypes, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
+        Artifact deployable = (Artifact) super.toConfigurationItem(deployitTypes, workspace, envVars, listener);
         String resolvedLocation = getResolvedLocation(envVars);
         try {
             final File file = findFileFromPattern(resolvedLocation, workspace, listener);
-            deployable.setLocation(file);
-            return deployable;
+            deployable.setFile(LocalFile.valueOf(file));
         } catch (IOException e) {
             throw new RuntimeException(String.format("Unable to find artifact for deployable '%s' in '%s'", getName(), resolvedLocation), e);
         }
+        return deployable;
     }
 
     private String getResolvedLocation(EnvVars envVars) {

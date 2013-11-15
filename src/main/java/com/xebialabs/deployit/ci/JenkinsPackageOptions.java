@@ -24,15 +24,27 @@
 package com.xebialabs.deployit.ci;
 
 import java.util.List;
+import java.util.Map;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.xebialabs.deployit.ci.util.DeployitTypes;
+import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
+import com.xebialabs.deployit.plugin.api.udm.Application;
+import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
+import com.xebialabs.deployit.plugin.api.udm.Deployable;
+import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
+
 import hudson.DescriptorExtensionList;
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
+import static com.google.common.collect.Maps.newHashMap;
 
 public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions> {
 
@@ -50,6 +62,36 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
     public List<DeployableView> getDeployables() {
         return deployables;
     }
+
+    public DeploymentPackage toDeploymentPackage(String applicationName, String version, DeployitTypes deployitTypes, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
+        Application application = deployitTypes.newInstance(Application.class, applicationName);
+        DeploymentPackage deploymentPackage = deployitTypes.newInstance(DeploymentPackage.class, version);
+        deploymentPackage.setApplication(application);
+        Map<String,ConfigurationItem> deployablesByFqn = newHashMap();
+        for (DeployableView deployableView : deployables) {
+            ConfigurationItem deployable = deployableView.toConfigurationItem(deployitTypes, workspace, envVars, listener);
+            if (deployableView instanceof  EmbeddedView) {
+                linkEmbeddedToParent(deployablesByFqn, deployable, deployableView, deployitTypes, listener);
+            } else {
+                deploymentPackage.addDeployable((Deployable) deployable);
+            }
+            deployablesByFqn.put(deployableView.getFullyQualifiedName(), deployable);
+        }
+        deploymentPackage.setProperty("deployables",deploymentPackage.getDeployables());
+        return deploymentPackage;
+    }
+
+
+    private void linkEmbeddedToParent(Map<String, ConfigurationItem> deployablesByFqn, ConfigurationItem deployable, final DeployableView deployableView,DeployitTypes deployitTypes, JenkinsDeploymentListener listener) {
+        final EmbeddedView embeddedView = (EmbeddedView)deployableView;
+        ConfigurationItem parent = deployablesByFqn.get(embeddedView.getParentName());
+        if (parent == null) {
+            listener.error("Failed to find parent [" + embeddedView.getParentName() + "] that embeds [" + deployable + "]");
+            throw new RuntimeException("Failed to find parent that embeds " + deployable);
+        }
+        deployitTypes.addEmbedded(parent, deployable);
+    }
+
 
 
     @Extension

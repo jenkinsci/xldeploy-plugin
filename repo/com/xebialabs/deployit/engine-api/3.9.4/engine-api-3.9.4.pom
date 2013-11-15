@@ -2,50 +2,10 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.xebialabs.deployit.engine</groupId>
-  <artifactId>remote-booter</artifactId>
-  <version>3.9.3</version>
+  <groupId>com.xebialabs.deployit</groupId>
+  <artifactId>engine-api</artifactId>
+  <version>3.9.4</version>
   <dependencies>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.7</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
@@ -57,47 +17,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>4.2.3</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -137,7 +57,87 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
+          <groupId>org.bouncycastle</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>servlet-api-2.5</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>javassist</artifactId>
+          <groupId>javassist</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>stax-api</artifactId>
+          <groupId>javax.xml.stream</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>google-collections</artifactId>
+          <groupId>com.google.collections</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>stax-api</artifactId>
+          <groupId>stax</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>bcprov-jdk16</artifactId>
+          <groupId>org.bouncycastle</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>servlet-api-2.5</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>javassist</artifactId>
+          <groupId>javassist</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>stax-api</artifactId>
+          <groupId>javax.xml.stream</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>google-collections</artifactId>
+          <groupId>com.google.collections</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-multipart-provider</artifactId>
+      <version>2.3.5.Final</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>stax-api</artifactId>
+          <groupId>stax</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -177,7 +177,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -217,7 +217,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -249,7 +249,7 @@
     <dependency>
       <groupId>com.xebialabs.deployit</groupId>
       <artifactId>udm-plugin-api</artifactId>
-      <version>3.9.3</version>
+      <version>3.9.4</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -257,47 +257,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.xebialabs.restito</groupId>
-      <artifactId>restito</artifactId>
-      <version>0.4-alpha-2</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -337,47 +297,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>6.8</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -417,7 +337,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -457,87 +377,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.xebialabs.deployit</groupId>
-      <artifactId>engine-api</artifactId>
-      <version>3.9.3</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.2.3</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -577,87 +417,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.xebialabs.deployit.engine</groupId>
-      <artifactId>engine-xml</artifactId>
-      <version>3.9.3</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
-          <groupId>org.bouncycastle</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api-2.5</artifactId>
-          <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>javassist</artifactId>
-          <groupId>javassist</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>javax.xml.stream</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>google-collections</artifactId>
-          <groupId>com.google.collections</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpmime</artifactId>
-      <version>4.2.3</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>stax-api</artifactId>
-          <groupId>stax</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -697,7 +457,47 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
+          <groupId>org.bouncycastle</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>servlet-api-2.5</artifactId>
+          <groupId>org.mortbay.jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>javassist</artifactId>
+          <groupId>javassist</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>stax-api</artifactId>
+          <groupId>javax.xml.stream</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>google-collections</artifactId>
+          <groupId>com.google.collections</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>stax-api</artifactId>
+          <groupId>stax</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -737,7 +537,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -777,7 +577,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>

@@ -23,9 +23,13 @@
 
 package com.xebialabs.deployit.ci;
 
+import com.xebialabs.deployit.booter.remote.BooterConfig;
+import com.xebialabs.deployit.ci.util.DeployitTypes;
 import com.xebialabs.deployit.client.ConnectionOptions;
 import com.xebialabs.deployit.client.DeployitCli;
 import com.xebialabs.deployit.client.Descriptors;
+import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
+import com.xebialabs.deployit.plugin.api.reflect.Type;
 
 import hudson.PluginManager;
 import hudson.model.Hudson;
@@ -41,6 +45,8 @@ public class DeployitCliTemplate {
     private String deployitClientProxyUrl;
 
     private Credential credential;
+    private DeployitTypes deployitTypes;
+    private DescriptorRegistry descriptorRegistry;
 
     public DeployitCliTemplate(String deployitServerUrl, String deployitClientProxyUrl, Credential credential) {
         this.deployitServerUrl = deployitServerUrl;
@@ -69,10 +75,6 @@ public class DeployitCliTemplate {
         return new DeployitCli(new ConnectionOptions(deployitServerUrl, deployitClientProxyUrl, credential.username, credential.password.getPlainText()));
     }
 
-    public void setCredential(Credential credential) {
-        this.credential = credential;
-    }
-
     public String getDeployitServerUrl() {
         return deployitServerUrl;
     }
@@ -85,11 +87,17 @@ public class DeployitCliTemplate {
         return credential;
     }
 
-    public Descriptors getDescriptors() {
-        return perform(new DeployitCliCallback<Descriptors>() {
-                public Descriptors call(DeployitCli cli) {
-                        return cli.getDescriptors();
+    public DeployitTypes getDeployitTypes() {
+        if (deployitTypes == null) {
+            deployitTypes = perform(new DeployitCliCallback<DeployitTypes>() {
+                public DeployitTypes call(DeployitCli cli) {
+                    Descriptors d = cli.getDescriptors();
+                    BooterConfig config = cli.getCommunicator().getConfig();
+                    descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(config);
+                    return new DeployitTypes(d, descriptorRegistry, config);
                 }
             });
+        }
+        return deployitTypes;
     }
 }

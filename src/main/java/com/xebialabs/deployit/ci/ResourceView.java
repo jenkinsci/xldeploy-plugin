@@ -23,17 +23,11 @@
 
 package com.xebialabs.deployit.ci;
 
-import com.google.common.collect.ImmutableMap;
-import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-import com.xebialabs.deployit.client.Deployable;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.util.ListBoxModel;
+import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import hudson.Extension;
+import hudson.util.ListBoxModel;
 
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
 

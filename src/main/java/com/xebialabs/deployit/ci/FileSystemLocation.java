@@ -69,4 +69,8 @@ public class FileSystemLocation extends ImportLocation {
         }
     }
 
+    @Override
+    public String toString() {
+        return String.format("FileSystemLocation[location: %s, workdir: %s]", location, workingDirectory);
+    }
 }

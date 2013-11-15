@@ -52,4 +52,9 @@ public class URLLocation extends ImportLocation {
             return "URL";
         }
     }
+
+    @Override
+    public String toString() {
+        return String.format("URLLocation[url: %s]", url);
+    }
 }
