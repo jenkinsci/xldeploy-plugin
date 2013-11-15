@@ -1,3 +1,12 @@
 <div>
-    Specify the ID of the application. Eg: "Applications/PetClinic". You can use <a href="/env-vars.html">Jenkins Env variables</a>. (eg. Applications/$JOB_NAME)
+    <p>Specify the name or ID of the application, e.g. "PetClinic" or "Applications/MyDirectory/PetClinic".</p>
+    <p>If only the name is specified and the application does not exist, the application will be created during the
+        import of the dar. If the fully qualified id is specified and the application does not exist, the application
+        will be created is the directory specified during import. Please note that the directory has to exist in the
+        Deployit Repository.</p>
+    <p>Note that in any Deployit instance, the application name must be unique even across directories. Also, for
+        backwards compatibility reasons, only the name (not the full ID) is used to find an application. Thus, an
+        application can be freely moved among Deployit directories without needing to change the Jenkins job
+        configuration.</p>
+    <p>You can use <a href="/env-vars.html">Jenkins Env variables</a>, e.g. Applications/MyDirectory/$JOB_NAME</p>
 </div>

@@ -23,13 +23,41 @@
 
 package com.xebialabs.deployit.ci;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+
+import com.xebialabs.deployit.booter.remote.client.DeployitRemoteClient;
+import com.xebialabs.deployit.ci.dar.RemotePackaging;
+import com.xebialabs.deployit.ci.util.DeployitTypes;
+import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
+import com.xebialabs.deployit.client.Deployed;
+import com.xebialabs.deployit.client.DeployitCli;
+import com.xebialabs.deployit.engine.api.dto.ConfigurationItemId;
+import com.xebialabs.deployit.plugin.api.reflect.Type;
+import com.xebialabs.deployit.plugin.api.udm.Application;
+import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
+import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
+import com.xebialabs.deployit.plugin.api.udm.Environment;
+
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -37,45 +65,13 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-
 import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Collections2;
-
-import com.xebialabs.deployit.booter.remote.client.DeployitRemoteClient;
-import com.xebialabs.deployit.ci.dar.RemotePackaging;
-import com.xebialabs.deployit.ci.util.DeployitTypes;
-import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-import com.xebialabs.deployit.ci.util.NullPackagingListener;
-import com.xebialabs.deployit.client.Deployed;
-import com.xebialabs.deployit.client.DeployitCli;
-import com.xebialabs.deployit.engine.packager.content.DarMember;
-import com.xebialabs.deployit.plugin.api.reflect.Type;
-import com.xebialabs.deployit.plugin.api.udm.Application;
-import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
-import com.xebialabs.deployit.plugin.api.udm.Environment;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.uniqueIndex;
-import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
-import static java.util.Collections.emptyList;
+import static hudson.util.FormValidation.warning;
+import static java.lang.String.format;
 
 public class DeployitNotifier extends Notifier {
 
@@ -89,7 +85,6 @@ public class DeployitNotifier extends Notifier {
     public final JenkinsDeploymentOptions deploymentOptions;
     public final boolean verbose;
 
-    protected transient DeployitTypes deployitTypes;
 
     @DataBoundConstructor
     public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose) {
@@ -102,11 +97,8 @@ public class DeployitNotifier extends Notifier {
         this.verbose = verbose || (deploymentOptions != null && deploymentOptions.verbose);
     }
 
-    private DeployitTypes getDeployitTypes() {
-        if (deployitTypes == null) {
-            this.deployitTypes = new DeployitTypes(getCliTemplate().getDescriptors());
-        }
-        return deployitTypes;
+    private Type getTypeForClass(Class<?> clazz) {
+        return getDescriptor().getTypeForClass(clazz, credential);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -115,11 +107,15 @@ public class DeployitNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-
         final JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, verbose);
 
         final EnvVars envVars = build.getEnvironment(listener);
         String resolvedApplication = envVars.expand(application);
+
+        List<String> qualifiedAppIds = search(getCliTemplate(), getTypeForClass(Application.class), DeployitTypes.getNameFromId(resolvedApplication));
+        if (qualifiedAppIds.size() == 1) {
+            resolvedApplication = qualifiedAppIds.get(0);
+        }
         String resolvedVersion = envVars.expand(version);
 
         //Package
@@ -133,18 +129,15 @@ public class DeployitNotifier extends Notifier {
                 deploymentOptions.setVersion(resolvedVersion);
             }
 
-            final List<DarMember> darMembers = getDeployablesAsDarMembers(
-                    packageOptions.getDeployables(), build.getWorkspace(), envVars, deploymentListener
-            );
-
+            DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, getCliTemplate().getDeployitTypes(), workspace, envVars, deploymentListener);
             final File targetDir = new File(workspace.absolutize().getRemote(), "deployitpackage");
 
             File packaged = workspace.getChannel().call(
                     new RemotePackaging()
                             .withTargetDir(targetDir)
-                            .withListener(verbose ? deploymentListener : new NullPackagingListener())
-                            .withDarMembers(darMembers)
-                            .forApplication(getCiName(resolvedApplication), resolvedVersion)
+                            .forDeploymentPackage(deploymentPackage)
+                            .usingConfig(getCliTemplate().getDeployitTypes().getRegistryId())
+                            .usingDescriptors(getCliTemplate().getDeployitTypes().getDescriptors().getDescriptors())
             );
 
             deploymentListener.info(Messages.DeployitNotifier_packaged(resolvedApplication, packaged));
@@ -160,7 +153,7 @@ public class DeployitNotifier extends Notifier {
             try {
                 final String darFileLocation = importOptions.getDarFileLocation(build.getWorkspace(), deploymentListener);
 
-                deploymentListener.info(Messages.DeployitNofifier_import(darFileLocation));
+                deploymentListener.info(Messages.DeployitNotifier_import(darFileLocation));
                 ConfigurationItem uploadedPackage = getCliTemplate().perform(new DeployitCliCallback<ConfigurationItem>() {
                     public ConfigurationItem call(DeployitCli cli) {
                         try {
@@ -183,7 +176,7 @@ public class DeployitNotifier extends Notifier {
                 try {
                     importOptions.getMode().cleanup();
                 } catch (Exception e) {
-                    deploymentListener.info(Messages.DeployitNotifier_import_error(importOptions, e.getMessage()));
+                    deploymentListener.info(Messages.DeployitNotifier_cleanup_error(importOptions.getMode(), e.getMessage()));
                 }
             }
         }
@@ -191,7 +184,7 @@ public class DeployitNotifier extends Notifier {
 
         //Deploy
         if (deploymentOptions != null) {
-            deploymentListener.info(Messages.DeployitNofifier_startDeployment(resolvedApplication, deploymentOptions.environment));
+            deploymentListener.info(Messages.DeployitNotifier_startDeployment(resolvedApplication, deploymentOptions.environment));
             String packageVersion = null;
             switch (deploymentOptions.versionKind) {
                 case Other:
@@ -206,7 +199,7 @@ public class DeployitNotifier extends Notifier {
                     break;
             }
             final String versionId = Joiner.on("/").join(resolvedApplication, packageVersion);
-            deploymentListener.info(Messages.DeployitNofifier_deploy(versionId, deploymentOptions.environment));
+            deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, deploymentOptions.environment));
             try {
                 getCliTemplate().perform(new DeployitCliCallback<String>() {
                     public String call(DeployitCli cli) {
@@ -215,27 +208,38 @@ public class DeployitNotifier extends Notifier {
                 });
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
-                deploymentListener.error(Messages._DeployitNofifier_errorDeploy(e.getMessage()));
+                deploymentListener.error(Messages._DeployitNotifier_errorDeploy(e.getMessage()));
                 return false;
             }
-            deploymentListener.info(Messages.DeployitNofifier_endDeployment(resolvedApplication, deploymentOptions.environment));
+            deploymentListener.info(Messages.DeployitNotifier_endDeployment(resolvedApplication, deploymentOptions.environment));
         }
         return true;
     }
 
-    private List<DarMember> getDeployablesAsDarMembers(List<DeployableView> deployables, final FilePath workspace, final EnvVars envVars, final JenkinsDeploymentListener deploymentListener) {
-        DeployitTypes deployitTypes = getDeployitTypes();
-        if(deployables == null) {
-            return emptyList();
+    public static List<String> search(DeployitCliTemplate template, final Type type, final String name) {
+        return template.perform(new DeployitCliCallback<List<String>>() {
+            @Override
+            public List<String> call(final DeployitCli cli) {
+                return search(cli, type, name);
+            }
+        });
+    }
+
+    private static List<String> search(DeployitCli cli, Type type, String name) {
+        cli.getListener().debug("search " + type);
+        try {
+            List<ConfigurationItemId> result = cli.getCommunicator().getProxies().getRepositoryService().query(type, null, name, null, null, 0, -1);
+
+            return Lists.transform(result, new Function<ConfigurationItemId, String>() {
+                @Override
+                public String apply(ConfigurationItemId input) {
+                    return input.getId();
+                }
+            });
+        } catch (Exception e) {
+            cli.getListener().debug(format("search fails for %s %s", type, e.getMessage()));
         }
-
-        List<DarMember> result = newArrayList();
-
-        for (DeployableView view : deployables) {
-            result.add(view.newDarMember(deployitTypes, workspace, envVars, deploymentListener));
-        }
-
-        return result;
+        return Collections.emptyList();
     }
 
     private String getCiName(String ciId) {
@@ -260,7 +264,7 @@ public class DeployitNotifier extends Notifier {
 
         private List<Credential> credentials = newArrayList();
 
-        private final DeployitCliCache deployitCliCache;
+        private transient final DeployitCliCache deployitCliCache;
 
         public DeployitDescriptor() {
             load();
@@ -312,17 +316,17 @@ public class DeployitNotifier extends Notifier {
             return super.newInstance(req, formData);
         }
 
-        public List<String> environments(String credential) {
+        public List<String> environments(final String credential) {
             return getCliTemplate(credential).perform(new DeployitCliCallback<List<String>>() {
                 public List<String> call(DeployitCli cli) {
-                    return cli.search(Type.valueOf(Environment.class).toString());
+                    return cli.search(getTypeForClass(Environment.class, credential).toString());
                 }
             });
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
             if ("Applications/".equals(value))
-                return ok("Fill in the application ID, eg Applications/PetClinic");
+                return ok("Fill in the application name or ID, e.g. Petclinic or Applications/MyDirectory/PetClinic");
 
             String resolvedName = null;
 
@@ -332,40 +336,25 @@ public class DeployitNotifier extends Notifier {
                 // Couldn't resolve the app name.
             }
 
-            final String applicationName = resolvedName == null ? value : resolvedName;
-
-            Type udmApplication = Type.valueOf(Application.class);
-            try {
-                final ConfigurationItem repositoryObject = getCliTemplate(credential).perform(new DeployitCliCallback<ConfigurationItem>() {
-                    public ConfigurationItem call(DeployitCli cli) {
-                        return cli.get(applicationName);
-                    }
-                });
-                if (repositoryObject.getType().equals(udmApplication))
+            resolvedName = resolvedName == null ? value : resolvedName;
+            final String applicationName = DeployitTypes.getNameFromId(resolvedName);
+            Type udmApplication = getTypeForClass(Application.class, credential);
+            List<String> candidates = search(getCliTemplate(credential), udmApplication, applicationName+"%");
+            for (String candidate : candidates) {
+                if (candidate.endsWith("/"+applicationName)) {
                     return ok();
-                else
-                    return error("CI found but with the wrong type, expected %s, found %s", udmApplication, repositoryObject.getType());
-            } catch (Exception e) {
-                return error("%s. Candidates %s", e.getMessage(), getCandidates(credential, applicationName, udmApplication));
+                }
             }
+            if (!candidates.isEmpty()) {
+                return warning("Application does not exist, but will be created upon package import. Did you mean to type one of the following %s?", candidates);
+            }
+            return warning("Application does not exist, but will be created upon package import.");
         }
 
-        private Collection<String> getCandidates(String credential, final String value, final Type type) {
-            try {
-                final List<String> search = getCliTemplate(credential).perform(new DeployitCliCallback<List<String>>() {
-                    public List<String> call(DeployitCli cli) {
-                        return cli.search(type.toString());
-                    }
-                });
-                return Collections2.filter(search, new Predicate<String>() {
-                    public boolean apply(String input) {
-                        return input.startsWith(value);
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                return emptyList();
-            }
+
+        private Credential getCredential(String credentialName) {
+            final Map<String, Credential> map = uniqueIndex(credentials, Credential.CREDENTIAL_INDEX);
+            return map.get(credentialName);
         }
 
         private DeployitCliTemplate getCliTemplate(final String credentialName) {
@@ -381,8 +370,16 @@ public class DeployitNotifier extends Notifier {
             }
         }
 
+        private Type getTypeForClass(Class<?> clazz, String credentials) {
+            return getCliTemplate(credentials).getDeployitTypes().typeForClass(clazz);
+        }
+
         public List<String> getAllResourceTypes() {
             return deployitCliCache.resources(getDefaultCredential());
+        }
+
+        public List<String> getAllEmbeddedResourceTypes() {
+            return deployitCliCache.embeddedResources(getDefaultCredential());
         }
 
         public List<String> getAllArtifactTypes() {

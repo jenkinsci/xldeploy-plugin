@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.xebialabs.deployit</groupId>
   <artifactId>udm-plugin-api</artifactId>
-  <version>3.9.3</version>
+  <version>3.9.4</version>
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -17,7 +17,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -49,7 +49,7 @@
     <dependency>
       <groupId>com.xebialabs.overthere</groupId>
       <artifactId>overthere</artifactId>
-      <version>2.2.2</version>
+      <version>2.3.0</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -57,7 +57,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -97,7 +97,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -137,7 +137,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -177,7 +177,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -217,7 +217,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>
@@ -257,7 +257,7 @@
           <groupId>stax</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>bcprov-jdk15</artifactId>
+          <artifactId>bcprov-jdk16</artifactId>
           <groupId>org.bouncycastle</groupId>
         </exclusion>
         <exclusion>

@@ -26,10 +26,13 @@ package com.xebialabs.deployit.ci.dar;
 import java.io.File;
 import java.util.List;
 
-import com.xebialabs.deployit.engine.packager.DarPackager;
-import com.xebialabs.deployit.engine.packager.content.DarMember;
-import com.xebialabs.deployit.engine.packager.content.ExternalDarContents;
-import com.xebialabs.deployit.engine.packager.content.PackagingListener;
+import com.xebialabs.deployit.booter.remote.BooterConfig;
+import com.xebialabs.deployit.packager.DarPackager;
+import com.xebialabs.deployit.packager.ManifestWriter;
+import com.xebialabs.deployit.packager.writers.ManifestXmlWriter;
+import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
+import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
+import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
 
 import hudson.remoting.Callable;
 
@@ -40,30 +43,14 @@ import hudson.remoting.Callable;
  */
 public class RemotePackaging implements Callable<File, RuntimeException> {
 
-    private PackagingListener deploymentListener;
-
-    List<DarMember> darMembers;
-
-    private String applicationName;
-
-    private String applicationVersion;
-
     private File targetDir;
+    private DeploymentPackage deploymentPackage;
+    private BooterConfig booterConfig;
+    private List<Descriptor> descriptors;
 
 
-    public RemotePackaging withListener(PackagingListener deploymentListener) {
-        this.deploymentListener = deploymentListener;
-        return this;
-    }
-
-    public RemotePackaging withDarMembers(List<DarMember> darMembers) {
-        this.darMembers = darMembers;
-        return this;
-    }
-
-    public RemotePackaging forApplication(String applicationName, String applicationVersion) {
-        this.applicationName = applicationName;
-        this.applicationVersion = applicationVersion;
+    public RemotePackaging forDeploymentPackage(DeploymentPackage deploymentPackage) {
+        this.deploymentPackage = deploymentPackage;
         return this;
     }
 
@@ -72,14 +59,29 @@ public class RemotePackaging implements Callable<File, RuntimeException> {
         return this;
     }
 
+    public RemotePackaging usingConfig(BooterConfig booterConfig) {
+        this.booterConfig = booterConfig;
+        return this;
+    }
+
+    public RemotePackaging usingDescriptors(List<Descriptor> descriptors) {
+        this.descriptors = descriptors;
+        return this;
+    }
+
+
     /**
      * Call to be executed via jenkins virtual channel
      */
     public File call() throws RuntimeException {
-        return new DarPackager(
-                targetDir,
-                new ExternalDarContents(deploymentListener, darMembers, applicationName, applicationVersion)
-        ).perform();
+        targetDir.mkdirs();
+        ManifestWriter mw = new ManifestXmlWriter();
+        DarPackager pkger = new DarPackager(mw);
+        if (DescriptorRegistry.getDescriptorRegistry(booterConfig) == null) {
+            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig);
+        }
+        return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true);
     }
+
 
 }

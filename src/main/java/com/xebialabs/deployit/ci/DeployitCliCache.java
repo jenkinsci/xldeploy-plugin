@@ -28,15 +28,24 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import com.xebialabs.deployit.client.DeployitCli;
+import com.xebialabs.deployit.ci.util.DeployitTypes;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
+import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
+import com.xebialabs.deployit.plugin.api.reflect.Type;
+import com.xebialabs.deployit.plugin.api.udm.EmbeddedDeployable;
+
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 
 public class DeployitCliCache {
 
@@ -55,16 +64,26 @@ public class DeployitCliCache {
                 }
             });
 
+    final LoadingCache<Credential, List<String>> embeddedResourcesCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<Credential, List<String>>() {
+                @Override
+                public List<String> load(Credential key) throws Exception {
+                    return Lists.transform(ImmutableList.copyOf(Iterables.filter(getDeployitTypes(key).getDescriptors().getDescriptors(), new Predicate<Descriptor>() {
+                        @Override
+                        public boolean apply(Descriptor input) {
+                            return input.getInterfaces().contains(Type.valueOf("udm.EmbeddedDeployable"));
+                        }
+                    })), TO_TYPE);
+                }
+            });
+
     final LoadingCache<Credential, List<String>> resourcesCache = CacheBuilder.newBuilder()
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(new CacheLoader<Credential, List<String>>() {
                 @Override
                 public List<String> load(Credential key) throws Exception {
-                    return Lists.transform(getCliTemplate(key).perform(new DeployitCliCallback<List<Descriptor>>() {
-                        public List<Descriptor> call(DeployitCli cli) {
-                            return cli.getDescriptors().getDeployableResources();
-                        }
-                    }), TO_TYPE);
+                    return Lists.transform(getDeployitTypes(key).getDescriptors().getDeployableResources(), TO_TYPE);
                 }
             });
 
@@ -73,11 +92,7 @@ public class DeployitCliCache {
             .build(new CacheLoader<Credential, List<String>>() {
                 @Override
                 public List<String> load(Credential key) throws Exception {
-                    return Lists.transform(getCliTemplate(key).perform(new DeployitCliCallback<List<Descriptor>>() {
-                        public List<Descriptor> call(DeployitCli cli) {
-                            return cli.getDescriptors().getDeployableArtifacts();
-                        }
-                    }), TO_TYPE);
+                    return Lists.transform(getDeployitTypes(key).getDescriptors().getDeployableArtifacts(), TO_TYPE);
                 }
             });
 
@@ -86,13 +101,29 @@ public class DeployitCliCache {
             .build(new CacheLoader<Credential, Map<String, List<String>>>() {
                 @Override
                 public Map<String, List<String>> load(Credential key) throws Exception {
-                    return ImmutableMap.copyOf(getCliTemplate(key).perform(new DeployitCliCallback<Map<String, List<String>>>() {
-                        public Map<String, List<String>> call(DeployitCli cli) {
-                            return cli.getDescriptors().getPropertiesIndexedByMap();
-                        }
-                    }));
+                    return ImmutableMap.copyOf(getSettablePropertyNamesByType(getCliTemplate(key).getDeployitTypes()));
                 }
             });
+
+    private Map<String, List<String>> getSettablePropertyNamesByType(final DeployitTypes deployitTypes) {
+        Map<String, List<String>> propertiesIndexedByMap = newHashMap(deployitTypes.getDescriptors().getPropertiesIndexedByMap());
+        final Type embeddedDeployableType = deployitTypes.typeForClass(EmbeddedDeployable.class);
+        for (final Descriptor descriptor : deployitTypes.getDescriptors().getDescriptors()) {
+            List<String> props = propertiesIndexedByMap.get(descriptor.getType().toString());
+            if (props == null) { continue; }
+
+            List<String> filteredProps = newArrayList(Iterables.filter(props, new Predicate<String>() {
+                @Override
+                public boolean apply(String prop) {
+                    PropertyDescriptor pd = descriptor.getPropertyDescriptor(prop);
+                    return pd != null && !pd.isHidden() && !pd.getName().equals("tags") &&
+                            !deployitTypes.isEmbeddedProperty(pd, embeddedDeployableType);
+                }
+            }));
+            propertiesIndexedByMap.put(descriptor.getType().toString(), filteredProps);
+        }
+        return propertiesIndexedByMap;
+    }
 
     private final static Function<Descriptor, String> TO_TYPE = new Function<Descriptor, String>() {
         public String apply(Descriptor input) {
@@ -116,11 +147,27 @@ public class DeployitCliCache {
         return cliTemplateCache.get(key);
     }
 
+    public DeployitTypes getDeployitTypes(Credential credential) {
+        try {
+            return getCliTemplate(credential).getDeployitTypes();
+        } catch (ExecutionException e) {
+            throw new RuntimeException("failing when fetching descriptors for " + credential, e);
+        }
+    }
+
     public List<String> resources(Credential credential) {
         try {
             return resourcesCache.get(credential);
         } catch (ExecutionException e) {
             throw new RuntimeException("failing when fetching resources for " + credential, e);
+        }
+    }
+
+    public List<String> embeddedResources(Credential credential) {
+        try {
+            return embeddedResourcesCache.get(credential);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("failing when fetching embedded resources for " + credential, e);
         }
     }
 

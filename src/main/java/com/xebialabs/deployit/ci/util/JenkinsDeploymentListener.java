@@ -27,11 +27,10 @@ import java.io.Serializable;
 import org.jvnet.localizer.Localizable;
 
 import com.xebialabs.deployit.client.logger.AbstractDeploymentListener;
-import com.xebialabs.deployit.engine.packager.content.PackagingListener;
 
 import hudson.model.BuildListener;
 
-public class JenkinsDeploymentListener extends AbstractDeploymentListener implements PackagingListener, Serializable {
+public class JenkinsDeploymentListener extends AbstractDeploymentListener implements Serializable {
 
     private final BuildListener listener;
     private final boolean debug;
