@@ -78,18 +78,16 @@ public class GeneratedLocation extends ImportLocation {
     }
 
     @Override
-    public void cleanup() throws IOException, InterruptedException {
-        // we need to check these for cases where the only manifest entries are pre-specified not generated
-        if (localTempDar != null) {
-            localTempDar.delete();
+    public void cleanup() {
+        try {
+            if (localTempDar != null && localTempDar.exists())
+                localTempDar.delete();
+            if (localTempDir != null && localTempDir.exists())
+                localTempDir.delete();
+        } catch (IOException e) {
+             //ignore
+        } catch (InterruptedException e) {
+            //ignore
         }
-        if (localTempDir != null) {
-            localTempDir.delete();
-        }
-    }
-
-    @Override
-    public String toString() {
-        return String.format("GeneratedLocation[localTempDir: %s, localTempDar: %s]", localTempDir, localTempDar);
     }
 }

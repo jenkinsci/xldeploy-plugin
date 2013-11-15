@@ -1,9 +1,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-
     <f:entry title="${%Credential}" field="credential" help="/plugin/deployit-plugin/help-credential.html">
         <f:select/>
     </f:entry>
-
+    <f:validateButton title="${%Reload types for credential}" with="credential" method="reloadTypes"/>
     <f:entry title="${%Application}" field="application" help="/plugin/deployit-plugin/help-application.html">
         <f:textbox default="Applications/"/>
     </f:entry>

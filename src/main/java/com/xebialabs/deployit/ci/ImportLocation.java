@@ -24,7 +24,6 @@
 package com.xebialabs.deployit.ci;
 
 import java.io.File;
-import java.io.IOException;
 
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
@@ -50,6 +49,6 @@ public abstract class ImportLocation implements Describable<ImportLocation> {
     /**
      * You need to override this method if your import location creates temp files
      */
-    public void cleanup() throws IOException, InterruptedException {}
+    public void cleanup() {}
 
 }

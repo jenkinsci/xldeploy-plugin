@@ -26,8 +26,6 @@ package com.xebialabs.deployit.ci;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.xebialabs.deployit.client.DeploymentOptions;
-
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.Describable;
@@ -40,20 +38,24 @@ import static com.xebialabs.deployit.ci.util.ListBoxModels.emptyModel;
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
 
 
-public class JenkinsDeploymentOptions extends DeploymentOptions implements Describable<JenkinsDeploymentOptions> {
+public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOptions> {
 
     public final String environment;
 
-    @Deprecated // The options has been moved to the main section @see DeployitNotifier
-    public final boolean verbose;
+    public boolean generateDeployedOnUpgrade;
+    public boolean skipMode;
+    public boolean testMode;
+    public boolean rollbackOnError;
 
     public final VersionKind versionKind;
     public String version;
 
     @DataBoundConstructor
-    public JenkinsDeploymentOptions(String environment, VersionKind versionKind, boolean generateDeployedOnUpgrade, boolean skipMode, boolean testMode, boolean rollbackOnError, boolean verbose) {
-        super(skipMode, testMode, false, false, false, false, generateDeployedOnUpgrade, rollbackOnError ? false : true, rollbackOnError, "");
-        this.verbose = verbose;
+    public JenkinsDeploymentOptions(String environment, VersionKind versionKind, boolean generateDeployedOnUpgrade, boolean skipMode, boolean testMode, boolean rollbackOnError) {
+        this.generateDeployedOnUpgrade = generateDeployedOnUpgrade;
+        this.skipMode = skipMode;
+        this.testMode = testMode;
+        this.rollbackOnError = rollbackOnError;
         this.environment = environment;
         this.versionKind = versionKind;
     }

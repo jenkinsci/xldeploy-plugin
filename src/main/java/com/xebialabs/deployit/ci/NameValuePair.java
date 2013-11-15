@@ -33,6 +33,8 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.util.Collection;
+
 public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
     public String propertyName;
@@ -51,8 +53,13 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
             return "NameValuePair";
         }
 
-        public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String type) {
-            return ListBoxModels.of(getDeployitDescriptor().getPropertiesOf(type));
+        public ListBoxModel doFillPropertyNameItems(
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialExistingProps,
+                @QueryParameter(value = "credential") @RelativePath(value = "../../..") String credentialNewProps,
+                @QueryParameter @RelativePath(value = "..") String type) {
+            String creds = credentialExistingProps != null ? credentialExistingProps : credentialNewProps;
+            Collection<String> properties = getDeployitDescriptor().getPropertiesOf(creds, type);
+            return ListBoxModels.of(properties);
         }
 
         protected DeployitNotifier.DeployitDescriptor getDeployitDescriptor() {
@@ -60,5 +67,4 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
         }
 
     }
-
 }

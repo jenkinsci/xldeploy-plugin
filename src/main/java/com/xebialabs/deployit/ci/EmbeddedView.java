@@ -2,8 +2,10 @@ package com.xebialabs.deployit.ci;
 
 import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
+import hudson.RelativePath;
 import hudson.util.ListBoxModel;
 
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
@@ -34,10 +36,12 @@ public class EmbeddedView extends DeployableView {
             return "Embedded";
         }
 
-        public ListBoxModel doFillTypeItems() {
-            return of(getDeployitDescriptor().getAllEmbeddedResourceTypes());
+        public ListBoxModel doFillTypeItems(
+                @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingEmbeddeds,
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewEmbeddeds
+        ) {
+            String creds = credentialExistingEmbeddeds != null ? credentialExistingEmbeddeds : credentialNewEmbeddeds;
+            return of(getDeployitDescriptor().getAllEmbeddedResourceTypes(creds));
         }
     }
-
-
 }

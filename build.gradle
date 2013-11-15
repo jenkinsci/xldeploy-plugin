@@ -73,17 +73,16 @@ jenkinsPlugin {
 
 configurations {
     compile.transitive = true
-    providedRuntime.exclude group:'jdom', module:'jdom' //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
-    providedRuntime.exclude group:'de.schlichtherle.truezip', module:'truezip-path' // needs Java7, borks on Java6 setups
+    providedRuntime.exclude group: 'jdom', module: 'jdom' //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
+    providedRuntime.exclude group: 'de.schlichtherle.truezip', module: 'truezip-path' // needs Java7, borks on Java6 setups
     all*.exclude group: 'com.thoughtworks.xstream', module: "xstream"
     // this artifact lives in a netbeans repository which behaves flakey
     // it's not used so exclude it.
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
 }
 
-def truezipVersion="7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
-                           // Later versions reference NIO.2, resulting in a NoClassDefFoundError
-                           // on java.nio.file.Path
+def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
+// (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 
 configurations.all {
     resolutionStrategy {
@@ -96,11 +95,14 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit:deployit-java-client:3.9.3"
     compile "com.xebialabs.deployit.engine:packager:3.9.4"
     compile "com.xebialabs.deployit:engine-api:3.9.3"
     compile "com.xebialabs.deployit.engine:remote-booter:3.9.4"
     compile "org.jdom:jdom2:2.0.5"
+
+    compile 'com.google.code.findbugs:jsr305:2.0.2'
+    compile 'findbugs:annotations:1.0.0'
+
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
 }

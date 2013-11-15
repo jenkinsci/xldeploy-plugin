@@ -28,10 +28,11 @@ import java.io.IOException;
 import java.util.List;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import com.google.common.base.Strings;
 
 import com.xebialabs.deployit.ci.dar.RemoteLookup;
-import com.xebialabs.deployit.ci.util.DeployitTypes;
+import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.util.FileFinder;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
@@ -41,6 +42,7 @@ import com.xebialabs.overthere.local.LocalFile;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.RelativePath;
 import hudson.util.ListBoxModel;
 
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
@@ -56,8 +58,8 @@ public class ArtifactView extends DeployableView {
         this.location = location;
     }
 
-    public ConfigurationItem toConfigurationItem(DeployitTypes deployitTypes, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
-        Artifact deployable = (Artifact) super.toConfigurationItem(deployitTypes, workspace, envVars, listener);
+    public ConfigurationItem toConfigurationItem(DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
+        Artifact deployable = (Artifact) super.toConfigurationItem(registry, workspace, envVars, listener);
         String resolvedLocation = getResolvedLocation(envVars);
         try {
             final File file = findFileFromPattern(resolvedLocation, workspace, listener);
@@ -115,8 +117,12 @@ public class ArtifactView extends DeployableView {
             return "Artifact";
         }
 
-        public ListBoxModel doFillTypeItems() {
-            return of(getDeployitDescriptor().getAllArtifactTypes());
+        public ListBoxModel doFillTypeItems(
+                @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingArtifacts,
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewArtifacts
+        ) {
+            String creds = credentialExistingArtifacts != null ? credentialExistingArtifacts : credentialNewArtifacts;
+            return of(getDeployitDescriptor().getAllArtifactTypes(creds));
         }
     }
 
