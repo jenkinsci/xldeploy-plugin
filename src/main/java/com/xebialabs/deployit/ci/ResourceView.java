@@ -25,8 +25,10 @@ package com.xebialabs.deployit.ci;
 
 import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
+import hudson.RelativePath;
 import hudson.util.ListBoxModel;
 
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
@@ -46,10 +48,12 @@ public class ResourceView extends DeployableView {
             return "Resource";
         }
 
-        public ListBoxModel doFillTypeItems() {
-            return of(getDeployitDescriptor().getAllResourceTypes());
+        public ListBoxModel doFillTypeItems(
+                @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingResources,
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewResources
+        ) {
+            String creds = credentialExistingResources != null ? credentialExistingResources : credentialNewResources;
+            return of(getDeployitDescriptor().getAllResourceTypes(creds));
         }
     }
-
-
 }

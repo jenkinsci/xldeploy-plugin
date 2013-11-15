@@ -24,13 +24,12 @@
 package com.xebialabs.deployit.ci.util;
 
 import java.io.Serializable;
-import org.jvnet.localizer.Localizable;
 
-import com.xebialabs.deployit.client.logger.AbstractDeploymentListener;
+import org.jvnet.localizer.Localizable;
 
 import hudson.model.BuildListener;
 
-public class JenkinsDeploymentListener extends AbstractDeploymentListener implements Serializable {
+public class JenkinsDeploymentListener implements Serializable {
 
     private final BuildListener listener;
     private final boolean debug;
@@ -48,24 +47,20 @@ public class JenkinsDeploymentListener extends AbstractDeploymentListener implem
         error(String.valueOf(localizable));
     }
 
-    public void handleDebug(String message) {
+    public void debug(String message) {
         if (debug)
             listener.getLogger().println("Debug: " + message);
     }
 
-    public void handleInfo(String message) {
-        listener.getLogger().println("Info : " + message);
+    public void info(String message) {
+        listener.getLogger().println("Info: " + message);
     }
 
-    public void handleTrace(String message) {
+    public void trace(String message) {
         listener.getLogger().println("Trace: " + message);
     }
 
-    public void handleError(String message) {
+    public void error(String message) {
         listener.error(message);
-    }
-
-    public void println(final String message) {
-        info(message);
     }
 }

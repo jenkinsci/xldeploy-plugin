@@ -24,7 +24,7 @@
 package com.xebialabs.deployit.ci.dar;
 
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
 import com.xebialabs.deployit.packager.DarPackager;
@@ -46,7 +46,7 @@ public class RemotePackaging implements Callable<File, RuntimeException> {
     private File targetDir;
     private DeploymentPackage deploymentPackage;
     private BooterConfig booterConfig;
-    private List<Descriptor> descriptors;
+    private Collection<Descriptor> descriptors;
 
 
     public RemotePackaging forDeploymentPackage(DeploymentPackage deploymentPackage) {
@@ -64,7 +64,7 @@ public class RemotePackaging implements Callable<File, RuntimeException> {
         return this;
     }
 
-    public RemotePackaging usingDescriptors(List<Descriptor> descriptors) {
+    public RemotePackaging usingDescriptors(Collection<Descriptor> descriptors) {
         this.descriptors = descriptors;
         return this;
     }
@@ -78,7 +78,7 @@ public class RemotePackaging implements Callable<File, RuntimeException> {
         ManifestWriter mw = new ManifestXmlWriter();
         DarPackager pkger = new DarPackager(mw);
         if (DescriptorRegistry.getDescriptorRegistry(booterConfig) == null) {
-            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig);
+           SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig);
         }
         return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true);
     }

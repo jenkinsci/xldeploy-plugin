@@ -27,7 +27,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-import com.xebialabs.deployit.ci.util.DeployitTypes;
+import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 
@@ -69,9 +69,9 @@ public abstract class DeployableView implements Describable<DeployableView> {
         return name;
     }
 
-    public ConfigurationItem toConfigurationItem(DeployitTypes deployitTypes, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
+    public ConfigurationItem toConfigurationItem(DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(getName()), "Name is required.");
-        ConfigurationItem deployable = deployitTypes.newInstance(type, getName());
+        ConfigurationItem deployable = registry.newInstance(type, getName());
         if (!isNullOrEmpty(tags)) {
             deployable.setProperty("tags", newHashSet(commaSeparatedListToList(tags)));
         }
@@ -80,7 +80,7 @@ public abstract class DeployableView implements Describable<DeployableView> {
             for (NameValuePair pair : properties) {
                 String value = stripEnclosingQuotes(nullToEmpty(pair.propertyValue));
                 value = envVars.expand(value);
-                deployitTypes.setProperty(deployable, pair.propertyName, value);
+                registry.setProperty(deployable, pair.propertyName, value);
             }
         }
 
