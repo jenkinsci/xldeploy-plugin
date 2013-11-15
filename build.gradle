@@ -22,7 +22,7 @@
  */
 
 group = "com.xebialabs.deployit.ci"
-version = "3.9.5"
+version = "3.9.6-SNAPSHOT"
 description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs Deployit&lt;/a&gt;."
 
 apply plugin: 'eclipse'
