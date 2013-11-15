@@ -30,6 +30,7 @@ apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'jpi'
 
+build.dependsOn clean
 build.dependsOn jpi
 
 repositories {
