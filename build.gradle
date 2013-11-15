@@ -30,8 +30,13 @@ apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'jpi'
 
-build.dependsOn clean
 build.dependsOn jpi
+
+task deleteGeneratedSrcLocalizer(type:Delete) {
+    delete "build/generated-src/localizer"
+}
+
+localizer.dependsOn deleteGeneratedSrcLocalizer
 
 repositories {
     mavenCentral()
