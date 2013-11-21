@@ -1,10 +1,8 @@
 package com.xebialabs.deployit.ci.server;
 
 import java.util.*;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
+import javax.annotation.Nullable;
+import com.google.common.base.*;
 import com.google.common.collect.*;
 import com.google.common.util.concurrent.Monitor;
 
@@ -23,8 +21,6 @@ import com.xebialabs.deployit.plugin.api.udm.base.*;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.collect.Sets.newLinkedHashSet;
-import static com.xebialabs.deployit.plugin.api.reflect.PropertyKind.LIST_OF_CI;
-import static com.xebialabs.deployit.plugin.api.reflect.PropertyKind.SET_OF_CI;
 import static java.util.EnumSet.of;
 
 public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistry {
@@ -130,27 +126,51 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     @Override
     public void setProperty(ConfigurationItem ci, String propName, String value) {
         PropertyDescriptor pd = getDescriptor(ci.getType()).getPropertyDescriptor(propName);
-        pd.set(ci, convertValue(value, pd.getKind()));
+        pd.set(ci, convertValue(value, pd));
     }
 
-    private Object convertValue(String val, PropertyKind kind) {
+    private Object convertValue(String val, PropertyDescriptor pd) {
         if (val == null) return null;
-        switch (kind) {
+        switch (pd.getKind()) {
             case BOOLEAN:
                 return Boolean.parseBoolean(val);
             case INTEGER:
                 if (val.isEmpty()) return null;
                 return Integer.parseInt(val);
+            case CI:
+                return convertToCiRef(val, pd);
             case SET_OF_STRING:
                 return newLinkedHashSet(splitValue(val));
             case LIST_OF_STRING:
                 return newArrayList(splitValue(val));
+            case SET_OF_CI:
+                return newLinkedHashSet(convertToCiRefs(val, pd));
+            case LIST_OF_CI:
+                return newArrayList(convertToCiRefs(val, pd));
             case MAP_STRING_STRING:
                 return Splitter.on('&').withKeyValueSeparator("=").split(val);
             default:
                 return val;
         }
     }
+
+    private Iterable<ConfigurationItem> convertToCiRefs(String val, final PropertyDescriptor pd) {
+        return FluentIterable.from(splitValue(val)).transform(new Function<String, ConfigurationItem>() {
+            @Nullable
+            @Override
+            public ConfigurationItem apply(@Nullable final String input) {
+                return convertToCiRef(input, pd);
+            }
+        });
+    }
+
+    private ConfigurationItem convertToCiRef(String name, PropertyDescriptor pd) {
+        BaseConfigurationItem ci = new BaseConfigurationItem();
+        ci.setId(name);
+        ci.setType(pd.getReferencedType());
+        return ci;
+    }
+
 
     private Iterable<String> splitValue(String val) {
         return Splitter.on(',').trimResults().omitEmptyStrings().split(val);
