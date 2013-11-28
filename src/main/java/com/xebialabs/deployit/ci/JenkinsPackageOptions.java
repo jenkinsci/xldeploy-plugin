@@ -26,6 +26,8 @@ package com.xebialabs.deployit.ci;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -47,6 +49,8 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.collect.Maps.newHashMap;
 
@@ -72,14 +76,12 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         DeploymentPackage deploymentPackage = registry.newInstance(DeploymentPackage.class, version);
         deploymentPackage.setApplication(application);
         Map<String,ConfigurationItem> deployablesByFqn = newHashMap();
-        List<DeployableView> deployablesWithEmbeddedsLast =
-                Lists.newArrayList(Iterables.filter(deployables, Predicates.not(Predicates.instanceOf(EmbeddedView.class))));
-        deployablesWithEmbeddedsLast.addAll(
-                Lists.newArrayList(Iterables.filter(deployables, Predicates.instanceOf(EmbeddedView.class))));
-        for (DeployableView deployableView : deployablesWithEmbeddedsLast) {
+        List<DeployableView> sortedDeployables = sortDeployables(deployables);
+        listener.info("Deployables: " + getFQNs(sortedDeployables));
+        for (DeployableView deployableView : sortedDeployables) {
             ConfigurationItem deployable = deployableView.toConfigurationItem(registry, workspace, envVars, listener);
             if (deployableView instanceof EmbeddedView) {
-                linkEmbeddedToParent(deployablesByFqn, deployable, deployableView, registry, listener);
+                linkEmbeddedToParent(deployablesByFqn, deployable, (EmbeddedView)deployableView, registry, listener);
             } else {
                 deploymentPackage.addDeployable((Deployable) deployable);
             }
@@ -89,9 +91,53 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         return deploymentPackage;
     }
 
+    private List<DeployableView> sortDeployables(List<DeployableView> deployables) {
+        List<DeployableView> result = Lists.newArrayList(Iterables.filter(deployables, Predicates.not(Predicates.instanceOf(EmbeddedView.class))));
+        List<EmbeddedView> remainder = Lists.transform(Lists.newArrayList(Iterables.filter(deployables, Predicates.instanceOf(EmbeddedView.class))), new Function<DeployableView, EmbeddedView>() {
+            @Nullable
+            @Override
+            public EmbeddedView apply(@Nullable DeployableView input) {
+                return (EmbeddedView) input;
+            }
+        });
+        boolean done = (remainder.size()==0);
+        while (!done) {
+            final Iterable<String> resultNames = getFQNs(result);
+            List<EmbeddedView> nextUp = Lists.newArrayList(Iterables.filter(remainder, new Predicate<EmbeddedView>() {
+                @Override
+                public boolean apply(EmbeddedView input) {
+                    return Iterables.contains(resultNames, input.parentName);
+                }
+            }));
+            if (nextUp.size()==0) {
+                throwNonDAGexception(remainder);
+            }
+            result.addAll(nextUp);
+            remainder.removeAll(nextUp);
+            done = (remainder.size()==0);
+        }
+        return result;
+    }
 
-    private void linkEmbeddedToParent(Map<String, ConfigurationItem> deployablesByFqn, ConfigurationItem deployable, final DeployableView deployableView,DeployitDescriptorRegistry registry, JenkinsDeploymentListener listener) {
-        final EmbeddedView embeddedView = (EmbeddedView)deployableView;
+    private List<String> getFQNs(Iterable<DeployableView> deployables) {
+        return Lists.newArrayList(Iterables.transform(deployables, new Function<DeployableView, String>() {
+            @Override
+            public String apply(DeployableView input) {
+                return input.getFullyQualifiedName();
+            }
+        }));
+    }
+
+    private void throwNonDAGexception(List<EmbeddedView> deployables) {
+        StringBuilder sb = new StringBuilder("The following embeddeds reference non-existing parents: ");
+        for (EmbeddedView ev : deployables) {
+            sb.append(ev.name).append("( -> ").append(ev.getParentName()).append("???) ");
+        }
+        throw new RuntimeException(sb.toString());
+    }
+
+
+    private void linkEmbeddedToParent(Map<String, ConfigurationItem> deployablesByFqn, ConfigurationItem deployable, final EmbeddedView embeddedView,DeployitDescriptorRegistry registry, JenkinsDeploymentListener listener) {
         ConfigurationItem parent = deployablesByFqn.get(embeddedView.getParentName());
         if (parent == null) {
             listener.error("Failed to find parent [" + embeddedView.getParentName() + "] that embeds [" + deployable + "]");
