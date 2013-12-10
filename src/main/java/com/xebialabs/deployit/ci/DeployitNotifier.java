@@ -27,18 +27,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Lists;
-import hudson.*;
+import java.util.*;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import com.xebialabs.deployit.ci.dar.RemotePackaging;
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
@@ -48,6 +44,7 @@ import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
 
+import hudson.*;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -302,7 +299,11 @@ public class DeployitNotifier extends Notifier {
         }
 
         public List<String> environments(final String credential) {
-            return getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
+            List<String> environments = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
+            List modifiableEnvironmentsList = new ArrayList(environments);
+
+            Collections.sort(modifiableEnvironmentsList);
+            return modifiableEnvironmentsList;
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
