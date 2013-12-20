@@ -29,6 +29,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
 import hudson.DescriptorExtensionList;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Describable;
@@ -48,8 +49,8 @@ public class JenkinsImportOptions implements Describable<JenkinsImportOptions> {
         return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
 
-    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener) {
-        return mode.getDarFileLocation(workspace, deploymentListener);
+    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
+        return mode.getDarFileLocation(workspace, deploymentListener, envVars);
     }
 
     public void setGeneratedDarLocation(File generatedDarLocation) {

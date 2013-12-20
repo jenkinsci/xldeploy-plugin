@@ -30,6 +30,7 @@ import com.google.common.io.Files;
 
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 
@@ -50,7 +51,7 @@ public class GeneratedLocation extends ImportLocation {
      * then returns temporary path. FilePath.cleanup() method should be used to delete all temporary files.
      */
     @Override
-    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener) {
+    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
         checkNotNull(generatedLocation, "The package has not been generated");
 
         if (!workspace.isRemote()) {
