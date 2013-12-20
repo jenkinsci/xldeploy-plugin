@@ -134,15 +134,17 @@ public class DeployitNotifier extends Notifier {
         //Import
         String importedVersion = "";
         if (importOptions != null) {
+            String resolvedDarFileLocation = "";
             try {
-                final String darFileLocation = importOptions.getDarFileLocation(build.getWorkspace(), deploymentListener);
-                deploymentListener.info(Messages.DeployitNotifier_import(darFileLocation));
-                ConfigurationItem uploadedPackage = getDeployitServer().importPackage(darFileLocation);
-                deploymentListener.info(Messages.DeployitNotifier_imported(darFileLocation));
+                final String darFileLocation = importOptions.getDarFileLocation(build.getWorkspace(), deploymentListener, envVars);
+                resolvedDarFileLocation = envVars.expand(darFileLocation);
+                deploymentListener.info(Messages.DeployitNotifier_import(resolvedDarFileLocation));
+                ConfigurationItem uploadedPackage = getDeployitServer().importPackage(resolvedDarFileLocation);
+                deploymentListener.info(Messages.DeployitNotifier_imported(resolvedDarFileLocation));
                 importedVersion = uploadedPackage.getName();
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
-                deploymentListener.error(Messages.DeployitNotifier_import_error(importOptions, e.getMessage()));
+                deploymentListener.error(Messages.DeployitNotifier_import_error(resolvedDarFileLocation, e.getMessage()));
                 return false;
             } finally {
                 importOptions.getMode().cleanup();
