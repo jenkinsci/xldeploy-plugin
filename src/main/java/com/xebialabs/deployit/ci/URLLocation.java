@@ -23,10 +23,13 @@
 
 package com.xebialabs.deployit.ci;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
+
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
@@ -40,7 +43,7 @@ public class URLLocation extends ImportLocation {
     }
 
     @Override
-    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener) {
+    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
         checkNotNull(emptyToNull(url), "URL is empty or null");
         return url;
     }
