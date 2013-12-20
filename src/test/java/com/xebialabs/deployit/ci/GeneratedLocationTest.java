@@ -31,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
 
@@ -62,20 +63,20 @@ public class GeneratedLocationTest {
     @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
         generatedLocation.setGeneratedLocation(new File("/tmp/test-local/asd.dar"));
-        assertThat(generatedLocation.getDarFileLocation(localFilePath, listener), is(format("%stmp%stest-local%sasd.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
+        assertThat(generatedLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("%stmp%stest-local%sasd.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
     }
 
     @Test
     public void shouldReturnLocalTempFileWhenWorkspaceIsRemote() {
         generatedLocation.setGeneratedLocation(new File("/tmp/test-remote/asd.dar"));
-        String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener);
+        String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
         assertThat(localDarLocation, not("/tmp/test-remote/asd.dar"));
     }
 
     @Test
     public void shouldCleanUpLocalTempFile() throws Exception {
         generatedLocation.setGeneratedLocation(new File("/tmp/test-remote/asd.dar"));
-        String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener);
+        String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
         File localDarFile = new File(localDarLocation);
         assertThat(localDarFile.exists(), is(true));
 

@@ -27,6 +27,7 @@ import java.io.File;
 
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
+import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
@@ -40,7 +41,7 @@ public abstract class ImportLocation implements Describable<ImportLocation> {
         return Jenkins.getInstance().getDescriptor(getClass());
     }
 
-    public abstract String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener) ;
+    public abstract String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) ;
 
     public void setGeneratedLocation(File generatedLocation) {
         this.generatedLocation = generatedLocation;
