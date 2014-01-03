@@ -27,9 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.common.collect.Lists;
 import hudson.*;
@@ -39,6 +37,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Ordering;
 
 import com.xebialabs.deployit.ci.dar.RemotePackaging;
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
@@ -302,7 +301,8 @@ public class DeployitNotifier extends Notifier {
         }
 
         public List<String> environments(final String credential) {
-            return getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
+            List<String> envs = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
+            return Ordering.natural().sortedCopy(envs);
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
