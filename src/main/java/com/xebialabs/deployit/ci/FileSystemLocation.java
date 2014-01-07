@@ -23,17 +23,15 @@
 
 package com.xebialabs.deployit.ci;
 
-import com.google.common.collect.Lists;
-import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-import hudson.Extension;
-import hudson.FilePath;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
+
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.emptyToNull;
@@ -51,13 +49,15 @@ public class FileSystemLocation extends ImportLocation {
     }
 
     @Override
-    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener) {
+    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
         checkNotNull(emptyToNull(location), "location is empty or null");
         FilePath root = (isNullOrEmpty(workingDirectory) ? workspace : new FilePath(new File(workingDirectory)));
+        String resolvedLocation = "";
         try {
-            return ArtifactView.findFileFromPattern(location, root, deploymentListener).getPath();
+            resolvedLocation = envVars.expand(location);
+            return ArtifactView.findFileFromPattern(resolvedLocation, root, deploymentListener).getPath();
         } catch (IOException exception) {
-            throw new RuntimeException(format("Unable to find DAR from %s in %s", location, root), exception);
+            throw new RuntimeException(format("Unable to find DAR from %s in %s", resolvedLocation, root), exception);
         }
     }
 

@@ -23,24 +23,22 @@
 
 package com.xebialabs.deployit.ci;
 
-import java.io.File;
+import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.remoting.VirtualChannel;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.remoting.VirtualChannel;
+import java.io.File;
 
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-public class GeneratedLocationTest {
+public class FileSystemLocationTest {
     private static final String FILE_SEPARATOR = File.separator;
 
     @Mock
@@ -51,36 +49,25 @@ public class GeneratedLocationTest {
 
     private FilePath remoteFilePath, localFilePath;
 
-    private GeneratedLocation generatedLocation = new GeneratedLocation();
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        remoteFilePath = new FilePath(channel, "/tmp/test-remote");
-        localFilePath = new FilePath(new File("/tmp/test-local"));
+        localFilePath = new FilePath(new File("./build/resources/test"));
     }
 
     @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
-        generatedLocation.setGeneratedLocation(new File("/tmp/test-local/asd.dar"));
-        assertThat(generatedLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("%stmp%stest-local%sasd.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
+        FileSystemLocation fileSystemLocation = new FileSystemLocation("test.dar","./build/resources/test");
+        assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("build%sresources%stest%stest.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
     }
 
-    @Test
-    public void shouldReturnLocalTempFileWhenWorkspaceIsRemote() {
-        generatedLocation.setGeneratedLocation(new File("/tmp/test-remote/asd.dar"));
-        String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
-        assertThat(localDarLocation, not("/tmp/test-remote/asd.dar"));
-    }
 
     @Test
-    public void shouldCleanUpLocalTempFile() throws Exception {
-        generatedLocation.setGeneratedLocation(new File("/tmp/test-remote/asd.dar"));
-        String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
-        File localDarFile = new File(localDarLocation);
-        assertThat(localDarFile.exists(), is(true));
+    public void shouldResolveEnvVarInPath() throws Exception {
+        EnvVars envVars = new EnvVars();
+        envVars.put("NAME","test");
+        FileSystemLocation fileSystemLocation = new FileSystemLocation("$NAME.dar","./build/resources/test");
+        assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, envVars), is(format("build%sresources%stest%stest.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
 
-        generatedLocation.cleanup();
-        assertThat(localDarFile.exists(), is(false));
     }
 }
