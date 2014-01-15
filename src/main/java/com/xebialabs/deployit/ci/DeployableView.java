@@ -71,7 +71,7 @@ public abstract class DeployableView implements Describable<DeployableView> {
 
     public ConfigurationItem toConfigurationItem(DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(getName()), "Name is required.");
-        ConfigurationItem deployable = registry.newInstance(type, getName());
+        ConfigurationItem deployable = registry.newInstance(type, envVars.expand(getName()));
         if (!isNullOrEmpty(tags)) {
             deployable.setProperty("tags", newHashSet(commaSeparatedListToList(tags)));
         }
