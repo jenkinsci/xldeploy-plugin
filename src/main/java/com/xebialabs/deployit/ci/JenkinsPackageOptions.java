@@ -73,9 +73,15 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         return deployables;
     }
 
-    public DeploymentPackage toDeploymentPackage(String applicationName, String version, DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
+    public DeploymentPackage toDeploymentPackage(String applicationName, String version, String orchestrator, String parallel, DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
         Application application = registry.newInstance(Application.class, applicationName);
         DeploymentPackage deploymentPackage = registry.newInstance(DeploymentPackage.class, version);
+        if (deploymentPackage.hasProperty("orchestrator")) {
+            deploymentPackage.setProperty("orchestrator", orchestrator);
+        }
+        if (deploymentPackage.hasProperty("parallelByContainer")) {
+            deploymentPackage.setProperty("parallelByContainer", parallel);
+        }
         deploymentPackage.setApplication(application);
         Map<String,ConfigurationItem> deployablesByFqn = newHashMap();
         List<DeployableView> sortedDeployables = sortDeployables(deployables);
