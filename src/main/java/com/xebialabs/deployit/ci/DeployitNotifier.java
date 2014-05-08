@@ -203,6 +203,8 @@ public class DeployitNotifier extends Notifier {
 
         private String deployitClientProxyUrl;
 
+        private int connectionPoolSize = 10;
+
         private List<Credential> credentials = newArrayList();
 
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
@@ -219,8 +221,10 @@ public class DeployitNotifier extends Notifier {
                 String serverUrl = credential.resolveServerUrl(deployitServerUrl);
                 String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
 
-                credentialServerMap.put(credential.name,
-                        DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password.getPlainText()));
+                DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password.getPlainText());
+                int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : 10;
+                deployitServer.setConnectionPoolSize(newConnectionPoolSize);
+                credentialServerMap.put(credential.name, deployitServer);
             }
         }
 
@@ -286,6 +290,8 @@ public class DeployitNotifier extends Notifier {
         public String getDeployitClientProxyUrl() {
             return deployitClientProxyUrl;
         }
+
+        public int getConnectionPoolSize() {return  connectionPoolSize; }
 
         public ListBoxModel doFillCredentialItems() {
             ListBoxModel m = new ListBoxModel();

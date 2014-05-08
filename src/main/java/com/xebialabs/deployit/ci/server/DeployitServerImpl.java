@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
+
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
@@ -38,6 +40,13 @@ public class DeployitServerImpl implements DeployitServer {
 
     private DeployitCommunicator getCommunicator() {
             return RemoteBooter.boot(booterConfig);
+    }
+
+    @Override
+    public void setConnectionPoolSize(final int poolSize) {
+        PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) getCommunicator().getHttpClientHolder().getHttpClient().getConnectionManager();
+        connectionManager.setDefaultMaxPerRoute(poolSize);
+        connectionManager.setMaxTotal(poolSize);
     }
 
     @Override
