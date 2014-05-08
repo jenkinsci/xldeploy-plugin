@@ -6,7 +6,9 @@
         <f:entry title="${%Default Proxy Url}" field="deployitClientProxyUrl">
             <f:textbox/>
         </f:entry>
-
+        <f:entry title="${%Connection Pool Size}" field="connectionPoolSize">
+            <f:textbox/>
+        </f:entry>
         <f:entry title="Credentials" field="credentials">
             <f:repeatable field="credentials" minimum="${1}">
                 <table style="width:100%">

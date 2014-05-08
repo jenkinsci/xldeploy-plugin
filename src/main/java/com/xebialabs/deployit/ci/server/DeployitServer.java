@@ -10,6 +10,9 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 
 public interface DeployitServer {
+
+    void setConnectionPoolSize(int poolSize);
+
     List<String> search(String type);
 
     List<String> search(String type, String namePattern);
