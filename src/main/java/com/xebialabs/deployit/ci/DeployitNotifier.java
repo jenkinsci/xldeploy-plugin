@@ -203,6 +203,8 @@ public class DeployitNotifier extends Notifier {
 
         private String deployitClientProxyUrl;
 
+        private int connectionPoolSize = 10;
+
         private List<Credential> credentials = newArrayList();
 
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
@@ -219,8 +221,10 @@ public class DeployitNotifier extends Notifier {
                 String serverUrl = credential.resolveServerUrl(deployitServerUrl);
                 String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
 
-                credentialServerMap.put(credential.name,
-                        DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password.getPlainText()));
+                DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password.getPlainText());
+                int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : 10;
+                deployitServer.setConnectionPoolSize(newConnectionPoolSize);
+                credentialServerMap.put(credential.name, deployitServer);
             }
         }
 
@@ -229,6 +233,10 @@ public class DeployitNotifier extends Notifier {
             //this method is called when the global form is submitted.
             deployitServerUrl = json.get("deployitServerUrl").toString();
             deployitClientProxyUrl = json.get("deployitClientProxyUrl").toString();
+            String connectionPoolSizeString = json.get("connectionPoolSize").toString();
+            if(!Strings.isNullOrEmpty(connectionPoolSizeString)) {
+                connectionPoolSize = Integer.parseInt(connectionPoolSizeString);
+            }
             credentials = req.bindJSONToList(Credential.class, json.get("credentials"));
             save();  //serialize to xml
             mapCredentialsByName();
@@ -268,6 +276,22 @@ public class DeployitNotifier extends Notifier {
             return validateOptionalUrl(deployitClientProxyUrl);
         }
 
+        public FormValidation doCheckConnectionPoolSize(@QueryParameter String connectionPoolSize) {
+            if(Strings.isNullOrEmpty(connectionPoolSize)) {
+                return error("Connection pool size is required.");
+            }
+            try {
+                Integer value = Integer.parseInt(connectionPoolSize);
+                if (value <= 0) {
+                    return error("Connection pool size may not be negative or zero.");
+                }
+            } catch (NumberFormatException e) {
+                return error("%s is not a valid integer.", connectionPoolSize);
+            }
+
+            return ok();
+        }
+
         public FormValidation doReloadTypes(@QueryParameter String credential) {
             DeployitServer deployitServer = getDeployitServer(credential);
             deployitServer.getDescriptorRegistry().reload();
@@ -286,6 +310,8 @@ public class DeployitNotifier extends Notifier {
         public String getDeployitClientProxyUrl() {
             return deployitClientProxyUrl;
         }
+
+        public int getConnectionPoolSize() {return  connectionPoolSize; }
 
         public ListBoxModel doFillCredentialItems() {
             ListBoxModel m = new ListBoxModel();

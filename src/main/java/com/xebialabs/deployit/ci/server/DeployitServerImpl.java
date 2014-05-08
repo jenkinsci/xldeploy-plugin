@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.List;
 
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
@@ -29,6 +32,7 @@ public class DeployitServerImpl implements DeployitServer {
 
     private BooterConfig booterConfig;
     private DeployitDescriptorRegistry descriptorRegistry;
+    private int poolSize;
 
     DeployitServerImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
@@ -37,7 +41,25 @@ public class DeployitServerImpl implements DeployitServer {
     }
 
     private DeployitCommunicator getCommunicator() {
-            return RemoteBooter.boot(booterConfig);
+        DeployitCommunicator communicator = RemoteBooter.boot(booterConfig);
+        setHttpClientOptions(communicator);
+        return communicator;
+    }
+
+    private DeployitCommunicator setHttpClientOptions(final DeployitCommunicator communicator) {
+        final HttpClient httpClient = communicator.getHttpClientHolder().getHttpClient();
+
+        // set route table size
+        PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) httpClient.getConnectionManager();
+        connectionManager.setDefaultMaxPerRoute(poolSize);
+        connectionManager.setMaxTotal(poolSize);
+
+        return communicator;
+    }
+
+    @Override
+    public void setConnectionPoolSize(final int poolSize) {
+        this.poolSize = poolSize;
     }
 
     @Override
@@ -65,7 +87,7 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public ConfigurationItem importPackage(final String darFile) {
-        DeployitCommunicator communicator = new DeployitCommunicator(booterConfig);
+        DeployitCommunicator communicator = newCommunicator();
         ConfigurationItem ci = new DeployitRemoteClient(communicator).importPackage(darFile);
         //do not use shutdown on communicator because we don't want to shutdown the registry.
         communicator.getHttpClientHolder().getHttpClient().getConnectionManager().shutdown();
@@ -82,7 +104,7 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public DeployitCommunicator newCommunicator() {
-        return new DeployitCommunicator(booterConfig);
+        return setHttpClientOptions(new DeployitCommunicator(booterConfig));
     }
 
     @Override
