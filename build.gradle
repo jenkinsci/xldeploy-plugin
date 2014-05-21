@@ -101,9 +101,9 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit.engine:packager:3.9.4"
-    compile "com.xebialabs.deployit:engine-api:3.9.3"
-    compile "com.xebialabs.deployit.engine:remote-booter:3.9.4"
+    compile "com.xebialabs.deployit.engine:packager:3.10.0"
+    compile "com.xebialabs.deployit:engine-api:3.10.0"
+    compile "com.xebialabs.deployit.engine:remote-booter:3.10.0"
     compile "org.jdom:jdom2:2.0.5"
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'

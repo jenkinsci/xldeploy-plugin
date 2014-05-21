@@ -174,7 +174,7 @@ public class DeployCommand {
                 sb.append(stepInfoMessage);
         }
 
-        if (TaskExecutionState.STOPPED.equals(taskState.getState()))
+        if (taskState.getState().isExecutionHalted())
             throw new IllegalStateException(format("Errors when executing task %s: %s", taskId, sb));
     }
 
@@ -184,15 +184,12 @@ public class DeployCommand {
         boolean done = false;
         TaskState ti;
 
-        Set<TaskExecutionState> doneStates = newHashSet(TaskExecutionState.DONE, TaskExecutionState.EXECUTED,
-                TaskExecutionState.STOPPED, TaskExecutionState.CANCELLED);
-
         while (!done) {
             ti = taskService.getTask(taskId);
             TaskExecutionState state = ti.getState();
             listener.debug("Task state: " + state.toString());
 
-            done = doneStates.contains(state);
+            done = state.isPassiveAfterExecuting();
 
             try {
                 Thread.sleep(1000);
