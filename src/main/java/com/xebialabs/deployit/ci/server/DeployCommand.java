@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.base.Throwables;
+
 import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.engine.api.DeploymentService;
@@ -187,16 +189,27 @@ public class DeployCommand {
         Set<TaskExecutionState> doneStates = newHashSet(TaskExecutionState.DONE, TaskExecutionState.EXECUTED,
                 TaskExecutionState.STOPPED, TaskExecutionState.CANCELLED);
 
+        int retryCount = 1;
         while (!done) {
-            ti = taskService.getTask(taskId);
-            TaskExecutionState state = ti.getState();
-            listener.debug("Task state: " + state.toString());
-
-            done = doneStates.contains(state);
+            try {
+                ti = taskService.getTask(taskId);
+                TaskExecutionState state = ti.getState();
+                listener.debug("Task state: " + state.toString());
+                done = doneStates.contains(state);
+                retryCount = 1;
+            } catch (Exception e) {
+                if (retryCount == 6) {      //fail after 5 consecutive errors.
+                    Throwables.propagate(e);
+                } else {
+                    listener.info("Failed to get task status. Error message: " + Throwables.getRootCause(e).getMessage());
+                    listener.info("Will attempt retry " + retryCount + " of 5 in one second.");
+                    retryCount++;
+                }
+            }
 
             try {
-                Thread.sleep(1000);
                 listener.debug("Waiting for task to be done...");
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

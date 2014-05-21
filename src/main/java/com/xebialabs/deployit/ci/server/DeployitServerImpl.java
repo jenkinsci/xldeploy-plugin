@@ -6,6 +6,7 @@ import java.util.List;
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
 import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,10 @@ public class DeployitServerImpl implements DeployitServer {
     }
 
     private DeployitCommunicator setHttpClientOptions(final DeployitCommunicator communicator) {
-        final HttpClient httpClient = communicator.getHttpClientHolder().getHttpClient();
+        final DefaultHttpClient httpClient = (DefaultHttpClient) communicator.getHttpClientHolder().getHttpClient();
+
+        // set missing authorization header if missing
+        httpClient.addRequestInterceptor(new PreemptiveAuthenticationInterceptor());
 
         // set route table size
         PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) httpClient.getConnectionManager();
