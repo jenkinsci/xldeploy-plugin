@@ -63,9 +63,10 @@ buildscript {
 
 jenkinsPlugin {
     coreVersion = '1.509.1' // we need to support LTS versions
+    shortName = "deployit-plugin" // short name of the plugin is the ID that uniquely identifies a plugin
     displayName = "XebiaLabs XL Deploy Plugin"
-    url = 'https://wiki.jenkins-ci.org/display/JENKINS/Deployit+Plugin'
-    gitHubUrl = 'https://github.com/jenkinsci/deployit-plugin'
+    url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Deploy+Plugin'
+    gitHubUrl = 'https://github.com/jenkinsci/xldeploy-plugin'
 
 
     developers {
