@@ -1,8 +1,8 @@
 /**
- * Copyright (c) 2013, XebiaLabs B.V., All rights reserved.
+ * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
  *
  *
- * The Deployit plugin for Jenkins is licensed under the terms of the GPLv2
+ * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
@@ -295,7 +295,7 @@ public class DeployitNotifier extends Notifier {
         public FormValidation doReloadTypes(@QueryParameter String credential) {
             DeployitServer deployitServer = getDeployitServer(credential);
             deployitServer.getDescriptorRegistry().reload();
-            return ok("Types reloaded from Deployit version " + deployitServer.getServerInfo().getVersion() +
+            return ok("Types reloaded from XL Deploy version " + deployitServer.getServerInfo().getVersion() +
                     " at " + deployitServer.getBooterConfig().getUrl());
         }
 

@@ -30,7 +30,7 @@
 
     <f:block>
         <table width="100%">
-            <f:optionalBlock field="importOptions" checked="${instance.importOptions != null}" title="Publish package to Deployit">
+            <f:optionalBlock field="importOptions" checked="${instance.importOptions != null}" title="Publish package to XL Deploy">
                 <j:set var="field" value="importOptions"/>
 
                 <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>

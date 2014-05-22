@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
-import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.slf4j.Logger;

@@ -1,8 +1,8 @@
 /**
- * Copyright (c) 2013, XebiaLabs B.V., All rights reserved.
+ * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
  *
  *
- * The Deployit plugin for Jenkins is licensed under the terms of the GPLv2
+ * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
@@ -218,12 +218,12 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
                 ServerInfo serverInfo = deployitServer.getServerInfo();
                 deployitServer.newCommunicator(); // throws IllegalStateException if creds invalid
-                return FormValidation.ok("Your Deployit instance [%s] is alive, and your credentials are valid!", serverInfo.getVersion());
+                return FormValidation.ok("Your XL Deploy instance [%s] is alive, and your credentials are valid!", serverInfo.getVersion());
             } catch(IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
-                return FormValidation.error("Deployit configuration is not valid! %s", e.getMessage());
+                return FormValidation.error("XL Deploy configuration is not valid! %s", e.getMessage());
             }
         }
     }
