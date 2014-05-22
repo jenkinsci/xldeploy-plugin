@@ -21,7 +21,6 @@ import com.xebialabs.deployit.plugin.api.udm.base.*;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.collect.Sets.newLinkedHashSet;
-import static java.util.EnumSet.of;
 
 public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistry {
 
@@ -201,7 +200,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         return FluentIterable.from(getAllDeployableDescriptors())
                 .filter(descriptorsWithType)
                 .transform(DESCRIPTOR_TO_TYPE_NAME)
-                .toSortedImmutableList(Ordering.natural());
+                .toSortedList(Ordering.natural());
     }
 
     @Override
@@ -231,7 +230,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         return FluentIterable.from(descriptor.getPropertyDescriptors())
                 .filter(editablePropertyDescriptors)
                 .transform(PROPERTY_DESCRIPTOR_TO_NAME)
-                .toSortedImmutableList(Ordering.natural());
+                .toSortedList(Ordering.natural());
     }
 
     @Override

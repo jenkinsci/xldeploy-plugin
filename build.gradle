@@ -2,7 +2,7 @@
  * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
  *
  *
- * The Deployit plugin for Jenkins is licensed under the terms of the GPLv2
+ * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
@@ -22,8 +22,8 @@
  */
 
 group = "com.xebialabs.deployit.ci"
-version = "3.9.7-SNAPSHOT"
-description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs Deployit&lt;/a&gt;."
+version = "4.0.0-SNAPSHOT"
+description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs XL Deploy&lt;/a&gt;."
 
 apply plugin: 'eclipse'
 apply plugin: 'idea'
@@ -63,7 +63,7 @@ buildscript {
 
 jenkinsPlugin {
     coreVersion = '1.509.1' // we need to support LTS versions
-    displayName = "XebiaLabs Deployit Plugin"
+    displayName = "XebiaLabs XL Deploy Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/Deployit+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/deployit-plugin'
 
@@ -87,6 +87,7 @@ configurations {
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
 }
 
+def xlPlatformVersion = "4.0.0"
 def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
 // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 
@@ -101,9 +102,9 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit.engine:packager:3.9.4"
-    compile "com.xebialabs.deployit:engine-api:3.9.3"
-    compile "com.xebialabs.deployit.engine:remote-booter:3.9.4"
+    compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
+    compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
+    compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'

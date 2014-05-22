@@ -3,7 +3,6 @@ package com.xebialabs.deployit.ci.server;
 import java.text.SimpleDateFormat;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Throwables;
@@ -22,7 +21,6 @@ import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.validation.ValidationMessage;
 
 import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 
 public class DeployCommand {
@@ -176,7 +174,7 @@ public class DeployCommand {
                 sb.append(stepInfoMessage);
         }
 
-        if (TaskExecutionState.STOPPED.equals(taskState.getState()))
+        if (taskState.getState().isExecutionHalted())
             throw new IllegalStateException(format("Errors when executing task %s: %s", taskId, sb));
     }
 
@@ -186,16 +184,13 @@ public class DeployCommand {
         boolean done = false;
         TaskState ti;
 
-        Set<TaskExecutionState> doneStates = newHashSet(TaskExecutionState.DONE, TaskExecutionState.EXECUTED,
-                TaskExecutionState.STOPPED, TaskExecutionState.CANCELLED);
-
         int retryCount = 1;
         while (!done) {
             try {
                 ti = taskService.getTask(taskId);
                 TaskExecutionState state = ti.getState();
                 listener.debug("Task state: " + state.toString());
-                done = doneStates.contains(state);
+                done = state.isPassiveAfterExecuting();
                 retryCount = 1;
             } catch (Exception e) {
                 if (retryCount == 6) {      //fail after 5 consecutive errors.
