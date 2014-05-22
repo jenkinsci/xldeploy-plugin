@@ -35,6 +35,9 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import hudson.util.VersionNumber;
+import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -218,6 +221,14 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
                 ServerInfo serverInfo = deployitServer.getServerInfo();
                 deployitServer.newCommunicator(); // throws IllegalStateException if creds invalid
+
+                final VersionNumber pluginVersion = Jenkins.getInstance().getPlugin("deployit-plugin").getWrapper().getVersionNumber();
+                final String serverVersion = serverInfo.getVersion();
+                String major = serverVersion.substring(0, serverVersion.indexOf("."));
+                if(pluginVersion.isNewerThan(new VersionNumber(major + ".*.*"))) {
+                    return FormValidation.error("Plugin version [%s] is not compatible with XL Deploy server version [%s]. Please consider upgrading.", pluginVersion.toString(), serverVersion);
+                }
+
                 return FormValidation.ok("Your XL Deploy instance [%s] is alive, and your credentials are valid!", serverInfo.getVersion());
             } catch(IllegalStateException e) {
                 return FormValidation.error(e.getMessage());

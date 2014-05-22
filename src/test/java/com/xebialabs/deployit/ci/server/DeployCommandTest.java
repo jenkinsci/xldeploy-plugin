@@ -33,6 +33,7 @@ import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.engine.api.DeploymentService;
 import com.xebialabs.deployit.engine.api.TaskService;
 import com.xebialabs.deployit.engine.api.dto.Deployment;
+import com.xebialabs.deployit.engine.api.execution.TaskExecutionState;
 import com.xebialabs.deployit.engine.api.execution.TaskState;
 
 import hudson.model.StreamBuildListener;
@@ -57,6 +58,7 @@ public class DeployCommandTest {
         when(deploymentService.createTask(deployment)).thenReturn("123");
 
         TaskState taskState = mock(TaskState.class);
+        when(taskState.getState()).thenReturn(TaskExecutionState.DONE);
 
         when(taskService.getTask("123"))
                 .thenReturn(taskState)
