@@ -18,7 +18,13 @@ The **XL Deploy Jenkins Plugin** enables 3 post-build actions: "Package your app
 
 ### Requirements ###
 
-* **Jenkins**: Jenkins **LTS** version {{supportedLtsVersion}} or higher.
+* **XL Deploy requirements**
+	* **XL Deploy**: version 4.0+
+* **Jenkins requirements**
+    * **Jenkins**: Jenkins **LTS** version {{supportedLtsVersion}} or higher
+    * **Java**: version 7
+
+**Important: Please note that from version 4.0.0 the plugin requires the Jenkins server to be run using Java 7 or higher.**
 
 ### Package your application ###
 
@@ -50,7 +56,34 @@ In the Job Configuration page, choose *Post-build Actions* -> *Add post-build ac
 
 If you practice continuous delivery, it may be useful to increase the version automatically after each build. For this you can use one of Jenkins environment variables in the Version field. For example ${BUILD_NUMBER}. To see the complete list of available variables you can go to http://\<jenkins-host\>:\<jenkins-port\>/env-vars.html
 
+**Optimize the plugin for parallel running deployment jobs**
+
+If you have many deployment jobs running in parallel you can tweak the connection settings by increasing the connection pool size on the Global configuration screen. The default connection pool size is 10.
+
 ## Release notes ##
+
+### Version 4.0.0 ###
+
+Improvements:
+
+* [DEPL-5587] - Add compatibility check of Jenkins plugin with XL Deploy server
+
+Bug Fixes:
+
+* [DEPL-5863] - Jenkins plugin throws random error (Error status 401 Unauthorized) during deployment
+* [DEPL-5864] - Jenkins plugin fails with "Timeout waiting for connection from pool" when used in parallel pipeline
+
+### Version 3.9.6 ###
+
+Improvements:
+
+* Evaluate environment variables when computing the deployable name and resolving an artifact's location.
+* Sort environment names in drop down list.
+
+Bug Fixes:
+
+* Correct handling of recursive embedded deployables.
+* Correct handling of configuration item references in the job configuration.
 
 ### Version 3.9.4 ###
 
