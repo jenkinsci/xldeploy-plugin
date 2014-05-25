@@ -49,20 +49,16 @@ public class FileSystemLocationTest {
 
     private FilePath remoteFilePath, localFilePath;
 
-    @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         localFilePath = new FilePath(new File("./build/resources/test"));
     }
 
-    @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
         FileSystemLocation fileSystemLocation = new FileSystemLocation("test.dar","./build/resources/test");
         assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("build%sresources%stest%stest.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
     }
 
-
-    @Test
     public void shouldResolveEnvVarInPath() throws Exception {
         EnvVars envVars = new EnvVars();
         envVars.put("NAME","test");

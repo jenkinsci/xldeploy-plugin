@@ -25,7 +25,6 @@ package com.xebialabs.deployit.ci.server;
 
 import java.nio.charset.Charset;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
@@ -45,8 +44,6 @@ import static org.mockito.Mockito.when;
 
 public class DeployCommandTest {
 
-    @Test
-    @Ignore("Temp ignore to fix failing cloudbees build")
     public void shouldRetryTaskStatusCheckFiveTimesAfterExceptionOccurs() {
         DeploymentService deploymentService = mock(DeploymentService.class);
         TaskService taskService = mock(TaskService.class);
