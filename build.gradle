@@ -63,9 +63,10 @@ buildscript {
 
 jenkinsPlugin {
     coreVersion = '1.509.1' // we need to support LTS versions
+    shortName = "deployit-plugin" // short name of the plugin is the ID that uniquely identifies a plugin
     displayName = "XebiaLabs Deployit Plugin"
-    url = 'https://wiki.jenkins-ci.org/display/JENKINS/Deployit+Plugin'
-    gitHubUrl = 'https://github.com/jenkinsci/deployit-plugin'
+    url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Deploy+Plugin'
+    gitHubUrl = 'https://github.com/jenkinsci/xldeploy-plugin'
 
 
     developers {
@@ -101,9 +102,9 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit.engine:packager:3.9.4"
-    compile "com.xebialabs.deployit:engine-api:3.9.3"
-    compile "com.xebialabs.deployit.engine:remote-booter:3.9.4"
+    compile "com.xebialabs.deployit.engine:packager:3.9.6"
+    compile "com.xebialabs.deployit:engine-api:3.9.4"
+    compile "com.xebialabs.deployit.engine:remote-booter:3.9.6"
     compile "org.jdom:jdom2:2.0.5"
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'
