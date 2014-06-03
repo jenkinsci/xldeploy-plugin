@@ -54,9 +54,11 @@ public class DeployitServerImpl implements DeployitServer {
         httpClient.addRequestInterceptor(new PreemptiveAuthenticationInterceptor());
 
         // set route table size
-        PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) httpClient.getConnectionManager();
-        connectionManager.setDefaultMaxPerRoute(poolSize);
-        connectionManager.setMaxTotal(poolSize);
+        if(poolSize > 0) {
+            PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) httpClient.getConnectionManager();
+            connectionManager.setDefaultMaxPerRoute(poolSize);
+            connectionManager.setMaxTotal(poolSize);
+        }
 
         return communicator;
     }
