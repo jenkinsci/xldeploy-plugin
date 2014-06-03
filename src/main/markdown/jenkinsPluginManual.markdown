@@ -52,6 +52,29 @@ If you practice continuous delivery, it may be useful to increase the version au
 
 ## Release notes ##
 
+### Version 3.9.7 ###
+
+Improvements:
+
+* [DEPL-5987] - Add support for XL Deploy server 4.0.0
+
+Bug Fixes:
+
+* [DEPL-5863] - Jenkins plugin throws random error (Error status 401 Unauthorized) during deployment
+* [DEPL-5864] - Jenkins plugin fails with "Timeout waiting for connection from pool" when used in parallel pipeline
+
+### Version 3.9.6 ###
+
+Improvements:
+
+* Evaluate environment variables when computing the deployable name and resolving an artifact's location.
+* Sort environment names in drop down list.
+
+Bug Fixes:
+
+* Correct handling of recursive embedded deployables.
+* Correct handling of configuration item references in the job configuration.
+
 ### Version 3.9.4 ###
 
 Improvements:
