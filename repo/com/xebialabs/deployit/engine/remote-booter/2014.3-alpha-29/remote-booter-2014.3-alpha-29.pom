@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.xebialabs.deployit.engine</groupId>
   <artifactId>remote-booter</artifactId>
-  <version>4.0.0</version>
+  <version>2014.3-alpha-29</version>
   <dependencies>
     <dependency>
       <groupId>commons-codec</groupId>
@@ -165,7 +165,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
-      <version>4.2.3</version>
+      <version>4.3.2</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -737,7 +737,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.2.3</version>
+      <version>4.3.3</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -841,7 +841,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpmime</artifactId>
-      <version>4.2.3</version>
+      <version>4.3.2</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>

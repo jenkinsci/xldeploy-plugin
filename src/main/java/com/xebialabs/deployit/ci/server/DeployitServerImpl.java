@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
@@ -41,24 +39,12 @@ public class DeployitServerImpl implements DeployitServer {
     }
 
     private DeployitCommunicator getCommunicator() {
-        DeployitCommunicator communicator = RemoteBooter.boot(booterConfig);
-        setHttpClientOptions(communicator);
-        return communicator;
-    }
-
-    private DeployitCommunicator setHttpClientOptions(final DeployitCommunicator communicator) {
-        final DefaultHttpClient httpClient = (DefaultHttpClient) communicator.getHttpClientHolder().getHttpClient();
-
-        // set missing authorization header if missing
-        httpClient.addRequestInterceptor(new PreemptiveAuthenticationInterceptor());
-
-        // set route table size
-        if(poolSize > 0) {
-            PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) httpClient.getConnectionManager();
-            connectionManager.setDefaultMaxPerRoute(poolSize);
-            connectionManager.setMaxTotal(poolSize);
-        }
-
+        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
+                .withConnectionPoolSize(poolSize)
+                .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
+                .withSocketTimeout(10000)
+                .build();
+        DeployitCommunicator communicator = RemoteBooter.boot(newBooterConfig);
         return communicator;
     }
 
@@ -92,10 +78,8 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public ConfigurationItem importPackage(final String darFile) {
-        DeployitCommunicator communicator = newCommunicator();
+        DeployitCommunicator communicator = getCommunicator();
         ConfigurationItem ci = new DeployitRemoteClient(communicator).importPackage(darFile);
-        //do not use shutdown on communicator because we don't want to shutdown the registry.
-        communicator.getHttpClientHolder().getHttpClient().getConnectionManager().shutdown();
         return ci;
     }
 
@@ -109,7 +93,12 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public DeployitCommunicator newCommunicator() {
-        return setHttpClientOptions(new DeployitCommunicator(booterConfig));
+        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
+                .withConnectionPoolSize(poolSize)
+                .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
+                .withSocketTimeout(10000)
+                .build();
+        return new DeployitCommunicator(newBooterConfig);
     }
 
     @Override
