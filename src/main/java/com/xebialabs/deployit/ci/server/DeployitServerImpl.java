@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
@@ -30,6 +28,7 @@ public class DeployitServerImpl implements DeployitServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployitServerImpl.class);
 
+    private static final int SOCKET_TIMEOUT = 60000;
     private BooterConfig booterConfig;
     private DeployitDescriptorRegistry descriptorRegistry;
     private int poolSize;
@@ -41,24 +40,12 @@ public class DeployitServerImpl implements DeployitServer {
     }
 
     private DeployitCommunicator getCommunicator() {
-        DeployitCommunicator communicator = RemoteBooter.boot(booterConfig);
-        setHttpClientOptions(communicator);
-        return communicator;
-    }
-
-    private DeployitCommunicator setHttpClientOptions(final DeployitCommunicator communicator) {
-        final DefaultHttpClient httpClient = (DefaultHttpClient) communicator.getHttpClientHolder().getHttpClient();
-
-        // set missing authorization header if missing
-        httpClient.addRequestInterceptor(new PreemptiveAuthenticationInterceptor());
-
-        // set route table size
-        if(poolSize > 0) {
-            PoolingClientConnectionManager connectionManager = (PoolingClientConnectionManager) httpClient.getConnectionManager();
-            connectionManager.setDefaultMaxPerRoute(poolSize);
-            connectionManager.setMaxTotal(poolSize);
-        }
-
+        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
+                .withConnectionPoolSize(poolSize)
+                .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
+                .withSocketTimeout(SOCKET_TIMEOUT)
+                .build();
+        DeployitCommunicator communicator = RemoteBooter.boot(newBooterConfig);
         return communicator;
     }
 
@@ -77,7 +64,7 @@ public class DeployitServerImpl implements DeployitServer {
         LOGGER.debug("search " + type);
         try {
 
-            List<ConfigurationItemId> result = getCommunicator().getProxies().getRepositoryService().query(getDescriptorRegistry().typeForName(type), null, namePattern, null, null, 0, -1);
+            List<ConfigurationItemId> result = getCommunicator().getProxies().getRepositoryService().query(getDescriptorRegistry().typeForName(type), null, null, namePattern, null, null, 0, -1);
             return Lists.transform(result, new Function<ConfigurationItemId, String>() {
                 @Override
                 public String apply(ConfigurationItemId input) {
@@ -92,10 +79,8 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public ConfigurationItem importPackage(final String darFile) {
-        DeployitCommunicator communicator = newCommunicator();
+        DeployitCommunicator communicator = getCommunicator();
         ConfigurationItem ci = new DeployitRemoteClient(communicator).importPackage(darFile);
-        //do not use shutdown on communicator because we don't want to shutdown the registry.
-        communicator.getHttpClientHolder().getHttpClient().getConnectionManager().shutdown();
         return ci;
     }
 
@@ -109,7 +94,12 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public DeployitCommunicator newCommunicator() {
-        return setHttpClientOptions(new DeployitCommunicator(booterConfig));
+        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
+                .withConnectionPoolSize(poolSize)
+                .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
+                .withSocketTimeout(SOCKET_TIMEOUT)
+                .build();
+        return new DeployitCommunicator(newBooterConfig);
     }
 
     @Override

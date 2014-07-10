@@ -88,7 +88,8 @@ configurations {
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
 }
 
-def xlPlatformVersion = "4.0.0"
+def xlDeployVersion = "4.1.0-beta-1"
+def xlPlatformVersion = "2014.3"
 def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
 // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 
@@ -103,7 +104,7 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
+    compile "com.xebialabs.deployit.engine:packager:$xlDeployVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
