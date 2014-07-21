@@ -77,7 +77,7 @@ public class DeployitServerImpl implements DeployitServer {
         LOGGER.debug("search " + type);
         try {
 
-            List<ConfigurationItemId> result = getCommunicator().getProxies().getRepositoryService().query(getDescriptorRegistry().typeForName(type), null, namePattern, null, null, 0, -1);
+            List<ConfigurationItemId> result = getCommunicator().getProxies().getRepositoryService().query(getDescriptorRegistry().typeForName(type), null, null, namePattern, null, null, 0, -1);
             return Lists.transform(result, new Function<ConfigurationItemId, String>() {
                 @Override
                 public String apply(ConfigurationItemId input) {

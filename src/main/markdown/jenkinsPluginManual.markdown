@@ -62,6 +62,12 @@ If you have many deployment jobs running in parallel you can tweak the connectio
 
 ## Release notes ##
 
+### Version 4.0.1 ###
+
+Bug Fixes:
+
+* [DEPL-6076] - Invalid file.Folder or www.WebContent artifact created from ZIP file
+
 ### Version 4.0.0 ###
 
 Improvements:

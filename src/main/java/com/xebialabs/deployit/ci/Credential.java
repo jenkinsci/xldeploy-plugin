@@ -222,13 +222,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 ServerInfo serverInfo = deployitServer.getServerInfo();
                 deployitServer.newCommunicator(); // throws IllegalStateException if creds invalid
 
-                final VersionNumber pluginVersion = Jenkins.getInstance().getPlugin("deployit-plugin").getWrapper().getVersionNumber();
-                final String serverVersion = serverInfo.getVersion();
-                String major = serverVersion.substring(0, serverVersion.indexOf("."));
-                if(pluginVersion.isNewerThan(new VersionNumber(major + ".*.*"))) {
-                    return FormValidation.error("Plugin version [%s] is not compatible with XL Deploy server version [%s]. Please consider upgrading.", pluginVersion.toString(), serverVersion);
-                }
-
                 return FormValidation.ok("Your XL Deploy instance [%s] is alive, and your credentials are valid!", serverInfo.getVersion());
             } catch(IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
