@@ -52,6 +52,12 @@ If you practice continuous delivery, it may be useful to increase the version au
 
 ## Release notes ##
 
+### Version 3.9.8 ###
+
+Bug Fixes:
+
+* [DEPL-6076] - Invalid file.Folder or www.WebContent artifact created from ZIP file
+
 ### Version 3.9.7 ###
 
 Improvements:

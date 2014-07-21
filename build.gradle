@@ -22,7 +22,7 @@
  */
 
 group = "com.xebialabs.deployit.ci"
-version = "3.9.8-SNAPSHOT"
+version = "3.9.8"
 description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs Deployit&lt;/a&gt;."
 
 apply plugin: 'eclipse'
@@ -102,9 +102,9 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit.engine:packager:3.9.6"
+    compile "com.xebialabs.deployit.engine:packager:3.9.7"
     compile "com.xebialabs.deployit:engine-api:3.9.4"
-    compile "com.xebialabs.deployit.engine:remote-booter:3.9.6"
+    compile "com.xebialabs.deployit.engine:remote-booter:3.9.7"
     compile "org.jdom:jdom2:2.0.5"
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'
