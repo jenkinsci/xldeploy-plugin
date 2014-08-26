@@ -47,7 +47,6 @@ import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
 
-import hudson.*;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -157,7 +156,8 @@ public class DeployitNotifier extends Notifier {
 
         //Deploy
         if (deploymentOptions != null) {
-            deploymentListener.info(Messages.DeployitNotifier_startDeployment(resolvedApplication, deploymentOptions.environment));
+            String resolvedEnvironment = envVars.expand(deploymentOptions.environment);
+            deploymentListener.info(Messages.DeployitNotifier_startDeployment(resolvedApplication, resolvedEnvironment));
             String packageVersion = null;
             switch (deploymentOptions.versionKind) {
                 case Other:
@@ -172,15 +172,15 @@ public class DeployitNotifier extends Notifier {
                     break;
             }
             final String versionId = Joiner.on("/").join(resolvedApplication, packageVersion);
-            deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, deploymentOptions.environment));
+            deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, resolvedEnvironment));
             try {
-                getDeployitServer().deploy(versionId, deploymentOptions.environment, deploymentOptions, deploymentListener);
+                getDeployitServer().deploy(versionId, resolvedEnvironment, deploymentOptions, deploymentListener);
             } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
                 deploymentListener.error(Messages._DeployitNotifier_errorDeploy(e.getMessage()));
                 return false;
             }
-            deploymentListener.info(Messages.DeployitNotifier_endDeployment(resolvedApplication, deploymentOptions.environment));
+            deploymentListener.info(Messages.DeployitNotifier_endDeployment(resolvedApplication, resolvedEnvironment));
         }
         return true;
     }
@@ -338,15 +338,7 @@ public class DeployitNotifier extends Notifier {
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
-            String resolvedName = null;
-
-            try {
-                resolvedName = project.getEnvironment(null, TaskListener.NULL).expand(value);
-            } catch (Exception ioe) {
-                // Couldn't resolve the app name.
-            }
-
-            resolvedName = resolvedName == null ? value : resolvedName;
+            String resolvedName = expandValue(value, project);
             final String applicationName = DeployitServerFactory.getNameFromId(resolvedName);
             List<String> candidates = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
             for (String candidate : candidates) {
@@ -360,7 +352,20 @@ public class DeployitNotifier extends Notifier {
             return warning("Application does not exist, but will be created upon package import.");
         }
 
-        private DeployitServer getDeployitServer(String credential) {
+        public String expandValue(final String value, final AbstractProject project) {
+            String resolvedValue = null;
+
+            try {
+                resolvedValue = project.getEnvironment(null, TaskListener.NULL).expand(value);
+            } catch (Exception ioe) {
+                // Couldn't resolve the app name.
+            }
+
+            resolvedValue = resolvedValue == null ? value : resolvedValue;
+            return resolvedValue;
+        }
+
+        public DeployitServer getDeployitServer(String credential) {
             checkNotNull(credential);
             return credentialServerMap.get(credential);
         }
