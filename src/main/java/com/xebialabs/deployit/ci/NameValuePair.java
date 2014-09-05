@@ -47,7 +47,15 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
     }
 
     @Extension
-    public static final class NameValuePairDescriptor extends Descriptor<NameValuePair> {
+    public static class NameValuePairDescriptor extends Descriptor<NameValuePair> {
+
+        public NameValuePairDescriptor(final Class<? extends NameValuePair> clazz) {
+            super(clazz);
+        }
+
+        public NameValuePairDescriptor() {
+        }
+
         @Override
         public String getDisplayName() {
             return "NameValuePair";

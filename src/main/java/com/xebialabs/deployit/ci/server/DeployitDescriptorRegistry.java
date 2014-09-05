@@ -3,7 +3,10 @@ package com.xebialabs.deployit.ci.server;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.base.Predicate;
+
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
+import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
 import com.xebialabs.deployit.plugin.api.reflect.Type;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
@@ -36,6 +39,8 @@ public interface DeployitDescriptorRegistry {
     List<String> getEmbeddedDeployableTypes();
 
     List<String> getEditablePropertiesForDeployableType(String type);
+
+    List<String> getPropertiesForDeployableType(String type, Predicate<PropertyDescriptor> propertyPredicate);
 
     void addEmbedded(ConfigurationItem parent, ConfigurationItem embed);
 

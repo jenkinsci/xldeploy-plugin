@@ -226,9 +226,14 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
                 return !pd.isHidden() && !pd.getName().equals("tags") && !isEmbeddedProperty(pd, embeddedDeployableType);
             }
         };
+        return getPropertiesForDeployableType(type, editablePropertyDescriptors);
+    }
+
+    @Override
+    public List<String> getPropertiesForDeployableType(String type, Predicate<PropertyDescriptor> propertyPredicate) {
         Descriptor descriptor = getDescriptor(type);
         return FluentIterable.from(descriptor.getPropertyDescriptors())
-                .filter(editablePropertyDescriptors)
+                .filter(propertyPredicate)
                 .transform(PROPERTY_DESCRIPTOR_TO_NAME)
                 .toSortedList(Ordering.natural());
     }

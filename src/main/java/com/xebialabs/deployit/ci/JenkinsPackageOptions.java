@@ -27,14 +27,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
@@ -52,9 +49,9 @@ import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import javax.annotation.Nullable;
-
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.xebialabs.deployit.ci.util.Strings2.stripEnclosingQuotes;
 
 public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions> {
 
@@ -73,7 +70,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         return deployables;
     }
 
-    public DeploymentPackage toDeploymentPackage(String applicationName, String version, DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
+    public DeploymentPackage toDeploymentPackage(String applicationName, String version, List<? extends NameValuePair> packageProperties, DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
         Application application = registry.newInstance(Application.class, applicationName);
         DeploymentPackage deploymentPackage = registry.newInstance(DeploymentPackage.class, version);
         deploymentPackage.setApplication(application);
@@ -89,6 +86,14 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
             deployablesByFqn.put(deployableView.getFullyQualifiedName(), deployable);
         }
         deploymentPackage.setProperty("deployables", deploymentPackage.getDeployables());
+
+        if (packageProperties != null) {
+            for (NameValuePair pair : packageProperties) {
+                String value = stripEnclosingQuotes(nullToEmpty(pair.propertyValue));
+                value = envVars.expand(value);
+                registry.setProperty(deploymentPackage, pair.propertyName, value);
+            }
+        }
         return deploymentPackage;
     }
 

@@ -77,10 +77,10 @@ public class DeployitNotifier extends Notifier {
     public final JenkinsImportOptions importOptions;
     public final JenkinsDeploymentOptions deploymentOptions;
     public final boolean verbose;
-
+    public final List<PackageProperty> packageProperties;
 
     @DataBoundConstructor
-    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose) {
+    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties) {
         this.credential = credential;
         this.application = application;
         this.version = version;
@@ -88,6 +88,7 @@ public class DeployitNotifier extends Notifier {
         this.importOptions = importOptions;
         this.deploymentOptions = deploymentOptions;
         this.verbose = verbose;
+        this.packageProperties = packageProperties;
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -116,7 +117,7 @@ public class DeployitNotifier extends Notifier {
                 deploymentOptions.setVersion(resolvedVersion);
             }
 
-            DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
+            DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, packageProperties, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
             final File targetDir = new File(workspace.absolutize().getRemote(), "deployitpackage");
 
             File packaged = workspace.getChannel().call(
