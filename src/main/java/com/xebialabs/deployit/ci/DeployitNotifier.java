@@ -49,6 +49,7 @@ import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
 
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -333,6 +334,18 @@ public class DeployitNotifier extends Notifier {
         public List<String> environments(final String credential) {
             List<String> envs = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
             return Ordering.natural().sortedCopy(envs);
+        }
+
+        public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value,
+                                                                  @AncestorInPath AbstractProject project)  {
+            String resolvedApplicationName = expandValue(value, project);
+            final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
+            final String applicationName = DeployitServerFactory.getNameFromId(resolvedApplicationName);
+            List<String> applicationSuggestions = getDeployitServer(getDefaultCredential().getName()).search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
+            for (String applicationSuggestion : applicationSuggestions) {
+                applicationCadidates.add(applicationSuggestion);
+            }
+            return applicationCadidates;
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
