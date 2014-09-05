@@ -50,6 +50,7 @@ import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
 import hudson.*;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -332,6 +333,32 @@ public class DeployitNotifier extends Notifier {
         public List<String> environments(final String credential) {
             List<String> envs = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
             return Ordering.natural().sortedCopy(envs);
+        }
+
+        /**
+         * Satisfies requirements to implement auto completion for the application name field
+         * providing validated, possible application names from the XL Deploy repository.
+         * 
+         * @param applicationValue, the application name from the config form
+         * @return a list of strings that represent possible, validated, application names from XL Deploy
+         */
+        public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value, @AncestorInPath AbstractProject project)  {
+            String resolvedApplicationName = null;
+            try {
+                resolvedApplicationName = project.getEnvironment(null, TaskListener.NULL).expand(value);
+            } catch (Exception ioe) {
+                // Should probably do something better here, but if it's good enough for doCheckApplication...
+            }
+
+            resolvedApplicationName = resolvedApplicationName == null ? value : resolvedApplicationName;
+            final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
+            final String applicationName = DeployitServerFactory.getNameFromId(resolvedApplicationName);
+            List<String> applicationSuggestions = getDeployitServer(getDefaultCredential().getName()).search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
+            for (String applicationSuggestion : applicationSuggestions) {
+                applicationCadidates.add(applicationSuggestion);
+            }
+            
+            return applicationCadidates;
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
