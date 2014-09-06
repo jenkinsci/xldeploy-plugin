@@ -72,6 +72,8 @@ public class DeployitNotifier extends Notifier {
 
     public final String application;
     public final String version;
+    public final String orchestrator;
+    public final String parallel;
 
     public final JenkinsPackageOptions packageOptions;
     public final JenkinsImportOptions importOptions;
@@ -80,10 +82,12 @@ public class DeployitNotifier extends Notifier {
 
 
     @DataBoundConstructor
-    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose) {
+    public DeployitNotifier(String credential, String application, String version, String orchestrator, String parallel, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose) {
         this.credential = credential;
         this.application = application;
         this.version = version;
+        this.orchestrator = orchestrator;
+        this.parallel = parallel;
         this.packageOptions = packageOptions;
         this.importOptions = importOptions;
         this.deploymentOptions = deploymentOptions;
@@ -106,6 +110,8 @@ public class DeployitNotifier extends Notifier {
             resolvedApplication = qualifiedAppIds.get(0);
         }
         String resolvedVersion = envVars.expand(version);
+        String resolvedOrchestrator = envVars.expand(orchestrator);
+        String resolvedParallel = envVars.expand(parallel);
 
         //Package
         if (packageOptions != null) {
@@ -116,7 +122,7 @@ public class DeployitNotifier extends Notifier {
                 deploymentOptions.setVersion(resolvedVersion);
             }
 
-            DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
+            DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, resolvedOrchestrator, resolvedParallel, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
             final File targetDir = new File(workspace.absolutize().getRemote(), "deployitpackage");
 
             File packaged = workspace.getChannel().call(

@@ -11,6 +11,14 @@
         <f:textbox/>
     </f:entry>
 
+    <f:entry title="${%Orchestrator}" field="orchestrator" help="/plugin/deployit-plugin/help-orchestrator.html">
+            <f:textbox/>
+    </f:entry>
+
+    <f:entry title="${%Parallel}" field="parallel" help="/plugin/deployit-plugin/help-parallel.html">
+            <f:textbox/>
+    </f:entry>
+
     <f:entry title="${%Verbose}" field="verbose">
         <f:checkbox/>
     </f:entry>
