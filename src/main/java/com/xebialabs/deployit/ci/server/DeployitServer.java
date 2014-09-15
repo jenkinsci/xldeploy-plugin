@@ -16,7 +16,11 @@ public interface DeployitServer {
     List<String> search(String type);
 
     List<String> search(String type, String namePattern);
-
+    
+    List<String> search(String type, String ancestorId, String parentId, String namePattern);
+    
+	List<String> searchChildren(String type, String parentId, String namePattern);
+    
     ConfigurationItem importPackage(String darFile);
 
     void deploy(String deploymentPackage, String environment,  JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener);

@@ -73,7 +73,6 @@ public class DeployitNotifier extends Notifier {
     public final String credential;
 
     public final String application;
-    public final String version;
 
     public final JenkinsPackageOptions packageOptions;
     public final JenkinsImportOptions importOptions;
@@ -82,10 +81,9 @@ public class DeployitNotifier extends Notifier {
 
 
     @DataBoundConstructor
-    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose) {
+    public DeployitNotifier(String credential, String application, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose) {
         this.credential = credential;
         this.application = application;
-        this.version = version;
         this.packageOptions = packageOptions;
         this.importOptions = importOptions;
         this.deploymentOptions = deploymentOptions;
@@ -107,15 +105,16 @@ public class DeployitNotifier extends Notifier {
         if (qualifiedAppIds.size() == 1) {
             resolvedApplication = qualifiedAppIds.get(0);
         }
-        String resolvedVersion = envVars.expand(version);
 
+        String resolvedVersion = null;
         //Package
         if (packageOptions != null) {
+            resolvedVersion = envVars.expand(packageOptions.getVersion());
             deploymentListener.info(Messages.DeployitNotifier_package(resolvedApplication, resolvedVersion));
 
             final FilePath workspace = build.getWorkspace();
             if (deploymentOptions != null && deploymentOptions.versionKind == VersionKind.Packaged) {
-                deploymentOptions.setVersion(resolvedVersion);
+            	deploymentOptions.setVersion(resolvedVersion);
             }
 
             DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
@@ -162,7 +161,7 @@ public class DeployitNotifier extends Notifier {
             String packageVersion = null;
             switch (deploymentOptions.versionKind) {
                 case Other:
-                    packageVersion = resolvedVersion;
+                    packageVersion = deploymentOptions.storedVersions;
                     break;
                 case Packaged:
                     if (!importedVersion.isEmpty()) {
@@ -172,7 +171,7 @@ public class DeployitNotifier extends Notifier {
                     }
                     break;
             }
-            final String versionId = Joiner.on("/").join(resolvedApplication, packageVersion);
+            final String versionId = (! deploymentOptions.versionKind.equals(com.xebialabs.deployit.ci.VersionKind.Other)) ? Joiner.on("/").join(resolvedApplication, packageVersion) : packageVersion;
             deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, deploymentOptions.environment));
             try {
                 getDeployitServer().deploy(versionId, deploymentOptions.environment, deploymentOptions, deploymentListener);
@@ -333,6 +332,11 @@ public class DeployitNotifier extends Notifier {
         public List<String> environments(final String credential) {
             List<String> envs = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
             return Ordering.natural().sortedCopy(envs);
+        }
+        
+        public List<String> storedApplicationVersions(final String credential, final String application) {
+            List<String> storedApplicationVersions = getDeployitServer(credential).searchChildren(DeployitDescriptorRegistry.UDM_DEPLOYMENT_PACKAGE, application, "%");
+            return Ordering.natural().sortedCopy(storedApplicationVersions);
         }
 
         /**

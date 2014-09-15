@@ -3,6 +3,10 @@
    <f:entry title="${%Orchestrator(s)}" field="orchestrator" help="/plugin/deployit-plugin/help-orchestrator.html">                       
         <f:textbox default=""/>
     </f:entry>
+    
+    <f:entry title="${%Version}" field="version" help="/plugin/deployit-plugin/help-version.html">
+        <f:textbox/>
+    </f:entry>
 
     <f:entry title="${%Deployables}">
         <f:hetero-list name="deployables" field="deployables" hasHeader="true"

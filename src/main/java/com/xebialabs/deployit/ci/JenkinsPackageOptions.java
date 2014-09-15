@@ -36,6 +36,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -63,11 +64,13 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
 
     private final List<DeployableView> deployables;
     private final String orchestrator;
+    private final String version;
 
     @DataBoundConstructor
-    public JenkinsPackageOptions(List<DeployableView> deployables, String orchestrator) {
+    public JenkinsPackageOptions(List<DeployableView> deployables, String orchestrator, String version) {
         this.deployables = deployables;
         this.orchestrator = orchestrator;
+        this.version = version;
     }
 
     public Descriptor<JenkinsPackageOptions> getDescriptor() {
@@ -80,6 +83,10 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
 
     public String getOrchestrator() {
         return this.orchestrator;   
+    }
+    
+    public String getVersion()	{
+    	return this.version;
     }
 
     public DeploymentPackage toDeploymentPackage(String applicationName, String version, DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {

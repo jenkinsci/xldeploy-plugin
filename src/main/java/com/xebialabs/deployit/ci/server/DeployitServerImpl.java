@@ -69,15 +69,26 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public List<String> search(String type) {
-        return search(type, null);
+        return search(type, null, null, null);
     }
 
     @Override
-    public List<String> search(String type, String namePattern) {
+    public List<String> searchChildren(String type, String parentId, String namePattern)	{
+    	return search(type, null, parentId, namePattern);
+    }
+    
+    @Override
+    public List<String> search(String type, String namePattern) {       
+        return search(type, null, null, namePattern);
+    }
+    
+    @Override
+    public List<String> search(String type, String ancestorId, String parentId, String namePattern)	{
         LOGGER.debug("search " + type);
+        
         try {
 
-            List<ConfigurationItemId> result = getCommunicator().getProxies().getRepositoryService().query(getDescriptorRegistry().typeForName(type), null, null, namePattern, null, null, 0, -1);
+            List<ConfigurationItemId> result = getCommunicator().getProxies().getRepositoryService().query(getDescriptorRegistry().typeForName(type), parentId, ancestorId, namePattern, null, null, 0, -1);
             return Lists.transform(result, new Function<ConfigurationItemId, String>() {
                 @Override
                 public String apply(ConfigurationItemId input) {
