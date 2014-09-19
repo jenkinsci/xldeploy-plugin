@@ -30,11 +30,14 @@ import java.net.URL;
 import java.util.*;
 
 import com.google.common.collect.Lists;
+
 import hudson.*;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Ordering;
@@ -59,7 +62,6 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
@@ -92,6 +94,7 @@ public class DeployitNotifier extends Notifier {
         this.packageProperties = packageProperties;
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -103,7 +106,14 @@ public class DeployitNotifier extends Notifier {
         final EnvVars envVars = build.getEnvironment(listener);
         String resolvedApplication = envVars.expand(application);
 
-        List<String> qualifiedAppIds = getDeployitServer().search(DeployitDescriptorRegistry.UDM_APPLICATION, DeployitServerFactory.getNameFromId(resolvedApplication));
+        DeployitServer deployitServer = getDeployitServer();
+        if (null == deployitServer) {
+            String msg = String.format("No server found for credential %s. Please verify that there is a server configured for credential.", credential);
+            throw new DeployitPluginException(msg);
+        }
+
+        String applicationName = DeployitServerFactory.getNameFromId(resolvedApplication);
+        List<String> qualifiedAppIds = deployitServer.search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName);
         if (qualifiedAppIds.size() == 1) {
             resolvedApplication = qualifiedAppIds.get(0);
         }
@@ -112,6 +122,8 @@ public class DeployitNotifier extends Notifier {
         //Package
         if (packageOptions != null) {
             deploymentListener.info(Messages.DeployitNotifier_package(resolvedApplication, resolvedVersion));
+            verifyResolvedVersion(resolvedVersion);
+            verifyResolvedApplication(resolvedApplication);
 
             final FilePath workspace = build.getWorkspace();
             if (deploymentOptions != null && deploymentOptions.versionKind == VersionKind.Packaged) {
@@ -160,7 +172,7 @@ public class DeployitNotifier extends Notifier {
         if (deploymentOptions != null) {
             String resolvedEnvironment = envVars.expand(deploymentOptions.environment);
             deploymentListener.info(Messages.DeployitNotifier_startDeployment(resolvedApplication, resolvedEnvironment));
-            String packageVersion = null;
+            String packageVersion = "";
             switch (deploymentOptions.versionKind) {
                 case Other:
                     packageVersion = resolvedVersion;
@@ -173,6 +185,9 @@ public class DeployitNotifier extends Notifier {
                     }
                     break;
             }
+            verifyPackageVersion(packageVersion);
+            verifyResolvedApplication(resolvedApplication);
+
             final String versionId = Joiner.on("/").join(resolvedApplication, packageVersion);
             deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, resolvedEnvironment));
             try {
@@ -185,6 +200,27 @@ public class DeployitNotifier extends Notifier {
             deploymentListener.info(Messages.DeployitNotifier_endDeployment(resolvedApplication, resolvedEnvironment));
         }
         return true;
+    }
+
+    private void verifyResolvedApplication(String resolvedApplication) {
+        if (Strings.isNullOrEmpty(resolvedApplication)) {
+            String msg = String.format("Resolved application is '%s'. Please verify you have configured build correctly.", resolvedApplication);
+            throw new DeployitPluginException(msg);
+        }
+    }
+
+    private void verifyPackageVersion(String packageVersion) {
+        if (Strings.isNullOrEmpty(packageVersion)) {
+            String msg = String.format("Package version is '%s'. Please verify you have configured build correctly.", packageVersion);
+            throw new DeployitPluginException(msg);
+        }
+    }
+
+    private void verifyResolvedVersion(String packageVersion) {
+        if (Strings.isNullOrEmpty(packageVersion)) {
+            String msg = String.format("Package version is '%s'. Please verify you have configured build correctly.", packageVersion);
+            throw new DeployitPluginException(msg);
+        }
     }
 
     private DeployitServer getDeployitServer() {
@@ -402,7 +438,7 @@ public class DeployitNotifier extends Notifier {
 
         private Credential getDefaultCredential() {
             if (credentials.isEmpty())
-                throw new RuntimeException("No credentials defined in the system configuration");
+                throw new DeployitPluginException("No credentials defined in the system configuration");
             return credentials.iterator().next();
         }
     }

@@ -1,15 +1,20 @@
 package com.xebialabs.deployit.ci.server;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.GregorianCalendar;
 import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Throwables;
 
+import com.xebialabs.deployit.ci.DeployitPluginException;
 import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.engine.api.DeploymentService;
+import com.xebialabs.deployit.engine.api.RepositoryService;
 import com.xebialabs.deployit.engine.api.TaskService;
 import com.xebialabs.deployit.engine.api.dto.Deployment;
 import com.xebialabs.deployit.engine.api.dto.ValidatedConfigurationItem;
@@ -17,6 +22,7 @@ import com.xebialabs.deployit.engine.api.execution.StepExecutionState;
 import com.xebialabs.deployit.engine.api.execution.StepState;
 import com.xebialabs.deployit.engine.api.execution.TaskExecutionState;
 import com.xebialabs.deployit.engine.api.execution.TaskState;
+import com.xebialabs.deployit.plugin.api.reflect.Type;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.validation.ValidationMessage;
 
@@ -29,16 +35,41 @@ public class DeployCommand {
     private TaskService taskService;
     private JenkinsDeploymentOptions deploymentOptions;
     private JenkinsDeploymentListener listener;
+    private RepositoryService repositoryService;
 
-    DeployCommand(DeploymentService deploymentService, TaskService taskService, JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
+    DeployCommand(DeploymentService deploymentService, TaskService taskService, RepositoryService repositoryService, JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
         this.deploymentService = deploymentService;
         this.taskService = taskService;
+        this.repositoryService = repositoryService;
         this.deploymentOptions = deploymentOptions;
         this.listener = listener;
     }
 
+    private void verifyPackageExistInRemoteRepository(String deploymentPackage) {
+        boolean found = false;
+        Type foundType = null;
+        try {
+            ConfigurationItem repoPackage = repositoryService.read(deploymentPackage);
+            foundType = repoPackage.getType();
+            listener.debug(String.format("Found CI '%s' as '%s' .", repoPackage, foundType));
+        }
+        catch (Throwable t) {
+            String errorMsg = String.format("'%s' not found in repository.", deploymentPackage);
+            throw new DeployitPluginException(errorMsg, t);
+        }
+
+        Type deploymentPackageType = Type.valueOf("udm.DeploymentPackage");
+        if (!deploymentPackageType.equals(foundType)) {
+            String errorMsg = String.format("'%s' is of type '%s' instead 'udm.DeploymentPackage'. Please verify that 'Version' is specified in jenkins configuration.", deploymentPackage, foundType);
+            throw new DeployitPluginException(errorMsg);
+        }
+
+    }
+
     public void deploy(String deploymentPackage, String environment) {
         listener.debug(deploymentOptions.toString());
+
+        verifyPackageExistInRemoteRepository(deploymentPackage);
         boolean initialDeployment = !deploymentService.isDeployed(DeployitServerFactory.getParentId(deploymentPackage), environment);
 
         Deployment deployment;
@@ -67,7 +98,7 @@ public class DeployCommand {
         } catch (RuntimeException e) {
             listener.error(" RuntimeException: " + e.getMessage());
             if (!e.getMessage().contains("The task did not deliver any steps")) {
-                throw e;
+                throw new DeployitPluginException(e.getMessage(), e);
             }
             return;
         }
@@ -85,7 +116,7 @@ public class DeployCommand {
         }
 
         if (validationMessagesFound > 0) {
-            throw new IllegalStateException(String.format("Validation errors (%d) have been found", validationMessagesFound));
+            throw new DeployitPluginException(String.format("Validation errors (%d) have been found", validationMessagesFound));
         }
 
         listener.debug("deploy");
@@ -102,7 +133,7 @@ public class DeployCommand {
                     executeTask(deploymentService.rollback(taskId));
                 }
             } finally {
-                throw e;
+                throw new DeployitPluginException(e.getMessage(), e);
             }
         }
     }
@@ -128,8 +159,9 @@ public class DeployCommand {
             taskService.archive(taskId);
             return true;
         } catch (RuntimeException e) {
-            listener.error(format("Error when executing task %s: %s", taskId, e.getMessage()));
-            throw e;
+            String msg = format("Error when executing task %s: %s", taskId, e.getMessage());
+            listener.error(msg);
+            throw new DeployitPluginException(msg, e);
         }
 
     }
@@ -175,7 +207,7 @@ public class DeployCommand {
         }
 
         if (taskState.getState().isExecutionHalted())
-            throw new IllegalStateException(format("Errors when executing task %s: %s", taskId, sb));
+            throw new DeployitPluginException(format("Errors when executing task %s: %s", taskId, sb));
     }
 
     private void startTaskAndWait(String taskId) {

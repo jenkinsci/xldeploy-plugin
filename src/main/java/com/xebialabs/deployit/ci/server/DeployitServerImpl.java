@@ -7,6 +7,7 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.Reflection;
@@ -18,6 +19,7 @@ import com.xebialabs.deployit.booter.remote.client.DeployitRemoteClient;
 import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.engine.api.DeploymentService;
+import com.xebialabs.deployit.engine.api.RepositoryService;
 import com.xebialabs.deployit.engine.api.TaskService;
 import com.xebialabs.deployit.engine.api.dto.ConfigurationItemId;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
@@ -87,7 +89,8 @@ public class DeployitServerImpl implements DeployitServer {
     public void deploy(String deploymentPackage, String environment,  JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
         DeploymentService deploymentService = getCommunicator().getProxies().getDeploymentService();
         TaskService taskService = getCommunicator().getProxies().getTaskService();
-        new DeployCommand(deploymentService, taskService, deploymentOptions, listener).deploy(deploymentPackage, environment);
+        RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
+        new DeployCommand(deploymentService, taskService, repositoryService, deploymentOptions, listener).deploy(deploymentPackage, environment);
     }
 
 

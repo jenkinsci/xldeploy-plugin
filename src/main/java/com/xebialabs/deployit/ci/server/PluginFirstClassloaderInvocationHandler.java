@@ -4,9 +4,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import com.xebialabs.deployit.ci.Constants;
+import com.xebialabs.deployit.ci.DeployitPluginException;
+
 import jenkins.model.Jenkins;
 
 public class PluginFirstClassloaderInvocationHandler implements InvocationHandler {
+
 
     private static final Object[] NO_ARGS = {};
     private Object target;
@@ -25,11 +29,11 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
         final Thread currentThread = Thread.currentThread();
         final ClassLoader origClassLoader = currentThread.getContextClassLoader();
         try {
-            ClassLoader pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin("deployit-plugin").classLoader;
+            ClassLoader pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin(Constants.DEPLOYIT_PLUGIN).classLoader;
             currentThread.setContextClassLoader(pluginClassLoader);
             return doInvoke(proxy, method, args);
         } catch (InvocationTargetException e) {
-            throw e.getCause();
+            throw new DeployitPluginException(e.getCause().getMessage(), e.getCause());
         } finally {
             currentThread.setContextClassLoader(origClassLoader);
         }

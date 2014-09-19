@@ -4,12 +4,14 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.Reflection;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
+import com.xebialabs.deployit.ci.DeployitPluginException;
 
 public class DeployitServerFactory {
     public static boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
@@ -32,7 +34,7 @@ public class DeployitServerFactory {
         try {
             url = new URL(serverUrl);
         } catch (MalformedURLException e) {
-            throw new RuntimeException("MalformedURLException", e);
+            throw new DeployitPluginException("MalformedURLException", e);
         }
         builder.withHost(url.getHost()).withPort(url.getPort());
         if ("https".equalsIgnoreCase(url.getProtocol())) {

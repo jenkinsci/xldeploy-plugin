@@ -31,13 +31,13 @@ import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
 import com.xebialabs.deployit.ci.VersionKind;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.engine.api.DeploymentService;
+import com.xebialabs.deployit.engine.api.RepositoryService;
 import com.xebialabs.deployit.engine.api.TaskService;
 import com.xebialabs.deployit.engine.api.dto.Deployment;
 import com.xebialabs.deployit.engine.api.execution.TaskExecutionState;
 import com.xebialabs.deployit.engine.api.execution.TaskState;
 
 import hudson.model.StreamBuildListener;
-
 import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,9 +47,10 @@ public class DeployCommandTest {
     public void shouldRetryTaskStatusCheckFiveTimesAfterExceptionOccurs() {
         DeploymentService deploymentService = mock(DeploymentService.class);
         TaskService taskService = mock(TaskService.class);
+        RepositoryService repositoryService = mock(RepositoryService.class);
         JenkinsDeploymentOptions jenkinsOptions = new JenkinsDeploymentOptions("test", VersionKind.Packaged, false, false, false, false);
         JenkinsDeploymentListener jenkinsDeploymentListener = new JenkinsDeploymentListener(new StreamBuildListener(System.out, Charset.defaultCharset()), true);
-        DeployCommand deployCommand = new DeployCommand(deploymentService, taskService, jenkinsOptions, jenkinsDeploymentListener);
+        DeployCommand deployCommand = new DeployCommand(deploymentService, taskService, repositoryService, jenkinsOptions, jenkinsDeploymentListener);
 
         Deployment deployment = new Deployment();
         when(deploymentService.prepareInitial("pkg", "test")).thenReturn(deployment);

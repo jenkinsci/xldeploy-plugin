@@ -27,8 +27,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -39,6 +41,7 @@ import com.xebialabs.deployit.plugin.api.udm.Application;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.udm.Deployable;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
+import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
 
 import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
@@ -48,7 +51,6 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.xebialabs.deployit.ci.util.Strings2.stripEnclosingQuotes;
@@ -62,6 +64,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         this.deployables = deployables;
     }
 
+    @Override
     public Descriptor<JenkinsPackageOptions> getDescriptor() {
         return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
@@ -116,7 +119,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         ConfigurationItem parent = deployablesByFqn.get(embeddedView.getParentName());
         if (parent == null) {
             listener.error("Failed to find parent [" + embeddedView.getParentName() + "] that embeds [" + deployable + "]");
-            throw new RuntimeException("Failed to find parent that embeds " + deployable);
+            throw new DeployitPluginException("Failed to find parent that embeds " + deployable);
         }
         registry.addEmbedded(parent, deployable);
     }

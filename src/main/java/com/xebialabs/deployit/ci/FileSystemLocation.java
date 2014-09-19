@@ -57,7 +57,7 @@ public class FileSystemLocation extends ImportLocation {
             resolvedLocation = envVars.expand(location);
             return ArtifactView.findFileFromPattern(resolvedLocation, root, deploymentListener).getPath();
         } catch (IOException exception) {
-            throw new RuntimeException(format("Unable to find DAR from %s in %s", resolvedLocation, root), exception);
+            throw new DeployitPluginException(format("Unable to find DAR from %s in %s", resolvedLocation, root), exception);
         }
     }
 

@@ -28,8 +28,8 @@ import com.google.common.base.Strings;
 
 import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.server.DeployitServerFactory;
-
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
+
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
@@ -51,6 +51,7 @@ import static hudson.util.FormValidation.ok;
 public class Credential extends AbstractDescribableImpl<Credential> {
 
     public static final Function<Credential, String> CREDENTIAL_INDEX = new Function<Credential, String>() {
+        @Override
         public String apply(Credential input) {
             return input.getName();
         }
@@ -222,7 +223,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 ServerInfo serverInfo = deployitServer.getServerInfo();
                 deployitServer.newCommunicator(); // throws IllegalStateException if creds invalid
 
-                final VersionNumber pluginVersion = Jenkins.getInstance().getPlugin("deployit-plugin").getWrapper().getVersionNumber();
+                final VersionNumber pluginVersion = Jenkins.getInstance().getPlugin(Constants.DEPLOYIT_PLUGIN).getWrapper().getVersionNumber();
                 final String serverVersion = serverInfo.getVersion();
                 String major = serverVersion.substring(0, serverVersion.indexOf("."));
                 if(pluginVersion.isNewerThan(new VersionNumber(major + ".*.*"))) {

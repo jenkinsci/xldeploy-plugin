@@ -64,7 +64,8 @@ public class GeneratedLocation extends ImportLocation {
         try {
             remoteDar.copyTo(localTempDar);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            String msg = String.format("Unable to copy remote dar '%s' to local temp directory '%s'.", remoteDar, localTempDar);
+            throw new DeployitPluginException(msg, e);
         }
 
         return localTempDar.getRemote();

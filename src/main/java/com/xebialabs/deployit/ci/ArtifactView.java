@@ -58,6 +58,7 @@ public class ArtifactView extends DeployableView {
         this.location = location;
     }
 
+    @Override
     public ConfigurationItem toConfigurationItem(DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
         Artifact deployable = (Artifact) super.toConfigurationItem(registry, workspace, envVars, listener);
         String resolvedLocation = getResolvedLocation(envVars);
@@ -65,14 +66,14 @@ public class ArtifactView extends DeployableView {
             final File file = findFileFromPattern(resolvedLocation, workspace, listener);
             deployable.setFile(LocalFile.valueOf(file));
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Unable to find artifact for deployable '%s' in '%s'", getName(), resolvedLocation), e);
+            throw new DeployitPluginException(String.format("Unable to find artifact for deployable '%s' in '%s'", getName(), resolvedLocation), e);
         }
         return deployable;
     }
 
     private String getResolvedLocation(EnvVars envVars) {
         if (Strings.emptyToNull(location) == null) {
-            throw new RuntimeException(String.format("No location specified for '%s' of type '%s'", getName(), getType()));
+            throw new DeployitPluginException(String.format("No location specified for '%s' of type '%s'", getName(), getType()));
         }
         return envVars.expand(location);
     }
@@ -90,11 +91,11 @@ public class ArtifactView extends DeployableView {
         if (fileNames.size() > 1) {
             final Localizable localizable = Messages._DeployitNotifier_TooManyFilesMatchingPattern();
             listener.error(localizable);
-            throw new RuntimeException(String.valueOf(localizable));
+            throw new DeployitPluginException(String.valueOf(localizable));
         } else if (fileNames.size() == 0) {
-            final Localizable localizable = Messages._DeployitNotifier_noArtifactsFound(pattern);
+            final Localizable localizable = Messages._DeployitNotifier_noArtifactsFound(pattern, workspace);
             listener.error(localizable);
-            throw new RuntimeException(String.valueOf(localizable));
+            throw new DeployitPluginException(String.valueOf(localizable));
         }
         // so we use only the first found
         final String artifactPath = fileNames.get(0);
@@ -105,7 +106,7 @@ public class ArtifactView extends DeployableView {
         try {
             return workspace.getChannel().call(new RemoteLookup(artifactPath, workspace.getRemote()));
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new DeployitPluginException("Unable to fetch file", e);
         }
     }
 
