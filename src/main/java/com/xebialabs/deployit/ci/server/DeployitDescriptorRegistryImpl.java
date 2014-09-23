@@ -1,41 +1,84 @@
 package com.xebialabs.deployit.ci.server;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+
 import javax.annotation.Nullable;
-import com.google.common.base.*;
-import com.google.common.collect.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.Monitor;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
 import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
 import com.xebialabs.deployit.booter.remote.RemoteBooter;
+import com.xebialabs.deployit.booter.remote.RemoteDescriptor;
 import com.xebialabs.deployit.booter.remote.RemoteDescriptorRegistry;
-import com.xebialabs.deployit.plugin.api.reflect.*;
+import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
+import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
+import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
+import com.xebialabs.deployit.plugin.api.reflect.PropertyKind;
+import com.xebialabs.deployit.plugin.api.reflect.Type;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
-import com.xebialabs.deployit.plugin.api.udm.Deployable;
-import com.xebialabs.deployit.plugin.api.udm.EmbeddedDeployable;
-import com.xebialabs.deployit.plugin.api.udm.artifact.FolderArtifact;
-import com.xebialabs.deployit.plugin.api.udm.artifact.SourceArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.*;
+import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
 public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistry {
-
+    private static final Logger LOG = LoggerFactory.getLogger(DeployitDescriptorRegistryImpl.class);
     private BooterConfig booterConfig;
 
     private Monitor LOCK = new Monitor();
     private Iterable<Descriptor> allDeployableDescriptors;
 
+    private DeployitCommunicator communicator;
 
     DeployitDescriptorRegistryImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
     }
 
-    private DeployitCommunicator getCommunicator() {
-        return RemoteBooter.boot(booterConfig);
+    @Override
+    public DeployitCommunicator getCommunicator() {
+        LOCK.enter();
+        try {
+            if (null == communicator) {
+                try {
+                    communicator = RemoteBooter.getCommunicator(booterConfig);
+                    LOG.debug("Reusing existing communicator for config: {}.", safeBooterConfigKey());
+                } catch (IllegalStateException ex) {
+                    LOG.warn("No communicator found for config: {}. Creating new DeployitCommunicator. Cause: {}.", safeBooterConfigKey(), ex.getMessage(), ex);
+                    DescriptorRegistry.remove(booterConfig);
+                    communicator = RemoteBooter.boot(booterConfig);
+                }
+            }
+        } finally {
+            LOCK.leave();
+        }
+
+        return communicator;
+    }
+
+    private String safeBooterConfigKey() {
+        String safePassword = booterConfig.getPassword().replaceAll(".", "*");
+        return BooterConfig.builder()
+            .withProtocol(booterConfig.getProtocol())
+            .withCredentials(booterConfig.getUsername(), safePassword)
+            .withHost(booterConfig.getHost())
+            .withPort(booterConfig.getPort())
+            .withContext(booterConfig.getContext())
+            .withProxyHost(booterConfig.getProxyHost())
+            .withProxyPort(booterConfig.getProxyPort())
+            .build()
+            .getKey();
     }
 
     private RemoteDescriptorRegistry getDescriptorRegistry() {
@@ -57,56 +100,46 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
 
     @Override
     public <T extends BaseConfigurationItem> T newInstance(Class<T> clazz, String name) {
-        try {
-            T bci = clazz.newInstance();
-            bci.setId(name);
-            bci.setType(typeForClass(clazz));
-            return bci;
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        Type type = getDescriptorRegistry().lookupType(clazz);
+        return newInstance(type, name);
     }
 
     @Override
-    public ConfigurationItem newInstance(String type, String name) {
-        Descriptor descriptor = getDescriptor(type);
-        BaseConfigurationItem ci;
-
-        if (descriptor.isAssignableTo(typeForClass(EmbeddedDeployable.class))) {
-            ci = new BaseEmbeddedDeployable();
-        } else if (descriptor.isAssignableTo(typeForClass(SourceArtifact.class))) {
-            if (descriptor.isAssignableTo(typeForClass(FolderArtifact.class))) {
-                ci = new BaseDeployableFolderArtifact();
-            } else {
-                ci = new BaseDeployableFileArtifact();
-            }
-        } else if (descriptor.isAssignableTo(typeForClass(Deployable.class))) {
-            ci = new BaseDeployable();
-        } else {
-            ci = new BaseConfigurationItem();
-        }
-
-        ci.setId(name);
-        ci.setType(descriptor.getType());
-        for (PropertyDescriptor pd : descriptor.getPropertyDescriptors()) {
-            if (pd.isAsContainment()) {
-                switch (pd.getKind()) {
-                    case LIST_OF_CI:
-                        ci.setProperty(pd.getName(), newArrayList());
-                        break;
-                    case SET_OF_CI:
-                        ci.setProperty(pd.getName(), newHashSet());
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
+    public ConfigurationItem newInstance(String typeName, String name) {
+        Type type = getDescriptorRegistry().lookupType(typeName);
+        ConfigurationItem ci = newInstance(type, name);
         return ci;
     }
 
+    private <T extends BaseConfigurationItem> T newInstance(Type type, String id) {
+        try {
+            RemoteDescriptor remoteDescriptor = (RemoteDescriptor) getDescriptor(type);
+            T ci = remoteDescriptor.newInstance(id);
+
+            for (PropertyDescriptor pd : remoteDescriptor.getPropertyDescriptors()) {
+                if (pd.isAsContainment()) {
+                    String propertyName = pd.getName();
+                    if (null == ci.getProperty(propertyName)) {
+                        switch (pd.getKind()) {
+                        case LIST_OF_CI:
+                            ci.setProperty(propertyName, newArrayList());
+                            break;
+                        case SET_OF_CI:
+                            ci.setProperty(propertyName, newHashSet());
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return ci;
+        } catch (Throwable e) {
+            String errorMsg = String.format("Unable to instantiate CI '%s' with id '%s'. %s", type, id, e.getMessage());
+            throw new RuntimeException(errorMsg, e);
+        }
+    }
 
     @Override
     public Collection<Descriptor> getDescriptors() {
@@ -259,6 +292,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     public void reload() {
         LOCK.enter();
         try {
+            LOG.warn("About to reload descriptor registry for config: {}.", safeBooterConfigKey());
             getDescriptorRegistry().reboot(getCommunicator());
             allDeployableDescriptors = null;
         } finally {

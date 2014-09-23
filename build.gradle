@@ -56,7 +56,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.4.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.5.0'
     }
 }
 
@@ -78,6 +78,24 @@ jenkinsPlugin {
     }
 }
 
+// Per default Jenkins loads every jar from WEB-INF/lib, along with the contents of WEB-INF/classes after the classes and libraries of the core.
+// If you want to have your own libaries loaded before these (e.g. you want a newer version of velocity or an other library),
+// you can configure your plugin to use a different classloader strategy
+tasks.jpi.manifest.attributes(["PluginFirstClassLoader": "true" ])
+
+server.doFirst {
+    org.jenkinsci.gradle.plugins.jpi.JpiHplManifest.metaClass.writeTo = {File f->
+        def m = new java.util.jar.Manifest()
+        m.mainAttributes.putValue("Manifest-Version","1.0")
+        m.mainAttributes.putValue("PluginFirstClassLoader","true")
+        delegate.each {k,v ->
+            m.mainAttributes.putValue(k,v.toString())
+        }
+        f.withOutputStream { o -> m.write(o); }
+    }
+}
+
+
 configurations {
     compile.transitive = true
     providedRuntime.exclude group: 'jdom', module: 'jdom' //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
@@ -88,8 +106,8 @@ configurations {
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
 }
 
-def xlPlatformVersion = "2014.7"
-def xlDeployVersion = "4.5.0"
+def xlPlatformVersion = "2014.7.3"
+def xlDeployVersion = "4.5.1"
 def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
 // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Predicate;
 
+import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
 import com.xebialabs.deployit.plugin.api.reflect.Type;
@@ -45,4 +46,6 @@ public interface DeployitDescriptorRegistry {
     void addEmbedded(ConfigurationItem parent, ConfigurationItem embed);
 
     void reload();
+
+    public DeployitCommunicator getCommunicator();
 }

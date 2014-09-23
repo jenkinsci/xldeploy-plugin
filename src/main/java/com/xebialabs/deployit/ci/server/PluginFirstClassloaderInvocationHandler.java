@@ -25,7 +25,7 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
         final Thread currentThread = Thread.currentThread();
         final ClassLoader origClassLoader = currentThread.getContextClassLoader();
         try {
-            final ClassLoader pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin("deployit-plugin").classLoader;
+            ClassLoader pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin("deployit-plugin").classLoader;
             currentThread.setContextClassLoader(pluginClassLoader);
             return doInvoke(proxy, method, args);
         } catch (InvocationTargetException e) {

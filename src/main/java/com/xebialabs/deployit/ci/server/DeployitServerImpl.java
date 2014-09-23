@@ -35,18 +35,17 @@ public class DeployitServerImpl implements DeployitServer {
 
     DeployitServerImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
+        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
+            .withConnectionPoolSize(poolSize)
+            .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
+            .withSocketTimeout(SOCKET_TIMEOUT)
+            .build();
         this.descriptorRegistry = Reflection.newProxy(DeployitDescriptorRegistry.class,
-                new PluginFirstClassloaderInvocationHandler(new DeployitDescriptorRegistryImpl(booterConfig)));
+                new PluginFirstClassloaderInvocationHandler(new DeployitDescriptorRegistryImpl(newBooterConfig)));
     }
 
     private DeployitCommunicator getCommunicator() {
-        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
-                .withConnectionPoolSize(poolSize)
-                .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
-                .withSocketTimeout(SOCKET_TIMEOUT)
-                .build();
-        DeployitCommunicator communicator = RemoteBooter.boot(newBooterConfig);
-        return communicator;
+        return getDescriptorRegistry().getCommunicator();
     }
 
     @Override
@@ -94,12 +93,8 @@ public class DeployitServerImpl implements DeployitServer {
 
     @Override
     public DeployitCommunicator newCommunicator() {
-        BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
-                .withConnectionPoolSize(poolSize)
-                .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
-                .withSocketTimeout(SOCKET_TIMEOUT)
-                .build();
-        return new DeployitCommunicator(newBooterConfig);
+        // TODO ilx : remove this and go through registry!
+        return getCommunicator();
     }
 
     @Override
