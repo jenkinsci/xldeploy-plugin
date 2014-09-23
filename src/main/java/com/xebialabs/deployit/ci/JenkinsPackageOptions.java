@@ -78,6 +78,10 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         DeploymentPackage deploymentPackage = registry.newInstance(DeploymentPackage.class, version);
         deploymentPackage.setApplication(application);
         Map<String,ConfigurationItem> deployablesByFqn = newHashMap();
+        if (null == deployables) {
+            String msg = String.format("No deployables defined for deployment package. Application: '%s'.", applicationName);
+            throw new DeployitPluginException(msg);
+        }
         List<DeployableView> sortedDeployables = sortDeployables(deployables);
         for (DeployableView deployableView : sortedDeployables) {
             ConfigurationItem deployable = deployableView.toConfigurationItem(registry, workspace, envVars, listener);

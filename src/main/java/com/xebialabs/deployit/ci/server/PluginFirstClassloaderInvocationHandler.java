@@ -11,7 +11,6 @@ import jenkins.model.Jenkins;
 
 public class PluginFirstClassloaderInvocationHandler implements InvocationHandler {
 
-
     private static final Object[] NO_ARGS = {};
     private Object target;
 
@@ -25,7 +24,7 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
             args = NO_ARGS;
         }
 
-        //Classloader magic required to bootstrap resteasy.
+        // Classloader magic required to bootstrap resteasy.
         final Thread currentThread = Thread.currentThread();
         final ClassLoader origClassLoader = currentThread.getContextClassLoader();
         try {
@@ -33,7 +32,12 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
             currentThread.setContextClassLoader(pluginClassLoader);
             return doInvoke(proxy, method, args);
         } catch (InvocationTargetException e) {
-            throw new DeployitPluginException(e.getCause().getMessage(), e.getCause());
+            // rather than capturing invocation exception we should capture the cause
+            if (null != e.getCause()) {
+                throw new DeployitPluginException(e.getCause());
+            } else {
+                throw new DeployitPluginException(e);
+            }
         } finally {
             currentThread.setContextClassLoader(origClassLoader);
         }
