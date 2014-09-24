@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
+ *
+ *
+ * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
+ * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
+ * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
+ * this software, see the FLOSS License Exception
+ * <https://github.com/jenkinsci/deployit-plugin/blob/master/LICENSE>.
+ *
+ * This program is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU General Public License as published by the Free Software Foundation; version 2
+ * of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
+ * Floor, Boston, MA 02110-1301  USA
+ */
+
 package com.xebialabs.deployit.ci.server;
 
 import java.util.Collection;
@@ -21,13 +44,25 @@ import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
 import com.xebialabs.deployit.booter.remote.RemoteBooter;
 import com.xebialabs.deployit.booter.remote.RemoteDescriptor;
 import com.xebialabs.deployit.booter.remote.RemoteDescriptorRegistry;
+import com.xebialabs.deployit.booter.remote.RemotePropertyDescriptor;
+import com.xebialabs.deployit.ci.DeployitPluginException;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
 import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
 import com.xebialabs.deployit.plugin.api.reflect.PropertyKind;
 import com.xebialabs.deployit.plugin.api.reflect.Type;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
+import com.xebialabs.deployit.plugin.api.udm.Deployable;
+import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
+import com.xebialabs.deployit.plugin.api.udm.EmbeddedDeployable;
+import com.xebialabs.deployit.plugin.api.udm.Version;
+import com.xebialabs.deployit.plugin.api.udm.artifact.FolderArtifact;
+import com.xebialabs.deployit.plugin.api.udm.artifact.SourceArtifact;
 import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
+import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployable;
+import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployableFileArtifact;
+import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployableFolderArtifact;
+import com.xebialabs.deployit.plugin.api.udm.base.BaseEmbeddedDeployable;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
@@ -58,6 +93,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
                     LOG.warn("No communicator found for config: {}. Creating new DeployitCommunicator. Cause: {}.", safeBooterConfigKey(), ex.getMessage(), ex);
                     DescriptorRegistry.remove(booterConfig);
                     communicator = RemoteBooter.boot(booterConfig);
+                    fixVersionDepl6949();
                 }
             }
         } finally {
@@ -98,10 +134,75 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         return getDescriptorRegistry().lookupType(name);
     }
 
+    /**
+     * This method is only used when we create Dar on a remote side (ie jenkins plugin).
+     * TODO: Once the DarPackager and ManifestWriter are rewritten and start to accept generic CIs (DEPL-6925)
+     * this method should be removed.
+     */
     @Override
-    public <T extends BaseConfigurationItem> T newInstance(Class<T> clazz, String name) {
-        Type type = getDescriptorRegistry().lookupType(clazz);
-        return newInstance(type, name);
+    public <T extends BaseConfigurationItem> T newInstance(Class<T> clazz, String id) {
+        Type type = typeForClass(clazz);
+        try {
+            T bci = clazz.newInstance();
+            bci.setId(id);
+            bci.setType(type);
+            initSyntheticProperties(bci, type);
+
+            return bci;
+        } catch (Throwable t) {
+            String msg = String.format("Unable to create CI class '%s' with id: '%s'", clazz.toString(), id);
+            throw new DeployitPluginException(msg, t);
+        }
+    }
+
+    private <T extends BaseConfigurationItem> void initSyntheticProperties(T bci, Type type) {
+        prefillPropertiesWithDefaultValues(bci, type);
+    }
+
+    private <T extends BaseConfigurationItem> void prefillPropertiesWithDefaultValues(T bci, Type type) {
+        Collection<PropertyDescriptor> propertyDescriptors = type.getDescriptor().getPropertyDescriptors();
+        // properties with default values
+        for (PropertyDescriptor pd : propertyDescriptors) {
+            Object defaultValue = pd.getDefaultValue();
+            // hack for boolean
+            if (defaultValue == null && PropertyKind.BOOLEAN == pd.getKind()) {
+                defaultValue = false;
+            }
+            if (defaultValue != null) {
+                bci.setProperty(pd.getName(), defaultValue);
+            }
+        }
+    }
+
+    // DEPL-6949: add properties required by the DarPackager/ManifestWriter even if they don't exist on XLD
+    private void fixVersionDepl6949() {
+        // monkey patching "udm.Version" on client side
+        Descriptor deploymentPackageDescriptor = DescriptorRegistry.getDescriptor(Type.valueOf(DeploymentPackage.class));
+        Type type = deploymentPackageDescriptor.getType();
+        if (type.isSubTypeOf(Type.valueOf(Version.class))) {
+            addMissingPropertyDescriptor(type, "ignoreUndefinedPropertiesInManifest", PropertyKind.BOOLEAN, "true", true);
+            addMissingPropertyDescriptor(type, "exportAllPasswords", PropertyKind.BOOLEAN, "false", true);
+            addMissingPropertyDescriptor(type, "exportOnlyPasswordPlaceholders", PropertyKind.BOOLEAN, "true", true);
+        }
+    }
+
+    private void addMissingPropertyDescriptor(Type parentType, String name, PropertyKind kind, String defaultValue, boolean hidden) {
+        RemoteDescriptor descriptor = (RemoteDescriptor) parentType.getDescriptor();
+        RemotePropertyDescriptor pd = (RemotePropertyDescriptor) descriptor.getPropertyDescriptor(name);
+        Collection<PropertyDescriptor> propertyDescriptors = descriptor.getPropertyDescriptors();
+        if (null == pd) {
+            pd = new RemotePropertyDescriptor();
+            pd.setKind(kind);
+            pd.setDefaultValue(defaultValue);
+            pd.setFqn(parentType.toString() + "." + name);
+            pd.setName(name);
+            // there is no way to set hidden
+            if (hidden) {
+                pd.setHidden();
+            }
+        }
+        propertyDescriptors.add(pd);
+        descriptor.setPropertyDescriptors(propertyDescriptors);
     }
 
     @Override
@@ -111,10 +212,27 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         return ci;
     }
 
-    private <T extends BaseConfigurationItem> T newInstance(Type type, String id) {
+    private ConfigurationItem newInstance(Type type, String id) {
         try {
             RemoteDescriptor remoteDescriptor = (RemoteDescriptor) getDescriptor(type);
-            T ci = remoteDescriptor.newInstance(id);
+            // T ci = remoteDescriptor.newInstance(id);
+            BaseConfigurationItem ci;
+
+            if (remoteDescriptor.isAssignableTo(typeForClass(EmbeddedDeployable.class))) {
+                ci = new BaseEmbeddedDeployable();
+            } else if (remoteDescriptor.isAssignableTo(typeForClass(SourceArtifact.class))) {
+                if (remoteDescriptor.isAssignableTo(typeForClass(FolderArtifact.class))) {
+                    ci = new BaseDeployableFolderArtifact();
+                } else {
+                    ci = new BaseDeployableFileArtifact();
+                }
+            } else if (remoteDescriptor.isAssignableTo(typeForClass(Deployable.class))) {
+                ci = new BaseDeployable();
+            } else {
+                ci = new BaseConfigurationItem();
+            }
+            ci.setId(id);
+            ci.setType(type);
 
             for (PropertyDescriptor pd : remoteDescriptor.getPropertyDescriptors()) {
                 if (pd.isAsContainment()) {
@@ -133,6 +251,8 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
                     }
                 }
             }
+
+            initSyntheticProperties(ci, type);
 
             return ci;
         } catch (Throwable e) {
