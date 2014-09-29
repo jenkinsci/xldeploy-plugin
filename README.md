@@ -16,3 +16,10 @@ Run development server:
 Debuggins is configured with GRADLE_OPTIONS env variable.
 
     GRADLE_OPTS="${GRADLE_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006" ./gradlew clean server
+
+
+How to debug slave:
+
+    javaws  -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8200 http://localhost:8080/computer/slave1/slave-agent.jnlp
+
+
