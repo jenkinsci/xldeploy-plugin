@@ -51,7 +51,11 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
         final Thread currentThread = Thread.currentThread();
         final ClassLoader origClassLoader = currentThread.getContextClassLoader();
         try {
-            ClassLoader pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin(Constants.DEPLOYIT_PLUGIN).classLoader;
+            ClassLoader pluginClassLoader = origClassLoader;
+            if (null != Jenkins.getInstance()) {
+                // if we're not on slave - on slave we would get null - which makes me wonder if we really need to this magic at all
+                pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin(Constants.DEPLOYIT_PLUGIN).classLoader;
+            }
             currentThread.setContextClassLoader(pluginClassLoader);
             return doInvoke(proxy, method, args);
         } catch (InvocationTargetException e) {
