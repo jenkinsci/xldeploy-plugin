@@ -22,7 +22,7 @@
                 </f:entry>
 
                 <f:entry title="${%Value}" field="propertyValue">
-                    <f:textbox/>
+                    <f:expandableTextbox/>
                 </f:entry>
 
                 <f:entry title="">
