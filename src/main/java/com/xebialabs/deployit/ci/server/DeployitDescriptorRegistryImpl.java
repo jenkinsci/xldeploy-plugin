@@ -90,11 +90,12 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
                     communicator = RemoteBooter.getCommunicator(booterConfig);
                     LOG.debug("Reusing existing communicator for config: {}.", safeBooterConfigKey());
                 } catch (IllegalStateException ex) {
-                    LOG.warn("No communicator found for config: {}. Creating new DeployitCommunicator. Cause: {}.", safeBooterConfigKey(), ex.getMessage(), ex);
+                    LOG.debug("No communicator found for config: {}. Creating new DeployitCommunicator.", safeBooterConfigKey());
                     DescriptorRegistry.remove(booterConfig);
                     communicator = RemoteBooter.boot(booterConfig);
-                    fixVersionDepl6949();
                 }
+
+                fixVersionDepl6949();
             }
         } finally {
             LOCK.leave();
@@ -177,8 +178,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     // DEPL-6949: add properties required by the DarPackager/ManifestWriter even if they don't exist on XLD
     private void fixVersionDepl6949() {
         // monkey patching "udm.Version" on client side
-        Descriptor deploymentPackageDescriptor = DescriptorRegistry.getDescriptor(Type.valueOf(DeploymentPackage.class));
-        Type type = deploymentPackageDescriptor.getType();
+        Type type = typeForClass(DeploymentPackage.class);
         if (type.isSubTypeOf(Type.valueOf(Version.class))) {
             addMissingPropertyDescriptor(type, "ignoreUndefinedPropertiesInManifest", PropertyKind.BOOLEAN, "true", true);
             addMissingPropertyDescriptor(type, "exportAllPasswords", PropertyKind.BOOLEAN, "false", true);
