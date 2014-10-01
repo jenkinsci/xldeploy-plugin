@@ -15,8 +15,9 @@ public class SlaveRemoteDescriptorRegistry extends RemoteDescriptorRegistry {
         super(id);
     }
 
-    public static void boot(Collection<Descriptor> descriptors, BooterConfig booterConfig) {
+    public synchronized static void boot(Collection<Descriptor> descriptors, BooterConfig booterConfig) {
         SlaveRemoteDescriptorRegistry registry = new SlaveRemoteDescriptorRegistry(booterConfig);
+        DescriptorRegistry.remove(booterConfig);
         DescriptorRegistry.add(registry);
         registry.reboot(new ArrayList<Descriptor>(descriptors));
     }
