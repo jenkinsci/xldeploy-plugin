@@ -62,6 +62,28 @@ If you have many deployment jobs running in parallel you can tweak the connectio
 
 ## Release notes ##
 
+### Version 4.5.0 ###
+
+Improvements:
+
+* [DEPL-6550] - Add orchestrator field to Jenkins plugin configuration page
+* [DEPL-6638] - Support usage of Jenkins build parameters in Environment field
+
+Bug Fixes:
+
+* [DEPL-4798] - Unhelpful error message when Version is not defined
+* [DEPL-4899] - Hidden deployable properties are displayed in Jenkins CI dropdowns and appear editable
+* [DEPL-5521] - Text field with size large is rendered as a single line in Jenkins UI
+* [DEPL-5986] - Jenkins plugin fails with IllegalStateException due to uninitialized descriptor registries
+* [DEPL-6371] - Unhelpful error message when no deployable is defined
+* [DEPL-6974] - Intermittent error in SlaveRemoteDescriptorRegistry boot
+
+### Version 4.0.1 ###
+
+Bug Fixes:
+
+* [DEPL-6076] - Invalid file.Folder or www.WebContent artifact created from ZIP file
+
 ### Version 4.0.0 ###
 
 Improvements:
