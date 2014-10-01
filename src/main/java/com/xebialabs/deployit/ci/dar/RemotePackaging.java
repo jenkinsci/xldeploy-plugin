@@ -27,9 +27,6 @@ import java.io.File;
 import java.util.Collection;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
-import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistryImpl;
-import com.xebialabs.deployit.ci.server.DeployitServer;
-import com.xebialabs.deployit.ci.server.DeployitServerFactory;
 import com.xebialabs.deployit.packager.DarPackager;
 import com.xebialabs.deployit.packager.ManifestWriter;
 import com.xebialabs.deployit.packager.writers.ManifestXmlWriter;
@@ -76,14 +73,13 @@ public class RemotePackaging implements Callable<File, RuntimeException> {
     /**
      * Call to be executed via jenkins virtual channel
      */
-    @Override
     public File call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
         DarPackager pkger = new DarPackager(mw);
-        // initialize deployitserver, booter config etc.
-        DeployitServer server = DeployitServerFactory.newInstance(booterConfig);
-        server.getDescriptorRegistry().getDescriptors();
+        if (DescriptorRegistry.getDescriptorRegistry(booterConfig) == null) {
+           SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig);
+        }
         return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true);
     }
 
