@@ -104,6 +104,11 @@ configurations {
     // this artifact lives in a netbeans repository which behaves flakey
     // it's not used so exclude it.
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
+    providedRuntime.exclude group: 'ch.qos.logback', module: 'logback-classic'
+    providedRuntime.exclude group: 'ch.qos.logback', module: 'logback-core'
+    providedRuntime.exclude group: 'org.slf4j', module: 'slf4j-api'
+    providedRuntime.exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
+    providedRuntime.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 }
 
 def xlPlatformVersion = "2014.7.3"
