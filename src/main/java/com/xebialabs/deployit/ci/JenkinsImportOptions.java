@@ -53,7 +53,7 @@ public class JenkinsImportOptions implements Describable<JenkinsImportOptions> {
         return mode.getDarFileLocation(workspace, deploymentListener, envVars);
     }
 
-    public void setGeneratedDarLocation(File generatedDarLocation) {
+    public void setGeneratedDarLocation(String generatedDarLocation) {
         mode.setGeneratedLocation(generatedDarLocation);
     }
 

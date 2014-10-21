@@ -120,7 +120,7 @@ public class DeployitNotifier extends Notifier {
             DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
             final File targetDir = new File(workspace.absolutize().getRemote(), "deployitpackage");
 
-            File packaged = workspace.getChannel().call(
+            String packagedPath = workspace.getChannel().call(
                     new RemotePackaging()
                             .withTargetDir(targetDir)
                             .forDeploymentPackage(deploymentPackage)
@@ -128,9 +128,9 @@ public class DeployitNotifier extends Notifier {
                             .usingDescriptors(Lists.newArrayList(getDeployitServer().getDescriptorRegistry().getDescriptors()))
             );
 
-            deploymentListener.info(Messages.DeployitNotifier_packaged(resolvedApplication, packaged));
+            deploymentListener.info(Messages.DeployitNotifier_packaged(resolvedApplication, packagedPath));
             if (importOptions != null) {
-                importOptions.setGeneratedDarLocation(packaged);
+                importOptions.setGeneratedDarLocation(packagedPath);
             }
         }
 

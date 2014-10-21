@@ -35,7 +35,7 @@ import jenkins.model.Jenkins;
 
 public abstract class ImportLocation implements Describable<ImportLocation> {
 
-    protected File generatedLocation;
+    protected String generatedLocation;
 
     public Descriptor<ImportLocation> getDescriptor() {
         return Jenkins.getInstance().getDescriptor(getClass());
@@ -43,7 +43,7 @@ public abstract class ImportLocation implements Describable<ImportLocation> {
 
     public abstract String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) ;
 
-    public void setGeneratedLocation(File generatedLocation) {
+    public void setGeneratedLocation(String generatedLocation) {
         this.generatedLocation = generatedLocation;
     }
 
