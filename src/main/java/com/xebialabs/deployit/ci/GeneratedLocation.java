@@ -55,10 +55,10 @@ public class GeneratedLocation extends ImportLocation {
         checkNotNull(generatedLocation, "The package has not been generated");
 
         if (!workspace.isRemote()) {
-            return generatedLocation.getPath();
+            return generatedLocation;
         }
 
-        FilePath remoteDar = new FilePath(workspace.getChannel(), generatedLocation.getPath());
+        FilePath remoteDar = new FilePath(workspace.getChannel(), generatedLocation);
         localTempDir = Files.createTempDir();
         localTempDar = new FilePath(new File(localTempDir, remoteDar.getName()));
         try {

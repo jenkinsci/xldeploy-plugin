@@ -41,7 +41,7 @@ import hudson.remoting.Callable;
  * It must be executed on the target system where the project artifact was built.
  * @see <a href="https://wiki.jenkins-ci.org/display/JENKINS/Distributed+builds">Jenkins distributed builds</a>
  */
-public class RemotePackaging implements Callable<File, RuntimeException> {
+public class RemotePackaging implements Callable<String, RuntimeException> {
 
     private File targetDir;
     private DeploymentPackage deploymentPackage;
@@ -73,14 +73,14 @@ public class RemotePackaging implements Callable<File, RuntimeException> {
     /**
      * Call to be executed via jenkins virtual channel
      */
-    public File call() throws RuntimeException {
+    public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
         DarPackager pkger = new DarPackager(mw);
         if (DescriptorRegistry.getDescriptorRegistry(booterConfig) == null) {
            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig);
         }
-        return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true);
+        return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true).getPath();
     }
 
 
