@@ -79,9 +79,9 @@ public class DeployCommand {
             throw new DeployitPluginException(errorMsg, t);
         }
 
-        Type deploymentPackageType = Type.valueOf("udm.DeploymentPackage");
-        if (!deploymentPackageType.equals(foundType)) {
-            String errorMsg = String.format("'%s' is of type '%s' instead 'udm.DeploymentPackage'. Please verify that 'Version' is specified in jenkins configuration.", deploymentPackage, foundType);
+        Type versionType = Type.valueOf("udm.Version");
+        if (!foundType.isSubTypeOf(versionType)) {
+            String errorMsg = String.format("'%s' of type '%s' is not a deployment package. Please verify that 'Version' is specified in Jenkins configuration.", deploymentPackage, foundType);
             throw new DeployitPluginException(errorMsg);
         }
 
