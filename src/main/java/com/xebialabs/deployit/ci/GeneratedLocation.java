@@ -23,52 +23,24 @@
 
 package com.xebialabs.deployit.ci;
 
-import java.io.File;
-import java.io.IOException;
-import org.kohsuke.stapler.DataBoundConstructor;
-import com.google.common.io.Files;
-
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class GeneratedLocation extends ImportLocation {
-
-    private File localTempDir;
-    private FilePath localTempDar;
+public class GeneratedLocation extends RemoteAwareLocation {
 
     @DataBoundConstructor
     public GeneratedLocation() {
     }
 
-    /**
-     * For local workspace just returns the path;
-     * For remote workspace - copies dar file into local temporary location first,
-     * then returns temporary path. FilePath.cleanup() method should be used to delete all temporary files.
-     */
     @Override
     public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
         checkNotNull(generatedLocation, "The package has not been generated");
-
-        if (!workspace.isRemote()) {
-            return generatedLocation;
-        }
-
-        FilePath remoteDar = new FilePath(workspace.getChannel(), generatedLocation);
-        localTempDir = Files.createTempDir();
-        localTempDar = new FilePath(new File(localTempDir, remoteDar.getName()));
-        try {
-            remoteDar.copyTo(localTempDar);
-        } catch (Exception e) {
-            String msg = String.format("Unable to copy remote dar '%s' to local temp directory '%s'.", remoteDar, localTempDar);
-            throw new DeployitPluginException(msg, e);
-        }
-
-        return localTempDar.getRemote();
+        return getRemoteAwareLocation(workspace, generatedLocation);
     }
 
     @Extension
@@ -79,17 +51,5 @@ public class GeneratedLocation extends ImportLocation {
         }
     }
 
-    @Override
-    public void cleanup() {
-        try {
-            if (localTempDar != null && localTempDar.exists())
-                localTempDar.delete();
-            if (localTempDir != null && localTempDir.exists())
-                localTempDir.delete();
-        } catch (IOException e) {
-             //ignore
-        } catch (InterruptedException e) {
-            //ignore
-        }
-    }
+
 }

@@ -2,7 +2,7 @@
     <f:entry title="${%Location}" field="location" help="/plugin/deployit-plugin/help-location.html">
         <f:textbox default="**/*.dar"/>
     </f:entry>
-    <f:entry title="${%workingDirectory}" field="workingDirectory" help="/plugin/deployit-plugin/help-workingDirectory.html">
+    <f:entry title="${%Working Directory}" field="workingDirectory" help="/plugin/deployit-plugin/help-workingDirectory.html">
         <f:textbox/>
     </f:entry>
 

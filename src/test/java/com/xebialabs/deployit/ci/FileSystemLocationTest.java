@@ -36,6 +36,7 @@ import java.io.File;
 
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 public class FileSystemLocationTest {
@@ -49,16 +50,27 @@ public class FileSystemLocationTest {
 
     private FilePath remoteFilePath, localFilePath;
 
+    @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        remoteFilePath = new FilePath(channel, "./build/resources/test");
         localFilePath = new FilePath(new File("./build/resources/test"));
     }
 
+    @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
         FileSystemLocation fileSystemLocation = new FileSystemLocation("test.dar","./build/resources/test");
         assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("build%sresources%stest%stest.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
     }
 
+    @Test
+    public void shouldReturnLocalTempFileWhenWorkspaceIsRemote() {
+        FileSystemLocation fileSystemLocation = new FileSystemLocation("test.dar","./build/resources/test");
+        String localDarLocation = fileSystemLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
+        assertThat(localDarLocation, not("/build/resources/test/test.dar"));
+    }
+
+    @Test
     public void shouldResolveEnvVarInPath() throws Exception {
         EnvVars envVars = new EnvVars();
         envVars.put("NAME","test");
