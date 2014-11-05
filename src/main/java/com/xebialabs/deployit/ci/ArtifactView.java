@@ -79,6 +79,11 @@ public class ArtifactView extends DeployableView {
     }
 
     static File findFileFromPattern(String pattern, FilePath workspace, JenkinsDeploymentListener listener) throws IOException {
+        final String artifactPath = findFilePathFromPattern(pattern, workspace, listener);
+        return fetchFile(artifactPath, workspace);
+    }
+
+    static String findFilePathFromPattern(String pattern, FilePath workspace, JenkinsDeploymentListener listener) throws IOException {
         listener.info(String.format("Searching for '%s' in '%s'", pattern, workspace));
         FileFinder fileFinder = new FileFinder(pattern);
         List<String> fileNames;
@@ -99,7 +104,7 @@ public class ArtifactView extends DeployableView {
         }
         // so we use only the first found
         final String artifactPath = fileNames.get(0);
-        return fetchFile(artifactPath, workspace);
+        return new FilePath(workspace, artifactPath).getRemote();
     }
 
     private static File fetchFile(String artifactPath, FilePath workspace) throws IOException {

@@ -12,7 +12,7 @@
     <f:entry title="${%Update Mappings}" field="generateDeployedOnUpgrade" help="/plugin/deployit-plugin/help-generate-deployeds-on-update.html">
         <f:checkbox default="true" />
     </f:entry>
-    <f:entry title="${%SkipMode}" field="skipMode" help="/plugin/deployit-plugin/help-skipmode.html">
+    <f:entry title="${%Skip Mode}" field="skipMode" help="/plugin/deployit-plugin/help-skipmode.html">
         <f:checkbox/>
     </f:entry>
     <f:entry title="${%Dry Run}" field="testMode" help="/plugin/deployit-plugin/help-dryrun.html">

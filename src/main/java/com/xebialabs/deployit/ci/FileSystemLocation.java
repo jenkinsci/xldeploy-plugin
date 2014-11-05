@@ -23,7 +23,6 @@
 
 package com.xebialabs.deployit.ci;
 
-import java.io.File;
 import java.io.IOException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -38,7 +37,7 @@ import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
-public class FileSystemLocation extends ImportLocation {
+public class FileSystemLocation extends RemoteAwareLocation {
     public final String location;
     public final String workingDirectory;
 
@@ -51,11 +50,12 @@ public class FileSystemLocation extends ImportLocation {
     @Override
     public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
         checkNotNull(emptyToNull(location), "location is empty or null");
-        FilePath root = (isNullOrEmpty(workingDirectory) ? workspace : new FilePath(new File(workingDirectory)));
+        FilePath root = (isNullOrEmpty(workingDirectory) ? workspace : new FilePath(workspace.getChannel(), workingDirectory));
         String resolvedLocation = "";
         try {
             resolvedLocation = envVars.expand(location);
-            return ArtifactView.findFileFromPattern(resolvedLocation, root, deploymentListener).getPath();
+            String path = ArtifactView.findFilePathFromPattern(resolvedLocation, root, deploymentListener);
+            return getRemoteAwareLocation(workspace, path);
         } catch (IOException exception) {
             throw new DeployitPluginException(format("Unable to find DAR from %s in %s", resolvedLocation, root), exception);
         }

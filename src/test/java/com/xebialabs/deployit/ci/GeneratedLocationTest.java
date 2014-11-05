@@ -53,23 +53,27 @@ public class GeneratedLocationTest {
 
     private GeneratedLocation generatedLocation = new GeneratedLocation();
 
+    @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         remoteFilePath = new FilePath(channel, "/tmp/test-remote");
         localFilePath = new FilePath(new File("/tmp/test-local"));
     }
 
+    @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
         generatedLocation.setGeneratedLocation("/tmp/test-local/asd.dar");
         assertThat(generatedLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("%stmp%stest-local%sasd.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
     }
 
+    @Test
     public void shouldReturnLocalTempFileWhenWorkspaceIsRemote() {
         generatedLocation.setGeneratedLocation("/tmp/test-remote/asd.dar");
         String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
         assertThat(localDarLocation, not("/tmp/test-remote/asd.dar"));
     }
 
+    @Test
     public void shouldCleanUpLocalTempFile() throws Exception {
         generatedLocation.setGeneratedLocation("/tmp/test-remote/asd.dar");
         String localDarLocation = generatedLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
