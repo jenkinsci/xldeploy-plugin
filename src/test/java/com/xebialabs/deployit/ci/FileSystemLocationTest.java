@@ -30,14 +30,17 @@ import hudson.remoting.VirtualChannel;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.File;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.when;
 
 public class FileSystemLocationTest {
     private static final String FILE_SEPARATOR = File.separator;
@@ -64,9 +67,15 @@ public class FileSystemLocationTest {
     }
 
     @Test
-    public void shouldReturnLocalTempFileWhenWorkspaceIsRemote() {
+    public void shouldReturnLocalTempFileWhenWorkspaceIsRemote() throws Throwable {
+        // arrange
+        when(channel.call(Mockito.<hudson.remoting.Callable<Object, Throwable>>any())).thenReturn(asList("test.dar"));
         FileSystemLocation fileSystemLocation = new FileSystemLocation("test.dar","./build/resources/test");
+
+        // act
         String localDarLocation = fileSystemLocation.getDarFileLocation(remoteFilePath, listener, new EnvVars());
+
+        // assert
         assertThat(localDarLocation, not("/build/resources/test/test.dar"));
     }
 
