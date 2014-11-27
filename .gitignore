@@ -1,6 +1,7 @@
 # use glob syntax.
 syntax: glob
 .gradle/
+*.class
 
 # Gradle environment specific properties
 gradle.properties
@@ -39,3 +40,11 @@ atlassian-ide-plugin.xml
 integration-test
 ui-integration-test
 work
+tools
+
+# ignore robot output
+log.html
+output.xml
+report.html
+robot_cache
+selenium*

@@ -29,10 +29,11 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'jpi'
+apply plugin: 'obake'
 
 build.dependsOn jpi
 
-task deleteGeneratedSrcLocalizer(type:Delete) {
+task deleteGeneratedSrcLocalizer(type: Delete) {
     delete "build/generated-src/localizer"
 }
 
@@ -45,6 +46,7 @@ repositories {
     }
 }
 
+
 buildscript {
     repositories {
         maven {
@@ -54,9 +56,11 @@ buildscript {
         // The plugin is currently only available via the Jenkins
         // Maven repository, but has dependencies in Maven Central.
         mavenCentral()
+        jcenter()
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.5.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.7.1'
+        classpath 'org.bitbucket.grimrose:gradle-obake-plugin:0.5'
     }
 }
 
@@ -81,15 +85,15 @@ jenkinsPlugin {
 // Per default Jenkins loads every jar from WEB-INF/lib, along with the contents of WEB-INF/classes after the classes and libraries of the core.
 // If you want to have your own libaries loaded before these (e.g. you want a newer version of velocity or an other library),
 // you can configure your plugin to use a different classloader strategy
-tasks.jpi.manifest.attributes(["PluginFirstClassLoader": "true" ])
+tasks.jpi.manifest.attributes(["PluginFirstClassLoader": "true"])
 
 server.doFirst {
-    org.jenkinsci.gradle.plugins.jpi.JpiHplManifest.metaClass.writeTo = {File f->
+    org.jenkinsci.gradle.plugins.jpi.JpiHplManifest.metaClass.writeTo = { File f ->
         def m = new java.util.jar.Manifest()
-        m.mainAttributes.putValue("Manifest-Version","1.0")
-        m.mainAttributes.putValue("PluginFirstClassLoader","true")
-        delegate.each {k,v ->
-            m.mainAttributes.putValue(k,v.toString())
+        m.mainAttributes.putValue("Manifest-Version", "1.0")
+        m.mainAttributes.putValue("PluginFirstClassLoader", "true")
+        delegate.each { k, v ->
+            m.mainAttributes.putValue(k, v.toString())
         }
         f.withOutputStream { o -> m.write(o); }
     }
@@ -98,8 +102,10 @@ server.doFirst {
 
 configurations {
     compile.transitive = true
-    providedRuntime.exclude group: 'jdom', module: 'jdom' //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
-    providedRuntime.exclude group: 'de.schlichtherle.truezip', module: 'truezip-path' // needs Java7, borks on Java6 setups
+    providedRuntime.exclude group: 'jdom', module: 'jdom'
+    //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
+    providedRuntime.exclude group: 'de.schlichtherle.truezip', module: 'truezip-path'
+    // needs Java7, borks on Java6 setups
     all*.exclude group: 'com.thoughtworks.xstream', module: "xstream"
     // this artifact lives in a netbeans repository which behaves flakey
     // it's not used so exclude it.
@@ -109,12 +115,24 @@ configurations {
     providedRuntime.exclude group: 'org.slf4j', module: 'slf4j-api'
     providedRuntime.exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
     providedRuntime.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+
+    xl_sdk
 }
 
-def xlPlatformVersion = "2014.7.3"
-def xlDeployVersion = "4.5.1"
-def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
-// (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
+ext {
+    xlPlatformVersion = "2014.7.3"
+    xlDeployVersion = "4.5.1"
+    truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
+    // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
+
+    // robot itests
+    xlSdkVersion = '1.0.0-alpha-5'
+    xlSdkHome = "${System.properties['user.home']}/.gradle/xl-sdk/${xlSdkVersion}"
+    robotPassthroughProperties = ['JENKINS_VERSION']
+    defaultProperties = [
+            'JENKINS_VERSION': '1.579'
+    ]
+}
 
 configurations.all {
     resolutionStrategy {
@@ -137,5 +155,70 @@ dependencies {
 
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
+
+    xl_sdk "com.xebialabs.sdk:xl-sdk:$xlSdkVersion"
 }
 
+task installXlSdk(dependsOn: 'preparePhantomJS') {
+    doFirst {
+        file(xlSdkHome).mkdirs()
+    }
+    doLast {
+        println "Installing XL SDK"
+        copy {
+            from zipTree(configurations.xl_sdk.singleFile)
+            into xlSdkHome
+        }
+        println "Installing robotframework-selenium2library"
+        exec {
+            environment env()
+            commandLine "$xlSdkHome/runtime/bin/pip", 'install', 'robotframework-selenium2library'
+        }
+    }
+}
+
+// --randomize all|suites|tests|none
+// --pythonpath path *
+// --suite name
+// --outputdir dir
+// --variable name:value
+task itest(type: Exec, dependsOn: installXlSdk) {
+    def reportDir = "${buildDir}/reports/robot/"
+    def suiteDir = "src/test/robot"
+
+    def robotCommandLine = [
+            "${xlSdkHome}/bin/xl-sdk",
+            "itest",
+            "--loglevel", "DEBUG",
+            "--xunit", "xunit-report.xml",
+            '-v', "TMP_DIR:${buildDir}",
+    ] as List
+
+    robotPassthroughProperties.each {
+        if (project.hasProperty(it)) {
+            robotCommandLine += ['-v', "${it}:${project.properties[it]}"]
+        } else {
+            robotCommandLine += ['-v', "${it}:${defaultProperties[it]}"]
+        }
+    }
+
+    robotCommandLine += ["--outputdir", reportDir, "tests"]
+    doFirst {
+        file(reportDir).mkdirs()
+    }
+    environment env()
+    workingDir suiteDir
+    commandLine robotCommandLine
+}
+
+import org.bitbucket.grimrose.gradle.*
+
+def env() {
+    def env = [:]
+    env << System.getenv()
+    def phantomjs_dir = new ConventionPathResolver().find(project.projectDir, new ObakeConfig())
+    env['PATH'] = "$phantomjs_dir/bin:" + env['PATH']
+    env['PATH'] = "$xlSdkHome/runtime/bin:" + env['PATH']
+    env.remove('PYTHONHOME')
+    return env
+}
