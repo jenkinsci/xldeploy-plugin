@@ -1,22 +1,25 @@
 package com.xebialabs.deployit.ci;
 
+import hudson.Extension;
+import hudson.RelativePath;
+import hudson.model.AbstractProject;
+import hudson.util.ListBoxModel;
+
 import java.util.Collection;
+
 import javax.annotation.Nullable;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.google.common.base.Predicate;
 
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.util.ListBoxModels;
 import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
 import com.xebialabs.deployit.plugin.api.reflect.PropertyKind;
-
-import hudson.Extension;
-import hudson.RelativePath;
-import hudson.util.ListBoxModel;
-
-import static com.google.common.collect.Lists.newArrayList;
 
 public class PackageProperty extends NameValuePair {
 
@@ -50,17 +53,19 @@ public class PackageProperty extends NameValuePair {
 
         public ListBoxModel doFillPropertyNameItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialExistingProps,
-                @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialNewProps) {
+                @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialNewProps,
+                @AncestorInPath AbstractProject project)
+        {
             String creds = credentialExistingProps != null ? credentialExistingProps : credentialNewProps;
             String type = PACKAGE_TYPE;
+            Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             // load type descriptor
-            getDescriptorRegistry(creds).typeForName(PACKAGE_TYPE);
-            Collection<String> properties = getDescriptorRegistry(creds).getPropertiesForDeployableType(type, ONLY_SIMPLE_EDITABLE_PROPERTIES);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential );
+            DeployitDescriptorRegistry descriptorRegistry = deployitServer.getDescriptorRegistry();
+            descriptorRegistry.typeForName(PACKAGE_TYPE);
+            Collection<String> properties = descriptorRegistry.getPropertiesForDeployableType(type, ONLY_SIMPLE_EDITABLE_PROPERTIES);
             return ListBoxModels.of(properties);
         }
 
-        private DeployitDescriptorRegistry getDescriptorRegistry(final String creds) {
-            return getDeployitDescriptor().getDeployitServer(creds).getDescriptorRegistry();
-        }
     }
 }

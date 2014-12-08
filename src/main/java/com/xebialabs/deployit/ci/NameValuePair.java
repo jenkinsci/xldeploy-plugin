@@ -23,17 +23,21 @@
 
 package com.xebialabs.deployit.ci;
 
-import com.xebialabs.deployit.ci.util.ListBoxModels;
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.AbstractDescribableImpl;
+import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
-import jenkins.model.Jenkins;
+
+import java.util.Collection;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import java.util.Collection;
+import com.xebialabs.deployit.ci.server.DeployitServer;
+import com.xebialabs.deployit.ci.util.ListBoxModels;
 
 public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
@@ -64,14 +68,12 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
         public ListBoxModel doFillPropertyNameItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialExistingProps,
                 @QueryParameter(value = "credential") @RelativePath(value = "../../..") String credentialNewProps,
+                @AncestorInPath AbstractProject project,
                 @QueryParameter @RelativePath(value = "..") String type) {
             String creds = credentialExistingProps != null ? credentialExistingProps : credentialNewProps;
-            Collection<String> properties = getDeployitDescriptor().getPropertiesOf(creds, type);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, RepositoryUtils.retrieveOverridingCredentialFromProject(project));
+            Collection<String> properties = RepositoryUtils.getPropertiesOf(deployitServer, type);
             return ListBoxModels.of(properties);
-        }
-
-        protected DeployitNotifier.DeployitDescriptor getDeployitDescriptor() {
-            return (DeployitNotifier.DeployitDescriptor) Jenkins.getInstance().getDescriptorOrDie(DeployitNotifier.class);
         }
 
     }

@@ -1,13 +1,17 @@
 package com.xebialabs.deployit.ci;
 
 import java.util.List;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.xebialabs.deployit.ci.server.DeployitServer;
+
 import hudson.Extension;
 import hudson.RelativePath;
+import hudson.model.AbstractProject;
 import hudson.util.ListBoxModel;
-
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
 
 public class EmbeddedView extends DeployableView {
@@ -24,6 +28,7 @@ public class EmbeddedView extends DeployableView {
         return parentName;
     }
 
+    @Override
     public String getFullyQualifiedName() {
         return getParentName() + "/" + name;
     }
@@ -38,10 +43,13 @@ public class EmbeddedView extends DeployableView {
 
         public ListBoxModel doFillTypeItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingEmbeddeds,
-                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewEmbeddeds
-        ) {
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewEmbeddeds,
+                @AncestorInPath AbstractProject project)
+        {
             String creds = credentialExistingEmbeddeds != null ? credentialExistingEmbeddeds : credentialNewEmbeddeds;
-            return of(getDeployitDescriptor().getAllEmbeddedResourceTypes(creds));
+            Credential credential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, credential);
+            return of(RepositoryUtils.getAllEmbeddedResourceTypes(deployitServer));
         }
     }
 }

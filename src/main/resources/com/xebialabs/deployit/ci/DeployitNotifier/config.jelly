@@ -1,30 +1,52 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry title="${%Credential}" field="credential" help="/plugin/deployit-plugin/help-credential.html">
-        <f:select/>
-    </f:entry>
-    <f:validateButton title="${%Reload types for credential}" with="credential" method="reloadTypes"/>
+
+    <f:block>
+        <f:entry title="${%Global server credential}" field="credential" help="/plugin/deployit-plugin/help-credential.html">
+            <f:select />
+        </f:entry>
+    </f:block>
+
+    <f:block>
+        <j:set var="overridingCredential" value="${instance.overridingCredential}" />
+        <f:optionalBlock field="overridingCredential" name="overridingCredential" title="${%Override credential}" checked="${overridingCredential != null}">
+<!--             <st:include page="config.jelly" it="${instance.overridingCredential}" /> -->
+            <input type="hidden" name="stapler-class" value="com.xebialabs.deployit.ci.Credential" />
+            <f:entry title="${%Username}" field="username">
+                <f:textbox value="${overridingCredential.username}"/>
+            </f:entry>
+            <f:entry title="${%Password}" field="password">
+                <f:password value="${overridingCredential.password}"/>
+            </f:entry>
+            <f:description>
+            Overriding credential has to be applied before it has effect (please <b>Apply</b> or <b>Save</b> changes).</f:description>
+        </f:optionalBlock>
+    </f:block>
+
+
+    <f:validateButton title="${%Reload types for credential}" with="credential" method="reloadTypes" />
+
     <f:entry title="${%Application}" field="application" help="/plugin/deployit-plugin/help-application.html">
-        <f:textbox default="Applications/"/>
+        <f:textbox default="Applications/" />
     </f:entry>
 
     <f:entry title="${%Version}" field="version" help="/plugin/deployit-plugin/help-version.html">
-        <f:textbox/>
+        <f:textbox />
     </f:entry>
 
     <f:entry title="${%Options}" description="Options" field="packageProperties" help="/plugin/deployit-plugin/help-package-properties.html">
         <f:repeatable var="property" field="packageProperties">
             <table width="100%">
                 <f:entry title="${%Name}" field="propertyName">
-                    <f:select/>
+                    <f:select />
                 </f:entry>
 
                 <f:entry title="${%Value}" field="propertyValue">
-                    <f:textbox/>
+                    <f:textbox />
                 </f:entry>
 
                 <f:entry title="">
                     <div align="right">
-                        <f:repeatableDeleteButton/>
+                        <f:repeatableDeleteButton />
                     </div>
                 </f:entry>
             </table>
@@ -32,17 +54,17 @@
     </f:entry>
 
     <f:entry title="${%Verbose}" field="verbose">
-        <f:checkbox/>
+        <f:checkbox />
     </f:entry>
 
     <f:block>
         <table width="100%">
             <f:optionalBlock name="packageOptions" checked="${instance.packageOptions != null}" title="Package application" inline="false">
-                <j:set var="field" value="packageOptions"/>
+                <j:set var="field" value="packageOptions" />
 
-                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
-                <j:set var="instance" value="${instance[field]}"/>
-                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}" />
+                <j:set var="instance" value="${instance[field]}" />
+                <st:include from="${descriptor}" page="${descriptor.configPage}" />
             </f:optionalBlock>
         </table>
     </f:block>
@@ -51,11 +73,11 @@
     <f:block>
         <table width="100%">
             <f:optionalBlock field="importOptions" checked="${instance.importOptions != null}" title="Publish package to XL Deploy">
-                <j:set var="field" value="importOptions"/>
+                <j:set var="field" value="importOptions" />
 
-                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
-                <j:set var="instance" value="${instance[field]}"/>
-                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}" />
+                <j:set var="instance" value="${instance[field]}" />
+                <st:include from="${descriptor}" page="${descriptor.configPage}" />
             </f:optionalBlock>
         </table>
     </f:block>
@@ -64,11 +86,11 @@
     <f:block>
         <table width="100%">
             <f:optionalBlock field="deploymentOptions" checked="${instance.deploymentOptions != null}" title="Deploy application">
-                <j:set var="field" value="deploymentOptions"/>
+                <j:set var="field" value="deploymentOptions" />
 
-                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
-                <j:set var="instance" value="${instance[field]}"/>
-                <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+                <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}" />
+                <j:set var="instance" value="${instance[field]}" />
+                <st:include from="${descriptor}" page="${descriptor.configPage}" />
             </f:optionalBlock>
         </table>
     </f:block>

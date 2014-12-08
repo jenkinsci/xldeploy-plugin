@@ -3,8 +3,6 @@ package com.xebialabs.deployit.ci.server;
 import java.util.Collections;
 import java.util.List;
 
-import com.xebialabs.deployit.engine.api.dto.ServerInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +12,6 @@ import com.google.common.reflect.Reflection;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
 import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
-import com.xebialabs.deployit.booter.remote.RemoteBooter;
 import com.xebialabs.deployit.booter.remote.client.DeployitRemoteClient;
 import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
@@ -22,6 +19,7 @@ import com.xebialabs.deployit.engine.api.DeploymentService;
 import com.xebialabs.deployit.engine.api.RepositoryService;
 import com.xebialabs.deployit.engine.api.TaskService;
 import com.xebialabs.deployit.engine.api.dto.ConfigurationItemId;
+import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 
 import static java.lang.String.format;
@@ -29,8 +27,6 @@ import static java.lang.String.format;
 public class DeployitServerImpl implements DeployitServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployitServerImpl.class);
-
-    private static final int SOCKET_TIMEOUT = 60000;
     private BooterConfig booterConfig;
     private DeployitDescriptorRegistry descriptorRegistry;
     private int poolSize;
@@ -40,7 +36,7 @@ public class DeployitServerImpl implements DeployitServer {
         BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
             .withConnectionPoolSize(poolSize)
             .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
-            .withSocketTimeout(SOCKET_TIMEOUT)
+            .withSocketTimeout(booterConfig.getSocketTimeout())
             .build();
         this.descriptorRegistry = Reflection.newProxy(DeployitDescriptorRegistry.class,
                 new PluginFirstClassloaderInvocationHandler(new DeployitDescriptorRegistryImpl(newBooterConfig)));

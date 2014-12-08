@@ -117,6 +117,7 @@ configurations {
     providedRuntime.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 
     xl_sdk
+    provided
 }
 
 ext {
@@ -133,6 +134,18 @@ ext {
             'JENKINS_VERSION': '1.579'
     ]
 }
+
+sourceSets {
+    main { compileClasspath += configurations.provided }
+}
+
+idea {
+    module {
+        scopes.PROVIDED.plus += configurations.provided
+    }
+}
+
+eclipse.classpath.plusConfigurations += configurations.provided
 
 configurations.all {
     resolutionStrategy {
@@ -152,6 +165,8 @@ dependencies {
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
+
+    provided 'org.slf4j:slf4j-api:1.7.7'
 
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
