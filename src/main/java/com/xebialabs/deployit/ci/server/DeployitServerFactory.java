@@ -14,21 +14,21 @@ import com.xebialabs.deployit.booter.remote.BooterConfig;
 import com.xebialabs.deployit.ci.DeployitPluginException;
 
 public class DeployitServerFactory {
-    public static boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
-        newInstance(serverUrl, proxyUrl, username, password).newCommunicator();  //throws IllegalStateException on failure.
+    public static boolean validConnection(String serverUrl, String proxyUrl, String username, String password, int connectionPoolSize, int socketTimeout) throws IllegalStateException {
+        newInstance(serverUrl, proxyUrl, username, password, connectionPoolSize, socketTimeout).newCommunicator();  //throws IllegalStateException on failure.
         return true;
     }
 
-    public static DeployitServer newInstance(String serverUrl, String proxyUrl, String username, String password) {
-        return newInstance(getBooterConfig(serverUrl, proxyUrl, username, password));
+    public static DeployitServer newInstance(String serverUrl, String proxyUrl, String username, String password, int connectionPoolSize, int socketTimeout) {
+        return newInstance(getBooterConfig(serverUrl, proxyUrl, username, password, connectionPoolSize, socketTimeout));
     }
 
     public static DeployitServer newInstance(BooterConfig booterConfig) {
-        DeployitServerImpl server = new DeployitServerImpl(booterConfig);
+        DeployitServer server = new DeployitServerImpl(booterConfig);
         return Reflection.newProxy(DeployitServer.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 
-    public static BooterConfig getBooterConfig(String serverUrl, String proxyUrl, String username, String password) {
+    public static BooterConfig getBooterConfig(String serverUrl, String proxyUrl, String username, String password, int connectionPoolSize, int socketTimeout) {
         BooterConfig.Builder builder = BooterConfig.builder();
         URL url;
         try {
@@ -49,6 +49,9 @@ public class DeployitServerFactory {
             builder.withProxyPort(proxyUri.getPort());
         }
         builder.withCredentials(username, password);
+        builder.withConnectionPoolSize(connectionPoolSize);
+        builder.withSocketTimeout(socketTimeout);
+
         return builder.build();
     }
 

@@ -23,28 +23,28 @@
 
 package com.xebialabs.deployit.ci;
 
+import hudson.Extension;
+import hudson.RelativePath;
+import hudson.model.Describable;
+import hudson.model.AbstractProject;
+import hudson.model.Descriptor;
+import hudson.util.ComboBoxModel;
+import hudson.util.FormValidation;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.server.DeployitServerFactory;
 
-import hudson.Extension;
-import hudson.RelativePath;
-import hudson.model.AbstractProject;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import hudson.model.TaskListener;
-import hudson.util.ComboBoxModel;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import jenkins.model.Jenkins;
-
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.xebialabs.deployit.ci.util.ListBoxModels.emptyModel;
-import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
 import static hudson.util.FormValidation.ok;
 import static hudson.util.FormValidation.warning;
 
@@ -71,6 +71,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
         this.versionKind = versionKind;
     }
 
+    @Override
     public Descriptor<JenkinsDeploymentOptions> getDescriptor() {
         return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
@@ -82,23 +83,37 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             return "DeploymentOptions";
         }
 
-        public ComboBoxModel doFillEnvironmentItems(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential, @QueryParameter(value = "credential") String credential2) {
-            credential = !isNullOrEmpty(credential) ? credential : credential2;
-            DeployitNotifier.DeployitDescriptor deployitDescriptor = getDeployitDescriptor();
-            return isNullOrEmpty(credential) ? new ComboBoxModel() : new ComboBoxModel(deployitDescriptor.environments(credential));
+        public ComboBoxModel doFillEnvironmentItems(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential,
+            @QueryParameter(value = "credential") String credential2,
+            @AncestorInPath AbstractProject project)
+        {
+            String creds = !isNullOrEmpty(credential) ? credential : credential2;
+            Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            List<String> environments = new ArrayList<String>();
+            if (!isNullOrEmpty(creds)) {
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential);
+                environments = RepositoryUtils.environments(deployitServer);
+            }
+            return new ComboBoxModel(environments);
         }
 
-        public FormValidation doCheckEnvironment(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential, @QueryParameter(value = "credential") String credential2, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
+        public FormValidation doCheckEnvironment(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential,
+            @QueryParameter(value = "credential") String credential2,
+            @QueryParameter final String value,
+            @AncestorInPath AbstractProject project)
+        {
             if (isNullOrEmpty(value) || "Environments/".equals(value))
                 return ok("Fill in the target environment ID, eg Environments/MyEnv");
 
-            credential = !isNullOrEmpty(credential) ? credential : credential2;
+            String creds = !isNullOrEmpty(credential) ? credential : credential2;
+            Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential);
 
             DeployitNotifier.DeployitDescriptor deployitDescriptor = getDeployitDescriptor();
             String resolvedValue = deployitDescriptor.expandValue(value, project);
             final String environment = DeployitServerFactory.getNameFromId(resolvedValue).trim();
 
-            List<String> candidates = deployitDescriptor.getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT, environment);
+            List<String> candidates = deployitServer.search(DeployitDescriptorRegistry.UDM_ENVIRONMENT, environment);
 
             if(candidates.isEmpty()) {
                 return warning("Environment '%s' does not exist, please ensure it exists during deployment", environment);

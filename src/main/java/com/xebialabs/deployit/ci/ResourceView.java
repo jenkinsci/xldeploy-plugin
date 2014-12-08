@@ -23,13 +23,18 @@
 
 package com.xebialabs.deployit.ci;
 
+import hudson.Extension;
+import hudson.RelativePath;
+import hudson.model.AbstractProject;
+import hudson.util.ListBoxModel;
+
 import java.util.List;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import hudson.Extension;
-import hudson.RelativePath;
-import hudson.util.ListBoxModel;
+import com.xebialabs.deployit.ci.server.DeployitServer;
 
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
 
@@ -50,10 +55,13 @@ public class ResourceView extends DeployableView {
 
         public ListBoxModel doFillTypeItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingResources,
-                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewResources
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewResources,
+                @AncestorInPath AbstractProject project
         ) {
             String creds = credentialExistingResources != null ? credentialExistingResources : credentialNewResources;
-            return of(getDeployitDescriptor().getAllResourceTypes(creds));
+            Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential);
+            return of(RepositoryUtils.getAllResourceTypes(deployitServer ));
         }
     }
 }

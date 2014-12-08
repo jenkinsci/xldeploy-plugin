@@ -26,13 +26,17 @@ package com.xebialabs.deployit.ci;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+
 import com.google.common.base.Strings;
 
 import com.xebialabs.deployit.ci.dar.RemoteLookup;
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.util.FileFinder;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
@@ -43,8 +47,8 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.RelativePath;
+import hudson.model.AbstractProject;
 import hudson.util.ListBoxModel;
-
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
 import static java.lang.String.format;
 
@@ -125,10 +129,13 @@ public class ArtifactView extends DeployableView {
 
         public ListBoxModel doFillTypeItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingArtifacts,
-                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewArtifacts
-        ) {
+                @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewArtifacts,
+                @AncestorInPath AbstractProject project)
+        {
             String creds = credentialExistingArtifacts != null ? credentialExistingArtifacts : credentialNewArtifacts;
-            return of(getDeployitDescriptor().getAllArtifactTypes(creds));
+            Credential credential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, credential);
+            return of(RepositoryUtils.getAllArtifactTypes(deployitServer));
         }
     }
 

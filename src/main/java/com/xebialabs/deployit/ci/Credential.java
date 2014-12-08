@@ -23,27 +23,28 @@
 
 package com.xebialabs.deployit.ci;
 
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
-
-import com.xebialabs.deployit.ci.server.DeployitServer;
-import com.xebialabs.deployit.ci.server.DeployitServerFactory;
-import com.xebialabs.deployit.engine.api.dto.ServerInfo;
-
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import hudson.util.VersionNumber;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import jenkins.model.Jenkins;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
+
+import com.xebialabs.deployit.ci.server.DeployitServer;
+import com.xebialabs.deployit.ci.server.DeployitServerFactory;
+import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
@@ -56,9 +57,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return input.getName();
         }
     };
-    public final String name;
-    public final String username;
-    public final Secret password;
+    private final String name;
+    private final String username;
+    private final Secret password;
     private final SecondaryServerInfo secondaryServerInfo;
 
     @DataBoundConstructor
@@ -69,8 +70,20 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         this.secondaryServerInfo = secondaryServerInfo;
     }
 
+    public String getKey() {
+        return username + ":" + password.getPlainText() + "@" + name;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Secret getPassword() {
+        return password;
     }
 
     public  String getSecondaryServerUrl() {
@@ -212,6 +225,14 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
+        public static Credential fromStapler(@QueryParameter String name, @QueryParameter String username, @QueryParameter Secret password,
+            @QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl,
+            @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl)
+        {
+
+            return new Credential(name, username, password, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl));
+        }
+
 
         public FormValidation doValidate(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String username,
                                          @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
@@ -219,7 +240,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
 
-                DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
+                DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password.getPlainText(), 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
                 ServerInfo serverInfo = deployitServer.getServerInfo();
                 deployitServer.newCommunicator(); // throws IllegalStateException if creds invalid
 
@@ -240,4 +261,5 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
+// StamplerConverterImpl
 }
