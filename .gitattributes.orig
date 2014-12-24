@@ -1,0 +1,19 @@
+*.bat.ftl text eol=crlf
+*.cmd.ftl text eol=crlf
+*.sh.ftl  text eol=lf
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+*.ps1     text eol=crlf
+*.sh      text eol=lf
+*.lic     binary
+*.license binary
+<<<<<<< HEAD
+*.ear     binary
+*.war     binary
+*.pptx    binary
+=======
+>>>>>>> Add .gitattributes
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+*.java text
+*.scala text
