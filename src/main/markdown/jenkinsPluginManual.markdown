@@ -62,6 +62,18 @@ If you have many deployment jobs running in parallel you can tweak the connectio
 
 ## Release notes ##
 
+### Version 4.5.1 ##
+
+Improvements:
+
+* [DEPL-7285] - Support deploying existing Composite packages using Jenkins
+* [DEPL-7400] - Allow XLD credentials to be overridden in a Jenkins job
+
+Bug fixes:
+    
+* [DEPL-7184] - Publish DAR fails in mixed windows/unix master/slave setup
+* [DEPL-7254] - File system location doesn't support referencing file on Jenkins slave
+
 ### Version 4.5.0 ###
 
 Improvements:
