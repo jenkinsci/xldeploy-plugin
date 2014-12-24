@@ -109,12 +109,26 @@ configurations {
     providedRuntime.exclude group: 'org.slf4j', module: 'slf4j-api'
     providedRuntime.exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
     providedRuntime.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+
+    provided
 }
 
 def xlPlatformVersion = "2014.7.3"
 def xlDeployVersion = "4.5.1"
 def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
 // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
+
+sourceSets {
+    main { compileClasspath += configurations.provided }
+}
+
+idea {
+    module {
+        scopes.PROVIDED.plus += configurations.provided
+    }
+}
+
+eclipse.classpath.plusConfigurations += configurations.provided
 
 configurations.all {
     resolutionStrategy {
@@ -134,6 +148,8 @@ dependencies {
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
+
+    provided 'org.slf4j:slf4j-api:1.7.7'
 
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"

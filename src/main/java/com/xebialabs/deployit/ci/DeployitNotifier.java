@@ -23,67 +23,70 @@
 
 package com.xebialabs.deployit.ci;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-
-import com.google.common.collect.Lists;
-
-import hudson.*;
-
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Ordering;
-
-import com.xebialabs.deployit.ci.dar.RemotePackaging;
-import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
-import com.xebialabs.deployit.ci.server.DeployitServer;
-import com.xebialabs.deployit.ci.server.DeployitServerFactory;
-import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
-import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
-import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
-
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import hudson.Extension;
+import hudson.Launcher;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+
+import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import net.sf.json.JSONObject;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Lists.newArrayList;
-import static com.google.common.collect.Maps.newHashMap;
+
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+
+import com.google.common.base.Strings;
+
+import com.xebialabs.deployit.ci.DeployitPerformer.DeployitPerformerParameters;
+import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
+import com.xebialabs.deployit.ci.server.DeployitServerFactory;
+
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 import static hudson.util.FormValidation.warning;
 
+/**
+ * Runs XL Deploy tasks after the build has completed.
+ */
 public class DeployitNotifier extends Notifier {
 
     public final String credential;
-
     public final String application;
     public final String version;
-
     public final JenkinsPackageOptions packageOptions;
+    public List<PackageProperty> packageProperties = Collections.emptyList();
     public final JenkinsImportOptions importOptions;
     public final JenkinsDeploymentOptions deploymentOptions;
     public final boolean verbose;
-    public final List<PackageProperty> packageProperties;
+
+    public Credential overridingCredential;
+
+    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties) {
+        this(credential, application, version, packageOptions, importOptions, deploymentOptions, verbose, packageProperties, null);
+    }
 
     @DataBoundConstructor
-    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties) {
+    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties, Credential overridingCredential) {
         this.credential = credential;
         this.application = application;
         this.version = version;
@@ -92,6 +95,7 @@ public class DeployitNotifier extends Notifier {
         this.deploymentOptions = deploymentOptions;
         this.verbose = verbose;
         this.packageProperties = packageProperties;
+        this.overridingCredential = overridingCredential;
     }
 
     @Override
@@ -101,135 +105,14 @@ public class DeployitNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        final JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, verbose);
-
-        final EnvVars envVars = build.getEnvironment(listener);
-        String resolvedApplication = envVars.expand(application);
-
-        DeployitServer deployitServer = getDeployitServer();
-        if (null == deployitServer) {
-            String msg = String.format("No server found for credential %s. Please verify that there is a server configured for credential.", credential);
-            throw new DeployitPluginException(msg);
-        }
-
-        String applicationName = DeployitServerFactory.getNameFromId(resolvedApplication);
-        List<String> qualifiedAppIds = deployitServer.search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName);
-        if (qualifiedAppIds.size() == 1) {
-            resolvedApplication = qualifiedAppIds.get(0);
-        }
-        String resolvedVersion = envVars.expand(version);
-
-        //Package
-        if (packageOptions != null) {
-            deploymentListener.info(Messages.DeployitNotifier_package(resolvedApplication, resolvedVersion));
-            verifyResolvedVersion(resolvedVersion);
-            verifyResolvedApplication(resolvedApplication);
-
-            final FilePath workspace = build.getWorkspace();
-            if (deploymentOptions != null && deploymentOptions.versionKind == VersionKind.Packaged) {
-                deploymentOptions.setVersion(resolvedVersion);
-            }
-
-            DeploymentPackage deploymentPackage = packageOptions.toDeploymentPackage(resolvedApplication, resolvedVersion, packageProperties, getDeployitServer().getDescriptorRegistry(), workspace, envVars, deploymentListener);
-            final File targetDir = new File(workspace.absolutize().getRemote(), "deployitpackage");
-
-            String packagedPath = workspace.getChannel().call(
-                    new RemotePackaging()
-                            .withTargetDir(targetDir)
-                            .forDeploymentPackage(deploymentPackage)
-                            .usingConfig(getDeployitServer().getBooterConfig())
-                            .usingDescriptors(Lists.newArrayList(getDeployitServer().getDescriptorRegistry().getDescriptors()))
-            );
-
-            deploymentListener.info(Messages.DeployitNotifier_packaged(resolvedApplication, packagedPath));
-            if (importOptions != null) {
-                importOptions.setGeneratedDarLocation(packagedPath);
-            }
-        }
-
-        //Import
-        String importedVersion = "";
-        if (importOptions != null) {
-            String resolvedDarFileLocation = "";
-            try {
-                final String darFileLocation = importOptions.getDarFileLocation(build.getWorkspace(), deploymentListener, envVars);
-                resolvedDarFileLocation = envVars.expand(darFileLocation);
-                deploymentListener.info(Messages.DeployitNotifier_import(resolvedDarFileLocation));
-                ConfigurationItem uploadedPackage = getDeployitServer().importPackage(resolvedDarFileLocation);
-                deploymentListener.info(Messages.DeployitNotifier_imported(resolvedDarFileLocation));
-                importedVersion = uploadedPackage.getName();
-            } catch (Exception e) {
-                e.printStackTrace(listener.getLogger());
-                deploymentListener.error(Messages.DeployitNotifier_import_error(resolvedDarFileLocation, e.getMessage()));
-                return false;
-            } finally {
-                importOptions.getMode().cleanup();
-            }
-        }
-
-
-        //Deploy
-        if (deploymentOptions != null) {
-            String resolvedEnvironment = envVars.expand(deploymentOptions.environment);
-            deploymentListener.info(Messages.DeployitNotifier_startDeployment(resolvedApplication, resolvedEnvironment));
-            String packageVersion = "";
-            switch (deploymentOptions.versionKind) {
-                case Other:
-                    packageVersion = resolvedVersion;
-                    break;
-                case Packaged:
-                    if (!importedVersion.isEmpty()) {
-                        packageVersion = importedVersion;
-                    } else {
-                        packageVersion = deploymentOptions.getVersion();
-                    }
-                    break;
-            }
-            verifyPackageVersion(packageVersion);
-            verifyResolvedApplication(resolvedApplication);
-
-            final String versionId = Joiner.on("/").join(resolvedApplication, packageVersion);
-            deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, resolvedEnvironment));
-            try {
-                getDeployitServer().deploy(versionId, resolvedEnvironment, deploymentOptions, deploymentListener);
-            } catch (Exception e) {
-                e.printStackTrace(listener.getLogger());
-                deploymentListener.error(Messages._DeployitNotifier_errorDeploy(e.getMessage()));
-                return false;
-            }
-            deploymentListener.info(Messages.DeployitNotifier_endDeployment(resolvedApplication, resolvedEnvironment));
-        }
-        return true;
+        DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingCredential);
+        DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
+        DeployitPerformer performer = new DeployitPerformer(build, launcher, listener, deployitServer, performerParameters);
+        return performer.doPerform();
     }
 
-    private void verifyResolvedApplication(String resolvedApplication) {
-        if (Strings.isNullOrEmpty(resolvedApplication)) {
-            String msg = String.format("Resolved application is '%s'. Please verify you have configured build correctly.", resolvedApplication);
-            throw new DeployitPluginException(msg);
-        }
-    }
-
-    private void verifyPackageVersion(String packageVersion) {
-        if (Strings.isNullOrEmpty(packageVersion)) {
-            String msg = String.format("Package version is '%s'. Please verify you have configured build correctly.", packageVersion);
-            throw new DeployitPluginException(msg);
-        }
-    }
-
-    private void verifyResolvedVersion(String packageVersion) {
-        if (Strings.isNullOrEmpty(packageVersion)) {
-            String msg = String.format("Package version is '%s'. Please verify you have configured build correctly.", packageVersion);
-            throw new DeployitPluginException(msg);
-        }
-    }
-
-    private DeployitServer getDeployitServer() {
-        return getDescriptor().getDeployitServer(credential);
-    }
-
-    @Override
-    public DeployitDescriptor getDescriptor() {
-        return (DeployitDescriptor) super.getDescriptor();
+    public Credential getOverridingCredential() {
+        return this.overridingCredential;
     }
 
     @Extension
@@ -241,29 +124,47 @@ public class DeployitNotifier extends Notifier {
 
         private String deployitClientProxyUrl;
 
-        private int connectionPoolSize = 10;
+        private int connectionPoolSize = DeployitServer.DEFAULT_POOL_SIZE;
 
-        private List<Credential> credentials = newArrayList();
+        // credentials are actually globally available credentials
+        private List<Credential> credentials = new ArrayList<Credential>();
 
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
-
-        private final transient Map<String,DeployitServer> credentialServerMap = newHashMap();
+        private final transient Map<String, SoftReference<DeployitServer>> credentialServerMap = new HashMap<String, SoftReference<DeployitServer>>();
 
         public DeployitDescriptor() {
             load();  //deserialize from xml
-            mapCredentialsByName();
         }
 
-        private void mapCredentialsByName() {
-            for (Credential credential : credentials) {
-                String serverUrl = credential.resolveServerUrl(deployitServerUrl);
-                String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
+        private DeployitServer newDeployitServer(Credential credential) {
+            String serverUrl = credential.resolveServerUrl(deployitServerUrl);
+            String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
 
-                DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password.getPlainText());
-                int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : 10;
-                deployitServer.setConnectionPoolSize(newConnectionPoolSize);
-                credentialServerMap.put(credential.name, deployitServer);
+            int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : DeployitServer.DEFAULT_POOL_SIZE;
+            int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
+            DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.getUsername(), credential.getPassword().getPlainText(), newConnectionPoolSize, socketTimeout );
+
+            return deployitServer;
+        }
+
+        public DeployitServer getDeployitServer(Credential credential) {
+            DeployitServer deployitServer = null;
+            if (null != credential) {
+                SoftReference<DeployitServer> deployitServerRef = credentialServerMap.get(credential.getKey());
+
+                if (null != deployitServerRef) {
+                    deployitServer = deployitServerRef.get();
+                }
+
+                if (null == deployitServer) {
+                    synchronized (this) {
+                        deployitServer = newDeployitServer(credential);
+                        credentialServerMap.put(credential.getKey(), new SoftReference<DeployitServer>(deployitServer));
+                    }
+                }
             }
+            // no credential - no server
+            return deployitServer;
         }
 
         @Override
@@ -277,8 +178,13 @@ public class DeployitNotifier extends Notifier {
             }
             credentials = req.bindJSONToList(Credential.class, json.get("credentials"));
             save();  //serialize to xml
-            mapCredentialsByName();
+            credentialServerMap.clear(); // each time global config is changed clear server cache
             return true;
+        }
+
+        @Override
+        public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return super.newInstance(req, formData);
         }
 
         @Override
@@ -289,6 +195,22 @@ public class DeployitNotifier extends Notifier {
         @Override
         public String getDisplayName() {
             return Messages.DeployitNotifier_displayName();
+        }
+
+        public List<Credential> getCredentials() {
+            return credentials;
+        }
+
+        public String getDeployitServerUrl() {
+            return deployitServerUrl;
+        }
+
+        public String getDeployitClientProxyUrl() {
+            return deployitClientProxyUrl;
+        }
+
+        public int getConnectionPoolSize() {
+            return connectionPoolSize;
         }
 
         private FormValidation validateOptionalUrl(String url) {
@@ -330,76 +252,85 @@ public class DeployitNotifier extends Notifier {
             return ok();
         }
 
-        public FormValidation doReloadTypes(@QueryParameter String credential) {
-            DeployitServer deployitServer = getDeployitServer(credential);
-            deployitServer.getDescriptorRegistry().reload();
-            return ok("Types reloaded from XL Deploy version " + deployitServer.getServerInfo().getVersion() +
-                    " at " + deployitServer.getBooterConfig().getUrl());
-        }
-
-        public List<Credential> getCredentials() {
-            return credentials;
-        }
-
-        public String getDeployitServerUrl() {
-            return deployitServerUrl;
-        }
-
-        public String getDeployitClientProxyUrl() {
-            return deployitClientProxyUrl;
-        }
-
-        public int getConnectionPoolSize() {return  connectionPoolSize; }
-
         public ListBoxModel doFillCredentialItems() {
             ListBoxModel m = new ListBoxModel();
             for (Credential c : credentials)
-                m.add(c.name, c.name);
+                m.add(c.getName(), c.getName());
             return m;
         }
 
-        public FormValidation doCheckCredential(@QueryParameter String credential) {
-            return warning("Changing credentials may unintentionally change your deployables' types - check the definitions afterward");
+        public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
+            DeployitNotifier deployitNotifier = RepositoryUtils.retrieveDeployitNotifierFromProject(project);
+            String warningMsg = "Changing credentials may unintentionally change your deployables' types - check the definitions afterward.";
+            if (null != deployitNotifier) {
+                boolean hasCredential = null != deployitNotifier.credential;
+                if (hasCredential && !deployitNotifier.credential.equals(credential)) {
+                    return warning("Please Save or Apply changes before you continue. " + warningMsg);
+                }
+            } else {
+                return warning("Please Save or Apply changes before you continue. " + warningMsg);
+            }
+            return ok();
         }
 
-        @Override
-        public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return super.newInstance(req, formData);
-        }
-
-        public List<String> environments(final String credential) {
-            List<String> envs = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_ENVIRONMENT);
-            return Ordering.natural().sortedCopy(envs);
-        }
-
-        public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value,
-                                                                  @AncestorInPath AbstractProject project)  {
+        public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
             String resolvedApplicationName = expandValue(value, project);
             final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
+
             final String applicationName = DeployitServerFactory.getNameFromId(resolvedApplicationName);
-            List<String> applicationSuggestions = getDeployitServer(getDefaultCredential().getName()).search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
-            for (String applicationSuggestion : applicationSuggestions) {
-                applicationCadidates.add(applicationSuggestion);
+            DeployitNotifier deployitNotifier = RepositoryUtils.retrieveDeployitNotifierFromProject(project);
+            if (deployitNotifier != null) {
+                Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(deployitNotifier.credential, overridingcredential);
+                if (null != deployitServer) {
+                    List<String> applicationSuggestions = deployitServer.search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
+                    for (String applicationSuggestion : applicationSuggestions) {
+                        applicationCadidates.add(applicationSuggestion);
+                    }
+                }
+
             }
             return applicationCadidates;
         }
 
-        public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
+        public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project)
+        {
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
             String resolvedName = expandValue(value, project);
             final String applicationName = DeployitServerFactory.getNameFromId(resolvedName);
-            List<String> candidates = getDeployitServer(credential).search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
+
+            Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential);
+            List<String> candidates = deployitServer.search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
             for (String candidate : candidates) {
-                if (candidate.endsWith("/"+applicationName)) {
+                if (candidate.endsWith("/" + applicationName)) {
                     return ok();
                 }
             }
             if (!candidates.isEmpty()) {
-                return warning("Application does not exist, but will be created upon package import. Did you mean to type one of the following: %s?", candidates);
+                return warning("Application does not exist, but will be created upon package import. Did you mean to type one of the following: %s?",
+                    candidates);
             }
             return warning("Application does not exist, but will be created upon package import.");
+        }
+
+        public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project)
+        {
+            Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
+            try {
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential);
+                if (null == deployitServer)
+                    return error("Server not found for credential.");
+                deployitServer.reload();
+                return ok("Types reloaded from XL Deploy version " + deployitServer.getServerInfo().getVersion() +
+                    " at " + deployitServer.getBooterConfig().getUrl());
+            }
+            catch (DeployitPluginException ex) {
+                return error (String.format("Unable to reload types. Cause: %s.", ex.getMessage()));
+            }
         }
 
         public String expandValue(final String value, final AbstractProject project) {
@@ -413,33 +344,6 @@ public class DeployitNotifier extends Notifier {
 
             resolvedValue = resolvedValue == null ? value : resolvedValue;
             return resolvedValue;
-        }
-
-        public DeployitServer getDeployitServer(String credential) {
-            checkNotNull(credential);
-            return credentialServerMap.get(credential);
-        }
-
-        public Collection<String> getAllResourceTypes(String credential) {
-            return getDeployitServer(credential).getDescriptorRegistry().getDeployableResourceTypes();
-        }
-
-        public Collection<String> getAllEmbeddedResourceTypes(String credential) {
-            return getDeployitServer(credential).getDescriptorRegistry().getEmbeddedDeployableTypes();
-        }
-
-        public Collection<String> getAllArtifactTypes(String credential) {
-            return getDeployitServer(credential).getDescriptorRegistry().getDeployableArtifactTypes();
-        }
-
-        public Collection<String> getPropertiesOf(String credential, String type) {
-            return getDeployitServer(credential).getDescriptorRegistry().getEditablePropertiesForDeployableType(type);
-        }
-
-        private Credential getDefaultCredential() {
-            if (credentials.isEmpty())
-                throw new DeployitPluginException("No credentials defined in the system configuration");
-            return credentials.iterator().next();
         }
     }
 }
