@@ -23,28 +23,22 @@
 
 package com.xebialabs.deployit.ci;
 
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.xebialabs.deployit.ci.server.DeployitServer;
+import com.xebialabs.deployit.ci.server.DeployitServerFactory;
+import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import hudson.util.VersionNumber;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import jenkins.model.Jenkins;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
-
-import com.xebialabs.deployit.ci.server.DeployitServer;
-import com.xebialabs.deployit.ci.server.DeployitServerFactory;
-import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
@@ -243,13 +237,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password.getPlainText(), 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
                 ServerInfo serverInfo = deployitServer.getServerInfo();
                 deployitServer.newCommunicator(); // throws IllegalStateException if creds invalid
-
-                final VersionNumber pluginVersion = Jenkins.getInstance().getPlugin(Constants.DEPLOYIT_PLUGIN).getWrapper().getVersionNumber();
-                final String serverVersion = serverInfo.getVersion();
-                String major = serverVersion.substring(0, serverVersion.indexOf("."));
-                if(pluginVersion.isNewerThan(new VersionNumber(major + ".*.*"))) {
-                    return FormValidation.error("Plugin version [%s] is not compatible with XL Deploy server version [%s]. Please consider upgrading.", pluginVersion.toString(), serverVersion);
-                }
 
                 return FormValidation.ok("Your XL Deploy instance [%s] is alive, and your credentials are valid!", serverInfo.getVersion());
             } catch(IllegalStateException e) {
