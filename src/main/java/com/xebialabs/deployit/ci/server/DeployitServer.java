@@ -33,4 +33,6 @@ public interface DeployitServer {
     void reload();
 
     ServerInfo getServerInfo();
+
+    String getRegistryVersion();
 }
