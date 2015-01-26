@@ -74,6 +74,7 @@ class DeployitPerformer {
                             .forDeploymentPackage(deploymentPackage)
                             .usingConfig(deployitServer.getBooterConfig())
                             .usingDescriptors(Lists.newArrayList(descriptorRegistry.getDescriptors()))
+                            .withRegistryVersion(deployitServer.getRegistryVersion())
             );
 
             if (deploymentParameters.importOptions != null && packagedPath != null) {
