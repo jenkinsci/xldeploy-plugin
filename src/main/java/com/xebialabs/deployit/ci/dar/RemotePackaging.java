@@ -23,18 +23,19 @@
 
 package com.xebialabs.deployit.ci.dar;
 
+import hudson.remoting.Callable;
+
 import java.io.File;
 import java.util.Collection;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
+import com.xebialabs.deployit.ci.Versioned;
 import com.xebialabs.deployit.packager.DarPackager;
 import com.xebialabs.deployit.packager.ManifestWriter;
 import com.xebialabs.deployit.packager.writers.ManifestXmlWriter;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
-
-import hudson.remoting.Callable;
 
 /**
  * Wrapper for the packaging operation.
@@ -47,6 +48,7 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     private DeploymentPackage deploymentPackage;
     private BooterConfig booterConfig;
     private Collection<Descriptor> descriptors;
+    private String registryVersion;
 
 
     public RemotePackaging forDeploymentPackage(DeploymentPackage deploymentPackage) {
@@ -69,19 +71,34 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
         return this;
     }
 
+    public RemotePackaging withRegistryVersion(String registryVersion) {
+        this.registryVersion = registryVersion;
+        return this;
+    }
 
     /**
      * Call to be executed via jenkins virtual channel
      */
+    @Override
     public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
         DarPackager pkger = new DarPackager(mw);
-        if (DescriptorRegistry.getDescriptorRegistry(booterConfig) == null) {
-           SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig);
+        DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
+        if (null == descriptorRegistry) {
+           SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
+        } else {
+            if (descriptorRegistry instanceof Versioned) {
+                Versioned versionedDescriptorRegistry = (Versioned) descriptorRegistry;
+                if (!versionedDescriptorRegistry.getVersion().equals(this.registryVersion)) {
+                    SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
+                }
+            }
+            else {
+                // do nothing for normal remote descriptor registries - those should be reloaded from the UI
+            }
         }
         return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true).getPath();
     }
-
 
 }

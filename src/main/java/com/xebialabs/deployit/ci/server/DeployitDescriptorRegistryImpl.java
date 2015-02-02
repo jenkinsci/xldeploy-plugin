@@ -25,6 +25,7 @@ package com.xebialabs.deployit.ci.server;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -76,9 +77,11 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     private Iterable<Descriptor> allDeployableDescriptors;
 
     private DeployitCommunicator communicator;
+    private String version;
 
     DeployitDescriptorRegistryImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
+        this.version = UUID.randomUUID().toString();
     }
 
     @Override
@@ -282,12 +285,16 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     }
 
     private Object convertValue(String val, PropertyDescriptor pd) {
-        if (val == null) return null;
+        if (val == null) {
+            return null;
+        }
         switch (pd.getKind()) {
             case BOOLEAN:
                 return Boolean.parseBoolean(val);
             case INTEGER:
-                if (val.isEmpty()) return null;
+                if (val.isEmpty()) {
+                    return null;
+                }
                 return Integer.parseInt(val);
             case CI:
                 return convertToCiRef(val, pd);
@@ -413,11 +420,17 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         LOCK.enter();
         try {
             LOG.warn("About to reload descriptor registry for config: {}.", safeBooterConfigKey());
+            version = UUID.randomUUID().toString();
             getDescriptorRegistry().reboot(getCommunicator());
             allDeployableDescriptors = null;
         } finally {
             LOCK.leave();
         }
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
     }
 
     private boolean isEmbeddedProperty(PropertyDescriptor pd, Type embeddedDeployableType) {

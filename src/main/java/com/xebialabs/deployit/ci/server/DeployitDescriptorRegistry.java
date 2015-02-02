@@ -6,13 +6,14 @@ import java.util.List;
 import com.google.common.base.Predicate;
 
 import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
+import com.xebialabs.deployit.ci.Versioned;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
 import com.xebialabs.deployit.plugin.api.reflect.Type;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
 
-public interface DeployitDescriptorRegistry {
+public interface DeployitDescriptorRegistry extends Versioned {
     String UDM_ENVIRONMENT = "udm.Environment";
     String UDM_APPLICATION = "udm.Application";
     String UDM_ARTIFACT = "udm.Artifact";
