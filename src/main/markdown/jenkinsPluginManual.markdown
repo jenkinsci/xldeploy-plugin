@@ -62,7 +62,14 @@ If you have many deployment jobs running in parallel you can tweak the connectio
 
 ## Release notes ##
 
-### Version 4.5.1 ##
+### Version 4.5.2 ###
+
+Bug fixes:
+
+* [DEPL-7739] - Checking Connection in Jenkins fails when XLD version is higher than XLD Jenkins plugin
+* [DEPL-7758] - Reload XLD types for existing jobs on Jenkins slaves
+
+### Version 4.5.1 ###
 
 Improvements:
 
