@@ -126,8 +126,7 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2015.2.0"
-    // xlDeployVersion = "5.0.0-beta2"
+    xlPlatformVersion = "2015.2.1"
     truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
     // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 

@@ -19,7 +19,7 @@ The **XL Deploy Jenkins Plugin** enables 3 post-build actions: "Package your app
 ### Requirements ###
 
 * **XL Deploy requirements**
-	* **XL Deploy**: version 4.0+
+	* **XL Deploy**: version 5.0.0+
 * **Jenkins requirements**
     * **Jenkins**: Jenkins **LTS** version {{supportedLtsVersion}} or higher
     * **Java**: version 7
@@ -61,6 +61,19 @@ If you practice continuous delivery, it may be useful to increase the version au
 If you have many deployment jobs running in parallel you can tweak the connection settings by increasing the connection pool size on the Global configuration screen. The default connection pool size is 10.
 
 ## Release notes ##
+
+### Version 5.0.0 ##
+
+Improvements:
+
+* [DEPL-7620] - Allow external artifact reference to be supplied in Jenkins plugin
+
+### Version 4.5.2 ###
+
+Bug fixes:
+
+* [DEPL-7739] - Checking Connection in Jenkins fails when XLD version is higher than XLD Jenkins plugin
+* [DEPL-7758] - Reload XLD types for existing jobs on Jenkins slaves
 
 ### Version 4.5.1 ##
 
