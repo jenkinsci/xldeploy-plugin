@@ -22,4 +22,7 @@ How to debug slave:
 
     javaws  -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8200 http://localhost:8080/computer/slave1/slave-agent.jnlp
 
+### Dependencies ###
+
+Jenkins plugin for XL Deploy depends on publicly available libraries that can be found at https://dist.xebialabs.com/public/maven2/
 

@@ -12,6 +12,7 @@ out/
 target/
 bin/
 src/main/resources/web/help/onlinehelp
+classes/
 
 # Eclipse
 .metadata/

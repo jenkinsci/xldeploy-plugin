@@ -25,6 +25,8 @@ package com.xebialabs.deployit.ci;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import org.jvnet.localizer.Localizable;
@@ -54,6 +56,8 @@ import static java.lang.String.format;
 
 public class ArtifactView extends DeployableView {
 
+    public static final String FILE_URI_PROPERTY = "fileUri";
+
     public String location;
 
     @DataBoundConstructor
@@ -65,18 +69,41 @@ public class ArtifactView extends DeployableView {
     @Override
     public ConfigurationItem toConfigurationItem(DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
         Artifact deployable = (Artifact) super.toConfigurationItem(registry, workspace, envVars, listener);
-        String resolvedLocation = getResolvedLocation(envVars);
-        try {
-            final File file = findFileFromPattern(resolvedLocation, workspace, listener);
-            deployable.setFile(LocalFile.valueOf(file));
-        } catch (IOException e) {
-            throw new DeployitPluginException(String.format("Unable to find artifact for deployable '%s' in '%s'", getName(), resolvedLocation), e);
+        if (isUriLocation(envVars)) {
+            if (!deployable.hasProperty(FILE_URI_PROPERTY)) {
+                throw new DeployitPluginException(String.format("Your version of XL Deploy does not support URI locations for artifacts: %s. " +
+                        "Please specify a filesystem path instead.", getResolvedLocation(envVars)));
+            }
+            registry.setProperty(deployable, FILE_URI_PROPERTY, getResolvedLocation(envVars));
+        } else {
+            String resolvedLocation = getResolvedLocation(envVars);
+            try {
+                final File file = findFileFromPattern(resolvedLocation, workspace, listener);
+                deployable.setFile(LocalFile.valueOf(file));
+            } catch (IOException e) {
+                throw new DeployitPluginException(String.format("Unable to find artifact for deployable '%s' in '%s'", getName(), resolvedLocation), e);
+            }
         }
         return deployable;
     }
 
+    protected boolean isUriLocation(EnvVars envVars) {
+        if (Strings.isNullOrEmpty(location)) {
+            return false;
+        }
+        String expanded = getResolvedLocation(envVars);
+        if (expanded.matches("[a-zA-Z]:(\\\\|/).*")) {
+            return false; // assume Windows path
+        }
+        try {
+            return new URI(expanded).getScheme() != null;
+        } catch (URISyntaxException e) {
+            return false;
+        }
+    }
+    
     private String getResolvedLocation(EnvVars envVars) {
-        if (Strings.emptyToNull(location) == null) {
+        if (Strings.isNullOrEmpty(location)) {
             throw new DeployitPluginException(String.format("No location specified for '%s' of type '%s'", getName(), getType()));
         }
         return envVars.expand(location);

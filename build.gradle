@@ -43,7 +43,11 @@ localizer.dependsOn deleteGeneratedSrcLocalizer
 repositories {
     mavenCentral()
     maven {
-        url "${projectDir}/repo"
+        // url "${projectDir}/repo"
+        url "https://dist.xebialabs.com/public/maven2"
+    }
+    maven {
+        url "http://www.knopflerfish.org/maven2"
     }
 }
 
@@ -60,7 +64,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.7.1'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.9.1'
         classpath 'org.bitbucket.grimrose:gradle-obake-plugin:0.5'
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:1.12.+'
     }
@@ -122,8 +126,8 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2014.7.3"
-    xlDeployVersion = "4.5.1"
+    xlPlatformVersion = "2015.2.0"
+    // xlDeployVersion = "5.0.0-beta2"
     truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
     // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 
@@ -136,18 +140,6 @@ ext {
     ]
 }
 
-// sourceSets {
-//     main { compileClasspath += [ configurations.provided ] }
-// }
-// 
-// idea {
-//     module {
-//         scopes.PROVIDED.plus += [ configurations.provided ]
-//     }
-// }
-// 
-// eclipse.classpath.plusConfigurations += [ configurations.provided ]
-
 configurations.all {
     resolutionStrategy {
         force "de.schlichtherle.truezip:truezip-driver-file:$truezipVersion"
@@ -159,7 +151,7 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.xebialabs.deployit.engine:packager:$xlDeployVersion"
+    compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
