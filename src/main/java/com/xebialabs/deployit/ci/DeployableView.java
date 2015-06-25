@@ -73,8 +73,8 @@ public abstract class DeployableView implements Describable<DeployableView> {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(getName()), "Name is required.");
         ConfigurationItem deployable = registry.newInstance(type, envVars.expand(getName()));
         if (!isNullOrEmpty(tags)) {
-            tags = envVars.expand(tags);
-            deployable.setProperty("tags", newHashSet(commaSeparatedListToList(tags)));
+            resolvedTags = envVars.expand(tags);
+            deployable.setProperty("tags", newHashSet(commaSeparatedListToList(resolvedTags)));
         }
 
         if (properties != null) {
