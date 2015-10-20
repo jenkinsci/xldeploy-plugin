@@ -36,6 +36,7 @@ build.dependsOn jpi
 
 task deleteGeneratedSrcLocalizer(type: Delete) {
     delete "build/generated-src/localizer"
+    delete "src/main/localizer"
 }
 
 localizer.dependsOn deleteGeneratedSrcLocalizer
@@ -64,7 +65,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.9.1'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.12.2'
         classpath 'org.bitbucket.grimrose:gradle-obake-plugin:0.5'
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:1.12.+'
     }
@@ -79,12 +80,25 @@ jenkinsPlugin {
     gitHubUrl = 'https://github.com/jenkinsci/xldeploy-plugin'
 
 
+    // the output directory for the localizer task relative to the project root, defaults to the value shown
+    localizerOutputDir = "${project.projectDir}/src/main/localizer"
+
     developers {
         developer {
             id 'XebiaLabsCI'
             name 'XebiaLabs'
             email 'xl-developers (at) xebialabs (dot) com'
         }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+            srcDir 'src/main/localizer'
+        }
+
     }
 }
 
