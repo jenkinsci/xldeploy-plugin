@@ -26,13 +26,11 @@ package com.xebialabs.deployit.ci.server;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.Collections;
-import java.util.Map;
-import java.util.HashMap;
 
 import javax.annotation.Nullable;
 
 import com.xebialabs.deployit.ci.ArtifactView;
+import com.xebialabs.deployit.ci.util.Strings2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,10 +73,6 @@ import static com.google.common.collect.Sets.newLinkedHashSet;
 
 public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(DeployitDescriptorRegistryImpl.class);
-    public static final String AMP_MARKER = "::AMP::";
-    public static final String EQUAL_MARKER = "::EQUAL::";
-    public static final String AMP_ESCAPE_SEQ = "\\\\&";
-    public static final String EQUAL_ESCAPE_SEQ = "\\\\=";
     private BooterConfig booterConfig;
 
     private Monitor LOCK = new Monitor();
@@ -315,32 +309,10 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
             case LIST_OF_CI:
                 return newArrayList(convertToCiRefs(val, pd));
             case MAP_STRING_STRING:
-                return convertToMap(val);
+                return Strings2.convertToMap(val);
             default:
                 return val;
         }
-    }
-
-    protected Map convertToMap(String val) {
-        val = replaceEscapedCharactersWithMarkers(val);
-        Map<String,String> values = Splitter.on('&').withKeyValueSeparator("=").split(val);
-        return Collections.unmodifiableMap(replaceMarkersWithEscapedCharacters(values));
-    }
-
-    private Map<String, String> replaceMarkersWithEscapedCharacters(Map<String, String> values) {
-        Map<String,String> map = new HashMap<String, String>();
-        for(Map.Entry<String,String> entry : values.entrySet()) {
-            map.put(replaceMarkers(entry.getKey()), replaceMarkers(entry.getValue()));
-        }
-        return map;
-    }
-
-    private String replaceEscapedCharactersWithMarkers(String val) {
-        return val.replaceAll(AMP_ESCAPE_SEQ, AMP_MARKER).replaceAll(EQUAL_ESCAPE_SEQ, EQUAL_MARKER);
-    }
-
-    private String replaceMarkers(String val) {
-        return val.replaceAll(AMP_MARKER, "&").replaceAll(EQUAL_MARKER, "=");
     }
 
     private Iterable<ConfigurationItem> convertToCiRefs(String val, final PropertyDescriptor pd) {
