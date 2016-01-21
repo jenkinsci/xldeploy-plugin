@@ -60,7 +60,23 @@ If you practice continuous delivery, it may be useful to increase the version au
 
 If you have many deployment jobs running in parallel you can tweak the connection settings by increasing the connection pool size on the Global configuration screen. The default connection pool size is 10.
 
+**Escape '&' and '=' characters in a property of type map_string_string**
+
+A '&' and '='can be escaped with sequence '\&' and '\=' respectively, for example string a=1&b=2&c=abc=xyz&d=a&b can be replaced with a=1&b=2&c=abc\=xyz&d=a\&b
+
 ## Release notes ##
+
+### Version 5.0.2 ##
+
+Improvements:
+
+* [DEPL-9295] - Allow escaping of '=' and '&' characters in a property of type map_string_string
+
+### Version 5.0.1 ##
+
+Bug fixes:
+
+* [DEPL-8961] - Fixed an issue that unintentionally caused the Jenkins plugin to fall back to the default XLD descriptor repository when creating a package
 
 ### Version 5.0.0 ##
 
@@ -83,7 +99,7 @@ Improvements:
 * [DEPL-7400] - Allow XLD credentials to be overridden in a Jenkins job
 
 Bug fixes:
-    
+
 * [DEPL-7184] - Publish DAR fails in mixed windows/unix master/slave setup
 * [DEPL-7254] - File system location doesn't support referencing file on Jenkins slave
 

@@ -30,6 +30,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import com.xebialabs.deployit.ci.ArtifactView;
+import com.xebialabs.deployit.ci.util.Strings2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -308,7 +309,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
             case LIST_OF_CI:
                 return newArrayList(convertToCiRefs(val, pd));
             case MAP_STRING_STRING:
-                return Splitter.on('&').withKeyValueSeparator("=").split(val);
+                return Strings2.convertToMap(val);
             default:
                 return val;
         }
