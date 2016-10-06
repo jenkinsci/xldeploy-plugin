@@ -1,4 +1,4 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:c="/lib/credentials" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:block>
         <f:entry title="${%Global server credential}" field="credential" help="/plugin/deployit-plugin/help-credential.html">
@@ -11,12 +11,19 @@
         <f:optionalBlock field="overridingCredential" name="overridingCredential" title="${%Override credential}" checked="${overridingCredential != null}">
 <!--             <st:include page="config.jelly" it="${instance.overridingCredential}" /> -->
             <input type="hidden" name="stapler-class" value="com.xebialabs.deployit.ci.Credential" />
-            <f:entry title="${%Username}" field="username">
-                <f:textbox value="${overridingCredential.username}"/>
-            </f:entry>
-            <f:entry title="${%Password}" field="password">
-                <f:password value="${overridingCredential.password}"/>
-            </f:entry>
+            <f:radioBlock inline="true" name="useGlobalCredential" value="false" title="Use username/password" checked="${!overridingCredential.isUseGlobalCredential()}">
+                <f:entry title="${%Username}" field="username">
+                    <f:textbox value="${overridingCredential.username}"/>
+                </f:entry>
+                <f:entry title="${%Password}" field="password">
+                    <f:password value="${overridingCredential.password}"/>
+                </f:entry>
+            </f:radioBlock>
+            <f:radioBlock inline="true" name="useGlobalCredential" value="true" title="Use stored credentials" checked="${overridingCredential.isUseGlobalCredential()}">
+                <f:entry title="${%Credentials}" field="credentialsId">
+                    <c:select default="${overridingCredential.credentialsId}"/>
+                </f:entry>
+            </f:radioBlock>
             <f:description>
             Overriding credential has to be applied before it has effect (please <b>Apply</b> or <b>Save</b> changes).</f:description>
         </f:optionalBlock>
