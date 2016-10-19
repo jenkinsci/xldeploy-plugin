@@ -56,7 +56,7 @@ buildscript {
     repositories {
         maven {
             name "jenkins"
-            delegate.url("http://maven.jenkins-ci.org/content/repositories/releases/")
+            delegate.url("http://repo.jenkins-ci.org/releases/")
         }
         // The plugin is currently only available via the Jenkins
         // Maven repository, but has dependencies in Maven Central.

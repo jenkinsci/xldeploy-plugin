@@ -130,7 +130,6 @@ class DeployitPerformer {
             try {
                 deployitServer.deploy(versionId, resolvedEnvironment, deploymentParameters.deploymentOptions, deploymentListener);
             } catch (Exception e) {
-                e.printStackTrace(buildListener.getLogger());
                 deploymentListener.error(Messages._DeployitNotifier_errorDeploy(e.getMessage()));
                 return false;
             }
