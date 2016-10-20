@@ -23,13 +23,13 @@
 
 package com.xebialabs.deployit.ci;
 
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.BuildListener;
-import hudson.model.TaskListener;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
+import hudson.model.*;
+import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -61,6 +61,7 @@ import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.server.DeployitServerFactory;
 
+import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 import static hudson.util.FormValidation.warning;
@@ -111,6 +112,10 @@ public class DeployitNotifier extends Notifier {
         return performer.doPerform();
     }
 
+    public boolean showGolbalCredentials() {
+        return overridingCredential.isUseGlobalCredential();
+    }
+
     public Credential getOverridingCredential() {
         return this.overridingCredential;
     }
@@ -129,6 +134,10 @@ public class DeployitNotifier extends Notifier {
         // credentials are actually globally available credentials
         private List<Credential> credentials = new ArrayList<Credential>();
 
+
+        private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
+        private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
+
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
         private final transient Map<String, SoftReference<DeployitServer>> credentialServerMap = new HashMap<String, SoftReference<DeployitServer>>();
 
@@ -142,9 +151,15 @@ public class DeployitNotifier extends Notifier {
 
             int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : DeployitServer.DEFAULT_POOL_SIZE;
             int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
-            DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.getUsername(), credential.getPassword().getPlainText(), newConnectionPoolSize, socketTimeout );
 
-            return deployitServer;
+            String userName = credential.getUsername();
+            String password = credential.getPassword().getPlainText();
+            if (credential.isUseGlobalCredential()) {
+                StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
+                userName =  cred.getUsername();
+                password = cred.getPassword().getPlainText();
+            }
+            return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
         }
 
         public DeployitServer getDeployitServer(Credential credential) {
@@ -257,6 +272,14 @@ public class DeployitNotifier extends Notifier {
             for (Credential c : credentials)
                 m.add(c.getName(), c.getName());
             return m;
+        }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
+            List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+                    ACL.SYSTEM,
+                    HTTP_SCHEME, HTTPS_SCHEME);
+
+            return new StandardUsernameListBoxModel().withAll(creds);
         }
 
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {

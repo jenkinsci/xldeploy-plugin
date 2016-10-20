@@ -154,7 +154,7 @@ public class DeployCommand {
                     executeTask(deploymentService.rollback(taskId));
                 }
             } finally {
-                throw new DeployitPluginException(e.getMessage(), e);
+                throw new DeployitPluginException(e.getMessage());
             }
         }
     }
@@ -180,9 +180,8 @@ public class DeployCommand {
             taskService.archive(taskId);
             return true;
         } catch (RuntimeException e) {
-            String msg = format("Error when executing task %s: %s", taskId, e.getMessage());
-            listener.error(msg);
-            throw new DeployitPluginException(msg, e);
+            String msg = format("Error when executing task %s", taskId);
+            throw new DeployitPluginException(msg);
         }
 
     }

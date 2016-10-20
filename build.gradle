@@ -56,7 +56,7 @@ buildscript {
     repositories {
         maven {
             name "jenkins"
-            delegate.url("http://maven.jenkins-ci.org/content/repositories/releases/")
+            delegate.url("http://repo.jenkins-ci.org/releases/")
         }
         // The plugin is currently only available via the Jenkins
         // Maven repository, but has dependencies in Maven Central.
@@ -154,7 +154,7 @@ dependencies {
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
-
+    jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
 

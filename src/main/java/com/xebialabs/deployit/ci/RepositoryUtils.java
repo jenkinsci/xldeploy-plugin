@@ -22,7 +22,7 @@ public class RepositoryUtils {
             String secondaryServerUrl = credential.resolveServerUrl(descriptor.getDeployitServerUrl());
 
             SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
-            credential = new Credential(credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(), serverInfo);
+            credential = new Credential(credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(), overridingCredential.getCredentialsId(), serverInfo,overridingCredential.isUseGlobalCredential());
         }
         DeployitServer deployitServer = descriptor.getDeployitServer(credential);
 
