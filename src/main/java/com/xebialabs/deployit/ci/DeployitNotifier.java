@@ -151,14 +151,15 @@ public class DeployitNotifier extends Notifier {
 
             int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : DeployitServer.DEFAULT_POOL_SIZE;
             int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
-            DeployitServer deployitServer;
+
+            String userName = credential.getUsername();
+            String password = credential.getPassword().getPlainText();
             if (credential.isUseGlobalCredential()) {
                 StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
-                deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, cred.getUsername(), cred.getPassword().getPlainText(), newConnectionPoolSize, socketTimeout);
-            } else {
-                deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, credential.getUsername(), credential.getPassword().getPlainText(), newConnectionPoolSize, socketTimeout);
+                userName =  cred.getUsername();
+                password = cred.getPassword().getPlainText();
             }
-            return deployitServer;
+            return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
         }
 
         public DeployitServer getDeployitServer(Credential credential) {

@@ -298,7 +298,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             } catch (IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
-                e.printStackTrace();
                 return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
             }
         }
@@ -323,7 +322,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             } catch (IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
-                e.printStackTrace();
                 return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
             }
         }
