@@ -1,0 +1,15 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:entry title="${%Manifest Path}" field="manifestPath" help="/plugin/deployit-plugin/help-manifestpath.html">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Artifact Path}" field="artifactPath" help="/plugin/deployit-plugin/help-artifactpath.html">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Package Name}" field="packageName" help="/plugin/deployit-plugin/help-packagename.html">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Package Version}" field="packageVersion" help="/plugin/deployit-plugin/help-packageversion.html">
+        <f:textbox/>
+    </f:entry>
+</j:jelly>

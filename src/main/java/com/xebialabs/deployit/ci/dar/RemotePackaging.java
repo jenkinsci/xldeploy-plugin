@@ -36,6 +36,7 @@ import com.xebialabs.deployit.packager.writers.ManifestXmlWriter;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
+import org.jenkinsci.remoting.RoleChecker;
 
 /**
  * Wrapper for the packaging operation.
@@ -101,4 +102,8 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
         return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true).getPath();
     }
 
+    @Override
+    public void checkRoles(RoleChecker checker) throws SecurityException {
+
+    }
 }

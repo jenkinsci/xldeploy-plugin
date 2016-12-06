@@ -26,6 +26,7 @@ package com.xebialabs.deployit.ci.dar;
 import java.io.File;
 
 import hudson.remoting.Callable;
+import org.jenkinsci.remoting.RoleChecker;
 
 /**
  * Wrapper for file-related operations.
@@ -42,6 +43,11 @@ public class RemoteLookup implements Callable<File, RuntimeException> {
     public RemoteLookup(final String artifactPath, final String workspacePath) {
         this.artifactPath = artifactPath;
         this.workspacePath = workspacePath;
+    }
+
+    @Override
+    public void checkRoles(RoleChecker checker) throws SecurityException {
+
     }
 
     @Override
