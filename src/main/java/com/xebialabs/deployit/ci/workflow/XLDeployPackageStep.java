@@ -4,8 +4,9 @@ import com.google.inject.Inject;
 import com.sun.istack.NotNull;
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.TaskListener;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FilenameUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -14,32 +15,54 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 public class XLDeployPackageStep extends AbstractStepImpl {
 
-    public String manifestPath = null;
-    public String artifactPath = null;
+    public List<Resource> artifacts = Collections.emptyList();
+    public Resource manifest = null;
     public String packageName = null;
     public String packageVersion = null;
+    public String manifestPath = null;
+    public String manifestUsername = null;
+    public String manifestPassword = null;
 
     @DataBoundConstructor
-    public XLDeployPackageStep(String manifestPath, String artifactPath, String packageVersion, String packageName) {
+    public XLDeployPackageStep(List<Resource> artifacts, String manifestPath, String manifestUsername, String manifestPassword, String packageVersion, String packageName) {
+        this.artifacts = artifacts;
         this.manifestPath = manifestPath;
-        this.artifactPath = artifactPath;
+        this.manifestUsername = manifestUsername;
+        this.manifestPassword = manifestPassword;
+        this.manifest = new Resource(manifestPath, manifestUsername, manifestPassword);
         this.packageVersion = packageVersion;
         this.packageName = packageName;
     }
 
     @DataBoundSetter
     public void setManifestPath(@NotNull String manifestPath) {
-        this.manifestPath = Util.fixEmptyAndTrim(manifestPath);
+        this.manifestPath = manifestPath;
     }
 
     @DataBoundSetter
-    public void setArtifactPath(@NotNull String artifactPath) {
-        this.artifactPath = artifactPath;
+    public void setManifestUsername(String manifestUsername) {
+        this.manifestUsername = manifestUsername;
+    }
+
+    @DataBoundSetter
+    public void setManifestPassword(String manifestPassword) {
+        this.manifestPassword = manifestPassword;
+    }
+
+    @DataBoundSetter
+    public void setArtifacts(@NotNull List<Resource> artifacts) {
+        this.artifacts = artifacts;
     }
 
     @DataBoundSetter
@@ -89,39 +112,64 @@ public class XLDeployPackageStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
+
             String packagePath = outputFilePath();
-            createDARPackage(getFullPath(step.manifestPath), getFullPath(step.artifactPath), packagePath);
+            FileOutputStream fileOutputStream = new FileOutputStream(packagePath);
+            ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
+
+            addResourceToPackage(step.manifest, zipOutputStream);
+            for (Resource artifact : step.artifacts) {
+                addResourceToPackage(artifact, zipOutputStream);
+            }
+            zipOutputStream.closeEntry();
+            zipOutputStream.close();
+            fileOutputStream.close();
+
             listener.getLogger().println("XL Deploy package created : " + packagePath);
             return null;
         }
 
-        private String outputFilePath() {
-            return new StringBuilder(envVars.get("WORKSPACE")).append(File.separator).append(step.packageName).append("-").append(step.packageVersion).append(".dar").toString();
-        }
+        private void addResourceToPackage(Resource resource, ZipOutputStream zipOutputStream) throws IOException {
 
-        private String getFullPath(String filePath) {
-            return new StringBuilder(envVars.get("WORKSPACE")).append(File.separator).append(filePath).toString();
-        }
+            ZipEntry zipEntry;
+            InputStream inputStream;
 
-        private void createDARPackage(String manifestPath, String artifactPath, String packagePath) throws IOException {
-            FileOutputStream fileOutputStream = new FileOutputStream(packagePath);
-            ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
-            addFileToPackage(new File(artifactPath), zipOutputStream);
-            addFileToPackage(new File(manifestPath), zipOutputStream);
-            zipOutputStream.closeEntry();
-            zipOutputStream.close();
-            fileOutputStream.close();
-        }
+            if (resource.isURLResource()) {
+                URL url = new URL(resource.path);
+                URLConnection urlConnection = url.openConnection();
+                setAuthData(urlConnection, resource);
+                inputStream = urlConnection.getInputStream();
+                zipEntry = new ZipEntry(FilenameUtils.getName(url.getPath()));
+            } else {
+                File resourceFile = new File(getGeneratedFilePath(resource.path));
+                zipEntry = new ZipEntry(resourceFile.getName());
+                inputStream = new FileInputStream(resourceFile);
+            }
 
-        private void addFileToPackage(File inputFile, ZipOutputStream zipOutputStream) throws IOException {
-            ZipEntry zipEntry = new ZipEntry(inputFile.getName());
             zipOutputStream.putNextEntry(zipEntry);
-            FileInputStream fileInputStream = new FileInputStream(inputFile);
             byte[] buf = new byte[1024];
             int bytesRead;
-            while ((bytesRead = fileInputStream.read(buf)) > 0) {
+            while ((bytesRead = inputStream.read(buf)) > 0) {
                 zipOutputStream.write(buf, 0, bytesRead);
             }
+        }
+
+        private void setAuthData(URLConnection urlConnection, Resource resource) {
+            if (isNotBlank(resource.username) && isNotBlank(resource.password)) {
+                urlConnection.setRequestProperty("Authorization", "Basic " + Base64.encodeBase64String((resource.username + ":" + resource.password).getBytes()));
+            }
+        }
+
+        private String getGeneratedFilePath(String filePath) {
+            return getWorkspace().append(filePath).toString();
+        }
+
+        private String outputFilePath() {
+            return getWorkspace().append(step.packageName).append("-").append(step.packageVersion).append(".dar").toString();
+        }
+
+        private StringBuilder getWorkspace() {
+            return new StringBuilder(envVars.get("WORKSPACE")).append(File.separator);
         }
 
     }
