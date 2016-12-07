@@ -128,8 +128,6 @@ configurations {
 
 ext {
     xlPlatformVersion = "2016.2.1"
-    truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
-    // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 
     // robot itests
     xlSdkVersion = '1.0.0-alpha-5'
@@ -138,16 +136,6 @@ ext {
     defaultProperties = [
             'JENKINS_VERSION': '1.579'
     ]
-}
-
-configurations.all {
-    resolutionStrategy {
-        force "de.schlichtherle.truezip:truezip-driver-file:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-driver-zip:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-file:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-kernel:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-swing:$truezipVersion"
-    }
 }
 
 dependencies {
