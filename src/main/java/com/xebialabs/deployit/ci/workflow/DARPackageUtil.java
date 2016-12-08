@@ -53,7 +53,7 @@ public class DARPackageUtil {
         ZipEntry zipEntry = resourceInfo.getZipEntry();
         ZipEntry modifiedEntry = (manifest) ? zipEntry : new ZipEntry(this.packageName + File.separator + zipEntry.getName());
         zipOutputStream.putNextEntry(modifiedEntry);
-        byte[] buf = new byte[1024];
+        byte[] buf = new byte[8192];
         int bytesRead;
         while ((bytesRead = inputStream.read(buf)) > 0) {
             zipOutputStream.write(buf, 0, bytesRead);
