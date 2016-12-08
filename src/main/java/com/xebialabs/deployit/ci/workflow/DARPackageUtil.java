@@ -29,20 +29,30 @@ public class DARPackageUtil {
         String packagePath = outputFilePath();
         try (FileOutputStream fileOutputStream = new FileOutputStream(packagePath);
              ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
-            addResourceToPackage(this.manifest, zipOutputStream);
+            addManifest(this.manifest, zipOutputStream);
+            zipOutputStream.putNextEntry(new ZipEntry(this.packageName + File.separator));
             for (Resource artifact : this.artifacts) {
-                addResourceToPackage(artifact, zipOutputStream);
+                addArtifact(artifact, zipOutputStream);
                 zipOutputStream.closeEntry();
             }
         }
         return packagePath;
     }
 
-    private void addResourceToPackage(Resource resource, ZipOutputStream zipOutputStream) throws IOException {
+    private void addManifest(Resource resource, ZipOutputStream zipOutputStream) throws IOException {
+        addResourceToPackage(resource, zipOutputStream, true);
+    }
+
+    private void addArtifact(Resource resource, ZipOutputStream zipOutputStream) throws IOException {
+        addResourceToPackage(resource, zipOutputStream, false);
+    }
+
+    private void addResourceToPackage(Resource resource, ZipOutputStream zipOutputStream, boolean manifest) throws IOException {
         ResourceInfo resourceInfo = resourceReaderFactory.getReader(resource, this.workspace).readResource();
-        ZipEntry zipEntry = resourceInfo.getZipEntry();
         InputStream inputStream = resourceInfo.getInputStream();
-        zipOutputStream.putNextEntry(zipEntry);
+        ZipEntry zipEntry = resourceInfo.getZipEntry();
+        ZipEntry modifiedEntry = (manifest) ? zipEntry : new ZipEntry(this.packageName + File.separator + zipEntry.getName());
+        zipOutputStream.putNextEntry(modifiedEntry);
         byte[] buf = new byte[1024];
         int bytesRead;
         while ((bytesRead = inputStream.read(buf)) > 0) {
