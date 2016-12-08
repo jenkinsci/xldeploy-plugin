@@ -102,6 +102,11 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
         return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true).getPath();
     }
 
+    /**
+     * This method has an empty implementation, which is added after upgrading the Jenkins core version to 1.642.3
+     * @param checker
+     * @throws SecurityException
+     */
     @Override
     public void checkRoles(RoleChecker checker) throws SecurityException {
 

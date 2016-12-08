@@ -62,7 +62,11 @@ public class FileFinder implements FilePath.FileCallable<List<String>> {
         }
     }
 
-    @Override
+    /**
+     * This method has an empty implementation, which is added after upgrading the Jenkins core version to 1.642.3
+     * @param checker
+     * @throws SecurityException
+     */
     public void checkRoles(RoleChecker checker) throws SecurityException {
 
     }

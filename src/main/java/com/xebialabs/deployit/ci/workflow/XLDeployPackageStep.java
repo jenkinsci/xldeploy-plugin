@@ -18,12 +18,12 @@ import java.util.List;
 public class XLDeployPackageStep extends AbstractStepImpl {
 
     public List<Resource> artifacts = Collections.emptyList();
-    public Resource manifest = null;
-    public String packageName = null;
-    public String packageVersion = null;
-    public String manifestPath = null;
-    public String manifestUsername = null;
-    public String manifestPassword = null;
+    public Resource manifest;
+    public String packageName;
+    public String packageVersion;
+    public String manifestPath;
+    public String manifestUsername;
+    public String manifestPassword;
 
     @DataBoundConstructor
     public XLDeployPackageStep(List<Resource> artifacts, String manifestPath, String manifestUsername, String manifestPassword, String packageVersion, String packageName) {

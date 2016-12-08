@@ -45,6 +45,11 @@ public class RemoteLookup implements Callable<File, RuntimeException> {
         this.workspacePath = workspacePath;
     }
 
+    /**
+     * This method has an empty implementation, which is added after upgrading the Jenkins core version to 1.642.3
+     * @param checker
+     * @throws SecurityException
+     */
     @Override
     public void checkRoles(RoleChecker checker) throws SecurityException {
 
