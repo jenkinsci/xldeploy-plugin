@@ -216,7 +216,6 @@ def env() {
     def phantomjs_dir = new ConventionPathResolver().find(project.projectDir, new ObakeConfig())
     env['PATH'] = "$phantomjs_dir/bin:" + env['PATH']
     env['PATH'] = "$xlSdkHome/runtime/bin:" + env['PATH']
-    env['JAVA_HOME'] = "/opt/jdk/latest/bin/java"
     env.remove('PYTHONHOME')
     return env
 }
