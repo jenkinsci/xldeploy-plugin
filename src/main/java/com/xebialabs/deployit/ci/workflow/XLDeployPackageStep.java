@@ -12,28 +12,26 @@ import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.util.Collections;
-import java.util.List;
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
 public class XLDeployPackageStep extends AbstractStepImpl {
 
-    public List<Resource> artifacts = Collections.emptyList();
-    public Resource manifest;
     public String packageName;
     public String packageVersion;
     public String manifestPath;
-    public String manifestUsername;
-    public String manifestPassword;
+    public String artifactsDirPath;
 
     @DataBoundConstructor
-    public XLDeployPackageStep(List<Resource> artifacts, String manifestPath, String manifestUsername, String manifestPassword, String packageVersion, String packageName) {
-        this.artifacts = artifacts;
+    public XLDeployPackageStep(String artifactsDirPath, String manifestPath, String packageVersion, String packageName) {
         this.manifestPath = manifestPath;
-        this.manifestUsername = manifestUsername;
-        this.manifestPassword = manifestPassword;
-        this.manifest = new Resource(manifestPath, manifestUsername, manifestPassword);
         this.packageVersion = packageVersion;
         this.packageName = packageName;
+        this.artifactsDirPath = artifactsDirPath;
     }
 
     @DataBoundSetter
@@ -42,18 +40,8 @@ public class XLDeployPackageStep extends AbstractStepImpl {
     }
 
     @DataBoundSetter
-    public void setManifestUsername(String manifestUsername) {
-        this.manifestUsername = manifestUsername;
-    }
-
-    @DataBoundSetter
-    public void setManifestPassword(String manifestPassword) {
-        this.manifestPassword = manifestPassword;
-    }
-
-    @DataBoundSetter
-    public void setArtifacts(@NotNull List<Resource> artifacts) {
-        this.artifacts = artifacts;
+    public void setArtifactsDirPath(@NotNull String artifactsDirPath) {
+        this.artifactsDirPath = artifactsDirPath;
     }
 
     @DataBoundSetter
@@ -80,7 +68,7 @@ public class XLDeployPackageStep extends AbstractStepImpl {
 
         @Override
         public String getFunctionName() {
-            return "xlDeployPackage";
+            return "xldCreatePackage";
         }
 
         @Override
@@ -103,12 +91,11 @@ public class XLDeployPackageStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-
-            DARPackageUtil packageUtil = new DARPackageUtil(step.artifacts, step.manifest, step.packageName, step.packageVersion, envVars.get("WORKSPACE"));
+            DARPackageUtil packageUtil = new DARPackageUtil(step.artifactsDirPath, step.manifestPath, step.packageName, step.packageVersion, envVars);
             String packagePath = packageUtil.createPackage();
             listener.getLogger().println("XL Deploy package created : " + packagePath);
             return null;
         }
-    }
 
+    }
 }

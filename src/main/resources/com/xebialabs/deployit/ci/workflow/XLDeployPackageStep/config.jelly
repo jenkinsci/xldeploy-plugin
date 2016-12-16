@@ -1,32 +1,9 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-     <f:entry title="${%Artifacts}" field="artifacts" help="/plugin/deployit-plugin/help-artifacts.html">
-        <f:repeatable var="property" field="artifacts">
-            <table width="100%">
-                <f:entry title="${%Path}" field="path" help="/plugin/deployit-plugin/help-artifact-path.html">
-                    <f:textbox/>
-                </f:entry>
-                <f:entry title="${%Username}" field="username" help="/plugin/deployit-plugin/help-artifact-username.html">
-                    <f:textbox/>
-                </f:entry>
-                <f:entry title="${%Password}" field="password" help="/plugin/deployit-plugin/help-artifact-password.html">
-                    <f:textbox/>
-                </f:entry>
-                <f:entry title="">
-                    <div align="right">
-                        <f:repeatableDeleteButton/>
-                    </div>
-                </f:entry>
-            </table>
-        </f:repeatable>
+     <f:entry title="${%Artifacts Directory Path}" field="artifactsDirPath" help="/plugin/deployit-plugin/help-artifacts.html">
+         <f:textbox/>
     </f:entry>
-    <f:entry title="${%Manifest Path}" field="manifestPath"  help="/plugin/deployit-plugin/help-artifact-path.html">
-        <f:textbox/>
-    </f:entry>
-    <f:entry title="${%Manifest Username}" field="manifestUsername" help="/plugin/deployit-plugin/help-artifact-username.html">
-        <f:textbox/>
-    </f:entry>
-    <f:entry title="${%Manifest Password}" field="manifestPassword" help="/plugin/deployit-plugin/help-artifact-password.html">
+    <f:entry title="${%Manifest Path}" field="manifestPath"  help="/plugin/deployit-plugin/help-manifestpath.html">
         <f:textbox/>
     </f:entry>
     <f:entry title="${%Package Name}" field="packageName" help="/plugin/deployit-plugin/help-packagename.html">

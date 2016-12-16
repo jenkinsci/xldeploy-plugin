@@ -1,62 +1,91 @@
 package com.xebialabs.deployit.ci.workflow;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
+import hudson.EnvVars;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class DARPackageUtil {
-    private final List<Resource> artifacts;
-    private final Resource manifest;
+
+    private static final String SEPARATOR = "/";
+
+    private final String artifactDirPath;
+    private final String manifestPath;
     private final String packageName;
     private final String packageVersion;
     private final String workspace;
-    private final ResourceReaderFactory resourceReaderFactory = new ResourceReaderFactory();
+    private final EnvVars envVars;
 
-    public DARPackageUtil(List<Resource> artifacts, Resource manifest, String packageName, String packageVersion, String workspace) {
-
-        this.artifacts = artifacts;
-        this.manifest = manifest;
-        this.packageName = packageName;
-        this.packageVersion = packageVersion;
-        this.workspace = workspace;
+    public DARPackageUtil(String artifactDirPath, String manifestPath, String packageName, String packageVersion, EnvVars envVars) {
+        this.artifactDirPath = artifactDirPath;
+        this.manifestPath = manifestPath;
+        this.packageName = envVars.expand(packageName);
+        this.packageVersion = envVars.expand(packageVersion);
+        this.workspace = envVars.get("WORKSPACE");
+        this.envVars = envVars;
     }
 
     public String createPackage() throws IOException {
         String packagePath = outputFilePath();
+        replaceEnvVarInManifest();
         try (FileOutputStream fileOutputStream = new FileOutputStream(packagePath);
              ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
-            addManifest(this.manifest, zipOutputStream);
-            zipOutputStream.putNextEntry(new ZipEntry(this.packageName + File.separator));
-            for (Resource artifact : this.artifacts) {
-                addArtifact(artifact, zipOutputStream);
-                zipOutputStream.closeEntry();
-            }
+            // Add manifest file
+            addEntryToZip("", this.workspace + File.separator + manifestPath, zipOutputStream, false, true);
+            // Add artifacts directory
+            addFolderToZip("", this.workspace + File.separator + artifactDirPath, zipOutputStream);
         }
         return packagePath;
     }
 
-    private void addManifest(Resource resource, ZipOutputStream zipOutputStream) throws IOException {
-        addResourceToPackage(resource, zipOutputStream, true);
+    private void replaceEnvVarInManifest() throws IOException {
+        String manifestContent;
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Files.copy(Paths.get(workspace, manifestPath), outputStream);
+            manifestContent = new String(outputStream.toByteArray());
+        }
+        manifestContent = envVars.expand(manifestContent);
+        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(workspace, manifestPath), StandardOpenOption.TRUNCATE_EXISTING)) {
+            writer.append(manifestContent);
+        }
     }
 
-    private void addArtifact(Resource resource, ZipOutputStream zipOutputStream) throws IOException {
-        addResourceToPackage(resource, zipOutputStream, false);
+    private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws IOException {
+        File folder = new File(srcFolder);
+        if (folder.list().length == 0) {
+            addEntryToZip(path, srcFolder, zip, true, false);
+        } else {
+            for (String fileName : folder.list()) {
+                if (path.equals("")) {
+                    addEntryToZip(folder.getName(), srcFolder + File.separator + fileName, zip, false, false);
+                } else {
+                    addEntryToZip(path + SEPARATOR + folder.getName(), srcFolder + File.separator + fileName, zip, false, false);
+                }
+            }
+        }
     }
 
-    private void addResourceToPackage(Resource resource, ZipOutputStream zipOutputStream, boolean manifest) throws IOException {
-        ResourceInfo resourceInfo = resourceReaderFactory.getReader(resource, this.workspace).readResource();
-        InputStream inputStream = resourceInfo.getInputStream();
-        ZipEntry zipEntry = resourceInfo.getZipEntry();
-        ZipEntry modifiedEntry = (manifest) ? zipEntry : new ZipEntry(this.packageName + File.separator + zipEntry.getName());
-        zipOutputStream.putNextEntry(modifiedEntry);
-        byte[] buf = new byte[8192];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buf)) > 0) {
-            zipOutputStream.write(buf, 0, bytesRead);
+    private void addEntryToZip(String path, String srcFile, ZipOutputStream zip, boolean isFolder, boolean isManifest) throws IOException {
+        File entry = new File(srcFile);
+        if (isFolder == true) {
+            zip.putNextEntry(new ZipEntry(path + SEPARATOR + entry.getName() + SEPARATOR));
+        } else {
+            if (entry.isDirectory()) {
+                addFolderToZip(path, srcFile, zip);
+            } else {
+                byte[] buf = new byte[8192];
+                int len;
+                FileInputStream in = new FileInputStream(srcFile);
+                ZipEntry zipEntry = isManifest ? new ZipEntry(entry.getName()) : new ZipEntry(path + SEPARATOR + entry.getName());
+                zip.putNextEntry(zipEntry);
+                while ((len = in.read(buf)) > 0) {
+                    zip.write(buf, 0, len);
+                }
+            }
         }
     }
 
