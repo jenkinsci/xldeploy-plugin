@@ -108,6 +108,7 @@ server.doFirst {
 
 configurations {
     compile.transitive = true
+    compile.exclude group: 'com.xebialabs.xl-platform', module: 'xl-utils'
     providedRuntime.exclude group: 'jdom', module: 'jdom'
     //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
     providedRuntime.exclude group: 'de.schlichtherle.truezip', module: 'truezip-path'
@@ -126,9 +127,7 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2015.2.8"
-    truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
-    // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
+    xlPlatformVersion = "2016.2.1"
 
     // robot itests
     xlSdkVersion = '1.0.0-alpha-5'
@@ -139,16 +138,6 @@ ext {
     ]
 }
 
-configurations.all {
-    resolutionStrategy {
-        force "de.schlichtherle.truezip:truezip-driver-file:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-driver-zip:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-file:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-kernel:$truezipVersion"
-        force "de.schlichtherle.truezip:truezip-swing:$truezipVersion"
-    }
-}
-
 dependencies {
     compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
@@ -157,6 +146,7 @@ dependencies {
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
+    compile "com.google.guava:guava:16.0.1"
 
     provided 'org.slf4j:slf4j-api:1.7.7'
 
