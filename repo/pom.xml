@@ -13,7 +13,6 @@
 		<version.overthere>4.0.0</version.overthere>
 	</properties>
 
-
 	<dependencies>
 		<dependency>
 			<groupId>com.xebialabs.deployit</groupId>
