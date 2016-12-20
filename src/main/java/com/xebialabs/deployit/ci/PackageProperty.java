@@ -3,6 +3,7 @@ package com.xebialabs.deployit.ci;
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.AbstractProject;
+import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
 
 import java.util.Collection;
@@ -29,8 +30,12 @@ public class PackageProperty extends NameValuePair {
     }
 
     @Extension
-    public static class PackagePropertyDescriptor extends NameValuePairDescriptor {
+    public static class PackagePropertyDescriptor extends Descriptor<NameValuePair> {
         public static String PACKAGE_TYPE = "udm.DeploymentPackage";
+
+        public PackagePropertyDescriptor(final Class<? extends NameValuePair> clazz) {
+            super(clazz);
+        }
 
         public static final Predicate<PropertyDescriptor> ONLY_SIMPLE_EDITABLE_PROPERTIES = new Predicate<PropertyDescriptor>() {
             @Override
