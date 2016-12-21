@@ -14,6 +14,7 @@ public interface DeployitDescriptorRegistry {
     String UDM_ARTIFACT = "udm.Artifact";
     String UDM_DEPLOYABLE = "udm.Deployable";
     String UDM_EMBEDDED_DEPLOYABLE = "udm.EmbeddedDeployable";
+    String UDM_DEPLOYMENT_PACKAGE = "udm.DeploymentPackage";
 
     Type typeForClass(Class<?> clazz);
 

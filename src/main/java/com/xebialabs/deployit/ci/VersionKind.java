@@ -25,7 +25,7 @@ package com.xebialabs.deployit.ci;
 
 public enum VersionKind {
 
-    Packaged("From this job"), Other("Other (please specify above)");
+    Packaged("From this job"), Other("Other (please specify below)");
 
     private final String label;
 

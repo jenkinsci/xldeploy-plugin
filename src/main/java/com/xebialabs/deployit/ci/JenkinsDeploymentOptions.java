@@ -32,7 +32,6 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.xebialabs.deployit.ci.util.ListBoxModels.emptyModel;
 import static com.xebialabs.deployit.ci.util.ListBoxModels.of;
@@ -49,20 +48,34 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
 
     public final VersionKind versionKind;
     public String version;
+    public String storedVersions;
 
     @DataBoundConstructor
-    public JenkinsDeploymentOptions(String environment, VersionKind versionKind, boolean generateDeployedOnUpgrade, boolean skipMode, boolean testMode, boolean rollbackOnError) {
+    public JenkinsDeploymentOptions(String environment, VersionKind versionKind, String storedVersions, boolean generateDeployedOnUpgrade, boolean skipMode, boolean testMode, boolean rollbackOnError) {
         this.generateDeployedOnUpgrade = generateDeployedOnUpgrade;
         this.skipMode = skipMode;
         this.testMode = testMode;
         this.rollbackOnError = rollbackOnError;
         this.environment = environment;
         this.versionKind = versionKind;
+        this.storedVersions = storedVersions;
     }
 
     public Descriptor<JenkinsDeploymentOptions> getDescriptor() {
         return Jenkins.getInstance().getDescriptorOrDie(getClass());
     }
+    
+    public String getStoredVersions()	{
+    	return this.storedVersions;
+    }
+    
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
+	public String getVersion()	{
+		return this.version;
+	}
 
     @Extension
     public static final class DescriptorImpl extends Descriptor<JenkinsDeploymentOptions> {
@@ -76,17 +89,18 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             DeployitNotifier.DeployitDescriptor deployitDescriptor = getDeployitDescriptor();
             return isNullOrEmpty(credential) ? emptyModel() : of(deployitDescriptor.environments(credential));
         }
+        
+        public ListBoxModel doFillStoredVersionsItems(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential, 
+        											  @QueryParameter(value = "credential") String credential2, 
+        											  @QueryParameter(value = "application") @RelativePath(value = "..") String application) {
+            credential = !isNullOrEmpty(credential) ? credential : credential2;
+            DeployitNotifier.DeployitDescriptor deployitDescriptor = getDeployitDescriptor();
+            return isNullOrEmpty(credential) ? emptyModel() : of(deployitDescriptor.storedApplicationVersions(credential, application));
+        }
 
         protected DeployitNotifier.DeployitDescriptor getDeployitDescriptor() {
             return (DeployitNotifier.DeployitDescriptor) Jenkins.getInstance().getDescriptorOrDie(DeployitNotifier.class);
         }
     }
 
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
 }

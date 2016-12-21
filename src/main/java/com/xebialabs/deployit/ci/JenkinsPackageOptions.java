@@ -23,16 +23,20 @@
 
 package com.xebialabs.deployit.ci;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -59,10 +63,14 @@ import static com.google.common.collect.Maps.newHashMap;
 public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions> {
 
     private final List<DeployableView> deployables;
+    private final String orchestrator;
+    private final String version;
 
     @DataBoundConstructor
-    public JenkinsPackageOptions(List<DeployableView> deployables) {
+    public JenkinsPackageOptions(List<DeployableView> deployables, String orchestrator, String version) {
         this.deployables = deployables;
+        this.orchestrator = orchestrator;
+        this.version = version;
     }
 
     public Descriptor<JenkinsPackageOptions> getDescriptor() {
@@ -71,6 +79,14 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
 
     public List<DeployableView> getDeployables() {
         return deployables;
+    }
+
+    public String getOrchestrator() {
+        return this.orchestrator;   
+    }
+    
+    public String getVersion()	{
+    	return this.version;
     }
 
     public DeploymentPackage toDeploymentPackage(String applicationName, String version, DeployitDescriptorRegistry registry, FilePath workspace, EnvVars envVars, JenkinsDeploymentListener listener) {
@@ -89,8 +105,48 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
             deployablesByFqn.put(deployableView.getFullyQualifiedName(), deployable);
         }
         deploymentPackage.setProperty("deployables", deploymentPackage.getDeployables());
+
+        /*  Check for a specified orchestrator, and whether there's multiple specified 
+         *  or just one based on comma existence/separation, process accordingly.
+         */
+        if (! orchestrator.equals(""))  {
+            listener.info("Orchestrator(s): " + orchestrator);
+            List<String> orchestrators = (orchestrator.indexOf(",") > 0) ? buildOrchestratorList(orchestrator) : Collections.singletonList(orchestrator);
+            deploymentPackage.setProperty("orchestrator", orchestrators);
+        }
+
         return deploymentPackage;
     }
+
+    /**
+     * Takes a comma separated string of the desired orchestrators that need to be 
+     * associated with the generated version of the deployment package and creates 
+     * a list of strings.
+     * 
+     * Using extra, unnecessary lines of code because splitToList() is only available 
+     * in guava 15+, Jenkins core includes 11; haven't figured out how to override 
+     * it's class loader without introducing a shitload of other issues.
+     * 
+     * TODO: Figure out how to trump Jenkins core's guava.
+     * 
+     * @param orchestrators, a comma separated string of orchestrators
+     * @return a list of strings that represent the desired orchestartors to be used
+     */
+    private List<String> buildOrchestratorList(String orchestrators)  {
+        List<String> orchestratorList = new ArrayList<String>();
+        Iterator<String> orchIterator = Splitter.on(',')
+                                              .trimResults()
+                                              .omitEmptyStrings()
+                                              .split(orchestrators)
+                                              .iterator();
+
+        while (orchIterator.hasNext())  {
+            orchestratorList.add(orchIterator.next());
+        }
+    
+        return orchestratorList;
+    }
+
 
     private List<DeployableView> sortDeployables(List<DeployableView> deployables) {
         List<DeployableView> result = Lists.newArrayList(Iterables.filter(deployables, Predicates.not(Predicates.instanceOf(EmbeddedView.class))));

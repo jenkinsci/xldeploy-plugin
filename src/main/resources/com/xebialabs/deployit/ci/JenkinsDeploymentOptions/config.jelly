@@ -8,6 +8,10 @@
         <f:enum>${it.label}</f:enum>
     </f:entry>
 
+    <f:entry title="${%Existing Versions}" field="storedVersions" help="/plugin/deployit-plugin/help-storedVersions.html">
+        <f:select />
+    </f:entry>
+
     <f:entry title="${%Update Mappings}" field="generateDeployedOnUpgrade" help="/plugin/deployit-plugin/help-generate-deployeds-on-update.html">
         <f:checkbox default="true" />
     </f:entry>

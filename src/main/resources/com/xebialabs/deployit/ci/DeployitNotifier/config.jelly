@@ -7,10 +7,6 @@
         <f:textbox default="Applications/"/>
     </f:entry>
 
-    <f:entry title="${%Version}" field="version" help="/plugin/deployit-plugin/help-version.html">
-        <f:textbox/>
-    </f:entry>
-
     <f:entry title="${%Verbose}" field="verbose">
         <f:checkbox/>
     </f:entry>
