@@ -79,11 +79,12 @@ public class DARPackageUtil {
             } else {
                 byte[] buf = new byte[8192];
                 int len;
-                FileInputStream in = new FileInputStream(srcFile);
                 ZipEntry zipEntry = isManifest ? new ZipEntry(entry.getName()) : new ZipEntry(path + SEPARATOR + entry.getName());
                 zip.putNextEntry(zipEntry);
-                while ((len = in.read(buf)) > 0) {
-                    zip.write(buf, 0, len);
+                try (FileInputStream in = new FileInputStream(srcFile)) {
+                    while ((len = in.read(buf)) > 0) {
+                        zip.write(buf, 0, len);
+                    }
                 }
             }
         }
