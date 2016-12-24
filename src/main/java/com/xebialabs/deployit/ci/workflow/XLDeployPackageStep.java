@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.sun.istack.NotNull;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -82,10 +83,13 @@ public class XLDeployPackageStep extends AbstractStepImpl {
         @StepContextParameter
         private transient TaskListener listener;
 
+        @StepContextParameter
+        private transient FilePath ws;
+
         @Override
         protected Void run() throws Exception {
             DARPackageUtil packageUtil = new DARPackageUtil(step.artifactsDirPath, step.manifestPath, step.packageName, step.packageVersion, envVars);
-            String packagePath = packageUtil.createPackage();
+            String packagePath =  ws.getChannel().call(packageUtil);
             listener.getLogger().println("XL Deploy package created : " + packagePath);
             return null;
         }

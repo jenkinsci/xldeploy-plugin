@@ -1,6 +1,8 @@
 package com.xebialabs.deployit.ci.workflow;
 
 import hudson.EnvVars;
+import hudson.remoting.Callable;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -9,7 +11,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class DARPackageUtil {
+public class DARPackageUtil implements Callable<String, IOException> {
 
     private static final String SEPARATOR = "/";
 
@@ -29,7 +31,7 @@ public class DARPackageUtil {
         this.envVars = envVars;
     }
 
-    public String createPackage() throws IOException {
+    public String call() throws IOException {
         String packagePath = outputFilePath();
         replaceEnvVarInManifest();
         try (FileOutputStream fileOutputStream = new FileOutputStream(packagePath);
@@ -94,4 +96,8 @@ public class DARPackageUtil {
         return new StringBuilder(this.workspace).append(File.separator).append(this.packageName).append("-").append(this.packageVersion).append(".dar").toString();
     }
 
+    @Override
+    public void checkRoles(RoleChecker checker) throws SecurityException {
+
+    }
 }
