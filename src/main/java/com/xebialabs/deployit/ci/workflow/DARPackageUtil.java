@@ -15,31 +15,32 @@ public class DARPackageUtil implements Callable<String, IOException> {
 
     private static final String SEPARATOR = "/";
 
-    private final String artifactDirPath;
+    private final String artifactsPath;
     private final String manifestPath;
-    private final String packageName;
-    private final String packageVersion;
+    private final String darPath;
     private final String workspace;
     private final EnvVars envVars;
 
-    public DARPackageUtil(String artifactDirPath, String manifestPath, String packageName, String packageVersion, EnvVars envVars) {
-        this.artifactDirPath = artifactDirPath;
+    public DARPackageUtil(String artifactsPath, String manifestPath, String darPath, EnvVars envVars) {
+        this.artifactsPath = artifactsPath;
         this.manifestPath = manifestPath;
-        this.packageName = envVars.expand(packageName);
-        this.packageVersion = envVars.expand(packageVersion);
+        this.darPath = envVars.expand(darPath);
         this.workspace = envVars.get("WORKSPACE");
         this.envVars = envVars;
     }
 
     public String call() throws IOException {
-        String packagePath = outputFilePath();
         replaceEnvVarInManifest();
-        try (FileOutputStream fileOutputStream = new FileOutputStream(packagePath);
+        String packagePath = outputFilePath();
+        File darFile = new File(packagePath);
+        darFile.getParentFile().mkdirs();
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(darFile);
              ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
             // Add manifest file
             addEntryToZip("", this.workspace + File.separator + manifestPath, zipOutputStream, false, true);
             // Add artifacts directory
-            addFolderToZip("", this.workspace + File.separator + artifactDirPath, zipOutputStream);
+            addFolderToZip("", this.workspace + File.separator + artifactsPath, zipOutputStream);
         }
         return packagePath;
     }
@@ -93,7 +94,7 @@ public class DARPackageUtil implements Callable<String, IOException> {
     }
 
     private String outputFilePath() {
-        return new StringBuilder(this.workspace).append(File.separator).append(this.packageName).append("-").append(this.packageVersion).append(".dar").toString();
+        return new StringBuilder(this.workspace).append(File.separator).append(this.darPath).toString();
     }
 
     @Override

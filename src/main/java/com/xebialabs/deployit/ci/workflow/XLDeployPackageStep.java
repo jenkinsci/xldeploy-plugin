@@ -15,17 +15,15 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class XLDeployPackageStep extends AbstractStepImpl {
 
-    public String packageName;
-    public String packageVersion;
+    public String darPath;
     public String manifestPath;
-    public String artifactsDirPath;
+    public String artifactsPath;
 
     @DataBoundConstructor
-    public XLDeployPackageStep(String artifactsDirPath, String manifestPath, String packageVersion, String packageName) {
+    public XLDeployPackageStep(String artifactsPath, String manifestPath, String darPath) {
         this.manifestPath = manifestPath;
-        this.packageVersion = packageVersion;
-        this.packageName = packageName;
-        this.artifactsDirPath = artifactsDirPath;
+        this.darPath = darPath;
+        this.artifactsPath = artifactsPath;
     }
 
     @DataBoundSetter
@@ -34,18 +32,13 @@ public class XLDeployPackageStep extends AbstractStepImpl {
     }
 
     @DataBoundSetter
-    public void setArtifactsDirPath(@NotNull String artifactsDirPath) {
-        this.artifactsDirPath = artifactsDirPath;
+    public void setArtifactsPath(@NotNull String artifactsPath) {
+        this.artifactsPath = artifactsPath;
     }
 
     @DataBoundSetter
-    public void setPackageVersion(@NotNull String packageVersion) {
-        this.packageVersion = packageVersion;
-    }
-
-    @DataBoundSetter
-    public void setPackageName(@NotNull String packageName) {
-        this.packageName = packageName;
+    public void setDarPath(@NotNull String darPath) {
+        this.darPath = darPath;
     }
 
     @Override
@@ -88,7 +81,7 @@ public class XLDeployPackageStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-            DARPackageUtil packageUtil = new DARPackageUtil(step.artifactsDirPath, step.manifestPath, step.packageName, step.packageVersion, envVars);
+            DARPackageUtil packageUtil = new DARPackageUtil(step.artifactsPath, step.manifestPath, step.darPath, envVars);
             String packagePath =  ws.getChannel().call(packageUtil);
             listener.getLogger().println("XL Deploy package created : " + packagePath);
             return null;
