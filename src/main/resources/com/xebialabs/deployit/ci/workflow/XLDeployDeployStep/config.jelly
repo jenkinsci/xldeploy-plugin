@@ -1,0 +1,12 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+     <f:entry title="${%Server Credentials}" field="serverCredentials" help="/plugin/deployit-plugin/help-servercredentials.html">
+         <f:select/>
+    </f:entry>
+    <f:entry title="${%Application}" field="packageId" help="/plugin/deployit-plugin/help-packageid.html">
+        <f:textbox default="Applications/" />
+    </f:entry>
+    <f:entry title="${%Environment}" field="environmentId" help="/plugin/deployit-plugin/help-environment.html">
+        <f:textbox default="Environments/"/>
+    </f:entry>
+</j:jelly>
