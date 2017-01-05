@@ -114,7 +114,7 @@ public class ArtifactView extends DeployableView {
         return fetchFile(artifactPath, workspace);
     }
 
-    static String findFilePathFromPattern(String pattern, FilePath workspace, JenkinsDeploymentListener listener) throws IOException {
+    public static String findFilePathFromPattern(String pattern, FilePath workspace, JenkinsDeploymentListener listener) throws IOException {
         listener.info(String.format("Searching for '%s' in '%s'", pattern, workspace));
         FileFinder fileFinder = new FileFinder(pattern);
         List<String> fileNames;
