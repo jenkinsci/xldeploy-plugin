@@ -22,7 +22,7 @@
  */
 
 group = "com.xebialabs.deployit.ci"
-version = "5.0.4-SNAPSHOT"
+version = "6.0.1-SNAPSHOT"
 description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs XL Deploy&lt;/a&gt;."
 
 apply plugin: 'eclipse'
@@ -42,26 +42,24 @@ localizer.dependsOn deleteGeneratedSrcLocalizer
 
 repositories {
     mavenCentral()
-    maven {
-        // url "${projectDir}/repo"
-        url "https://dist.xebialabs.com/public/maven2"
-    }
-    maven {
-        url "http://www.knopflerfish.org/maven2"
-    }
+    jcenter()
+    maven { url "http://bits.netbeans.org/maven2" }
+    maven { url "http://repo.jenkins-ci.org/releases" }
+    maven { url "http://www.knopflerfish.org/maven2" }
+    maven { url "https://dist.xebialabs.com/public/maven2" }
 }
 
 
 buildscript {
     repositories {
-        maven {
-            name "jenkins"
-            delegate.url("http://repo.jenkins-ci.org/releases/")
-        }
         // The plugin is currently only available via the Jenkins
         // Maven repository, but has dependencies in Maven Central.
         mavenCentral()
         jcenter()
+        maven { url "http://bits.netbeans.org/maven2" }
+        maven { url "http://repo.jenkins-ci.org/releases" }
+        maven { url "http://www.knopflerfish.org/maven2" }
+        maven { url "https://dist.xebialabs.com/public/maven2" }
     }
     dependencies {
         classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.0'
@@ -121,8 +119,7 @@ configurations {
     providedRuntime.exclude group: 'org.slf4j', module: 'slf4j-api'
     providedRuntime.exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
     providedRuntime.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
-
-    xl_sdk
+    slf4j
 }
 
 ext {
@@ -130,13 +127,6 @@ ext {
     truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
     // (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
 
-    // robot itests
-    xlSdkVersion = '1.0.0-alpha-5'
-    xlSdkHome = "${System.properties['user.home']}/.gradle/xl-sdk/${xlSdkVersion}"
-    robotPassthroughProperties = ['JENKINS_VERSION']
-    defaultProperties = [
-            'JENKINS_VERSION': '1.579'
-    ]
 }
 
 configurations.all {
@@ -149,11 +139,14 @@ configurations.all {
     }
 }
 
+
 dependencies {
     compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
+
+    provided 'org.slf4j:slf4j-api:1.7.7'
 
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     jenkinsPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
@@ -161,74 +154,49 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
 
-    provided 'org.slf4j:slf4j-api:1.7.7'
-
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
 
-    xl_sdk "com.xebialabs.sdk:xl-sdk:$xlSdkVersion"
+    slf4j "org.slf4j:slf4j-api:1.7.7"
+    slf4j "org.slf4j:log4j-over-slf4j:1.7.7"
+    slf4j "org.slf4j:jcl-over-slf4j:1.7.7"
+    slf4j "org.slf4j:slf4j-jdk14:1.7.7"
+    slf4j "org.slf4j:slf4j-simple:1.7.7"
+
+    jenkinsTest ('org.jenkins-ci.main:maven-plugin:1.480@hpi') { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins:credentials:1.16.1@hpi") { transitive = true }
+
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-job:1.10@jar"
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-cps:1.10@jar"
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-api:1.10@jar"
+
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@hpi")  { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-support:1.10@hpi") { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-cps:1.10@hpi") { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins:git:3.0.1@hpi") { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@hpi") { transitive = true }
+
 }
 
-task installXlSdk(dependsOn: 'preparePhantomJS') {
-    doFirst {
-        file(xlSdkHome).mkdirs()
-    }
-    doLast {
-        println "Installing XL SDK"
-        copy {
-            from zipTree(configurations.xl_sdk.singleFile)
-            into xlSdkHome
-        }
-        println "Installing robotframework-selenium2library"
-        exec {
-            environment env()
-            commandLine "$xlSdkHome/runtime/bin/pip", 'install', 'robotframework-selenium2library'
-        }
-    }
+test {
+    exclude '**/*ITest*'
 }
 
-// --randomize all|suites|tests|none
-// --pythonpath path *
-// --suite name
-// --outputdir dir
-// --variable name:value
-task itest(type: Exec, dependsOn: installXlSdk) {
-    def reportDir = "${buildDir}/reports/robot/"
-    def suiteDir = "src/test/robot"
 
-    def robotCommandLine = [
-            "${xlSdkHome}/bin/xl-sdk",
-            "itest",
-            "--loglevel", "DEBUG",
-            "--xunit", "xunit-report.xml",
-            '-v', "TMP_DIR:${buildDir}",
-    ] as List
-
-    robotPassthroughProperties.each {
-        if (project.hasProperty(it)) {
-            robotCommandLine += ['-v', "${it}:${project.properties[it]}"]
-        } else {
-            robotCommandLine += ['-v', "${it}:${defaultProperties[it]}"]
-        }
-    }
-
-    robotCommandLine += ["--outputdir", reportDir, "tests"]
-    doFirst {
-        file(reportDir).mkdirs()
-    }
-    environment env()
-    workingDir suiteDir
-    commandLine robotCommandLine
+task itest(type: Test) {
+    description = "Run integration tests"
+    testClassesDir = project.sourceSets.test.output.classesDir
+    classpath = project.sourceSets.test.runtimeClasspath + configurations.slf4j
 }
 
-import org.bitbucket.grimrose.gradle.*
-
-def env() {
-    def env = [:]
-    env << System.getenv()
-    def phantomjs_dir = new ConventionPathResolver().find(project.projectDir, new ObakeConfig())
-    env['PATH'] = "$phantomjs_dir/bin:" + env['PATH']
-    env['PATH'] = "$xlSdkHome/runtime/bin:" + env['PATH']
-    env.remove('PYTHONHOME')
-    return env
+if (project.hasProperty('xlDeployIntegration.host')) {
+    def host = project.property('xlDeployIntegration.host')
+    def username = project.property('xlDeployIntegration.username')
+    def password = project.property('xlDeployIntegration.password')
+    test.systemProperties([
+            "xlDeployIntegration.host" : "$host",
+            "xlDeployIntegration.username" : "$username",
+            "xlDeployIntegration.password" : "$password"
+    ])
 }
+
