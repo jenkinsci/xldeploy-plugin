@@ -1,0 +1,12 @@
+
+node {
+        git url:'https://github.com/saraswat2385/rest-o-rant-api.git'
+        sh './gradlew clean build'
+        env.WORKSPACE = pwd()
+        def projectVersion = 'v1'
+        withEnv(["PROJECT_VERSION=" + projectVersion]) {
+        xldCreatePackage artifactsPath: 'build/distribution', manifestPath: 'deployit-manifest.xml', darPath: '$JOB_NAME-$BUILD_NUMBER.dar'
+        }
+       xldPublishPackage serverCredentials: 'admin_credential', darPath: '$JOB_NAME-$BUILD_NUMBER.dar'
+       xldDeploy  serverCredentials: 'admin_credential', packageId: 'Applications/$JOB_NAME/$BUILD_NUMBER.0', environmentId: 'Environments/localhost'
+}

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.xebialabs.deployit.ci.DeployitNotifier_-DeployitDescriptor plugin="deployit-plugin@6.0.1-SNAPSHOT">
+  <deployitServerUrl>http://localhost:4516</deployitServerUrl>
+  <deployitClientProxyUrl></deployitClientProxyUrl>
+  <credentials>
+    <com.xebialabs.deployit.ci.Credential>
+      <name>admin_credential</name>
+      <username>admin</username>
+      <password>admin</password>
+      <useGlobalCredential>false</useGlobalCredential>
+      <secondaryServerInfo>
+        <secondaryServerUrl>http://localhost:4516</secondaryServerUrl>
+        <secondaryProxyUrl></secondaryProxyUrl>
+      </secondaryServerInfo>
+      <credentialsId></credentialsId>
+    </com.xebialabs.deployit.ci.Credential>
+  </credentials>
+</com.xebialabs.deployit.ci.DeployitNotifier_-DeployitDescriptor>

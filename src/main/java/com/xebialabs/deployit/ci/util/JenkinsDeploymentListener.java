@@ -25,16 +25,16 @@ package com.xebialabs.deployit.ci.util;
 
 import java.io.Serializable;
 
+import hudson.model.TaskListener;
 import org.jvnet.localizer.Localizable;
 
-import hudson.model.BuildListener;
 
 public class JenkinsDeploymentListener implements Serializable {
 
-    private final BuildListener listener;
+    private final TaskListener listener;
     private final boolean debug;
 
-    public JenkinsDeploymentListener(BuildListener listener, boolean debug) {
+    public JenkinsDeploymentListener(TaskListener listener, boolean debug) {
         this.listener = listener;
         this.debug = debug;
     }
