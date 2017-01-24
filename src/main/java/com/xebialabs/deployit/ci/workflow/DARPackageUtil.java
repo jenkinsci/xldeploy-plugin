@@ -3,11 +3,20 @@ package com.xebialabs.deployit.ci.workflow;
 import hudson.EnvVars;
 import hudson.remoting.Callable;
 import org.jenkinsci.remoting.RoleChecker;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -30,7 +39,8 @@ public class DARPackageUtil implements Callable<String, IOException> {
     }
 
     public String call() throws IOException {
-        replaceEnvVarInManifest();
+        String manifestContent = replaceEnvVarInManifest();
+        List<String> filePathsToBeAdded = filterFiles(manifestContent);
         String packagePath = outputFilePath();
         File darFile = new File(packagePath);
         darFile.getParentFile().mkdirs();
@@ -39,13 +49,50 @@ public class DARPackageUtil implements Callable<String, IOException> {
              ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
             // Add manifest file
             addEntryToZip("", this.workspace + File.separator + manifestPath, zipOutputStream, false, true);
-            // Add artifacts directory
-            addFolderToZip("", this.workspace + File.separator + artifactsPath, zipOutputStream);
+
+            for (String filePath : filePathsToBeAdded) {
+                String parentPath = filePath.contains("/") ? filePath.substring(0, filePath.lastIndexOf("/")) : "";
+                File file = new File(workspace + File.separator + filePath);
+                if (file.isDirectory()) {
+                    // Add artifacts directory
+                    addFolderToZip(parentPath, this.workspace + File.separator + artifactsPath + File.separator + filePath, zipOutputStream);
+                } else {
+                    addEntryToZip(parentPath, this.workspace + File.separator + artifactsPath + File.separator + filePath, zipOutputStream, false, false);
+                }
+            }
+
         }
         return packagePath;
     }
 
-    private void replaceEnvVarInManifest() throws IOException {
+    List<String> filterFiles(String manifestContent) {
+        final List<String> files = new ArrayList<>();
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+            DefaultHandler handler = new DefaultHandler() {
+                @Override
+                public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+                    super.startElement(uri, localName, qName, attributes);
+                    for (int index = 0; index < attributes.getLength(); index++) {
+                        if (attributes.getQName(index).equals("file")) {
+                            files.add(attributes.getValue(attributes.getQName(index)));
+                        }
+                    }
+                }
+            };
+            saxParser.parse(new InputSource(new StringReader(manifestContent)), handler);
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+        return files;
+    }
+
+    private String replaceEnvVarInManifest() throws IOException {
         String manifestContent;
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             Files.copy(Paths.get(workspace, manifestPath), outputStream);
@@ -55,6 +102,7 @@ public class DARPackageUtil implements Callable<String, IOException> {
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(workspace, manifestPath), StandardOpenOption.TRUNCATE_EXISTING)) {
             writer.append(manifestContent);
         }
+        return manifestContent;
     }
 
     private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws IOException {
