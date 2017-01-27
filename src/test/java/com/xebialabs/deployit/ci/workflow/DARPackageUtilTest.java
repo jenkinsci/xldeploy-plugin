@@ -9,9 +9,11 @@ import static org.junit.Assert.assertEquals;
 
 public class DARPackageUtilTest {
 
+    private DARPackageUtil darPackageUtil = new DARPackageUtil("", "", "", new EnvVars());
+
     @Test
     public void shouldCollectFileNamesFromManifest() {
-        String manifestFileContent ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+        String manifestFileContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<udm.DeploymentPackage version=\"2.0\" application=\"rest-o-rant-api\">\n" +
                 "    <application />\n" +
                 "    <orchestrator />\n" +
@@ -26,10 +28,33 @@ public class DARPackageUtilTest {
                 "    <undeployDependencies>false</undeployDependencies>\n" +
                 "</udm.DeploymentPackage>\n";
 
-        DARPackageUtil darPackageUtil = new DARPackageUtil("", "", "", new EnvVars());
+
+        assertFileNames(manifestFileContent, 1, new String[]{"/libs/rest-o-rant-api.war"});
+    }
+
+    @Test
+    public void shouldCollectAllFilesFromADeployitManifest() {
+        String manifestXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<udm.DeploymentPackage version=\"2.0\" application=\"rest-o-rant-api\">\n" +
+                "    <deployables>\n" +
+                "        <tomcat.War name=\"/rest-o-rant-api\" file=\"/libs/rest-o-rant-api.war\">\n" +
+                "        </tomcat.War>\n" +
+                "        <file.Folder name=\"/test-folder\" file=\"/libs/test/folder\">\n" +
+                "        </file.Folder>\n" +
+                "    </deployables>\n" +
+                "    <dependencyResolution>LATEST</dependencyResolution>\n" +
+                "    <undeployDependencies>false</undeployDependencies>\n" +
+                "</udm.DeploymentPackage>\n";
+        assertFileNames(manifestXml, 2, new String[]{"/libs/rest-o-rant-api.war", "/libs/test/folder"});
+    }
+
+    private void assertFileNames(String manifestFileContent, int expectedLength, String[] fileNames) {
         List<String> filteredFiles = darPackageUtil.filterFiles(manifestFileContent);
-        assertEquals(1, filteredFiles.size());
-        assertEquals(filteredFiles.get(0), "/libs/rest-o-rant-api.war");
+        assertEquals(expectedLength, filteredFiles.size());
+        int i = 0;
+        for (String fileName : fileNames) {
+            assertEquals(filteredFiles.get(i++), fileName);
+        }
     }
 
 }

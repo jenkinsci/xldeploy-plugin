@@ -82,12 +82,8 @@ public class DARPackageUtil implements Callable<String, IOException> {
                 }
             };
             saxParser.parse(new InputSource(new StringReader(manifestContent)), handler);
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
+        } catch (SAXException | IOException | ParserConfigurationException e) {
+           throw new IllegalArgumentException("Exception Occured while parsing deployit-manifest", e);
         }
         return files;
     }
