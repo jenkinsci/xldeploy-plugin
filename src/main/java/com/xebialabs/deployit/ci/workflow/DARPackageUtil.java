@@ -1,5 +1,11 @@
 package com.xebialabs.deployit.ci.workflow;
 
+import com.xebialabs.overthere.RuntimeIOException;
+import com.xebialabs.overthere.util.OverthereUtils;
+import de.schlichtherle.truezip.file.TArchiveDetector;
+import de.schlichtherle.truezip.file.TFile;
+import de.schlichtherle.truezip.file.TFileOutputStream;
+import de.schlichtherle.truezip.file.TVFS;
 import hudson.EnvVars;
 import hudson.remoting.Callable;
 import org.jenkinsci.remoting.RoleChecker;
@@ -17,12 +23,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+
+import static java.io.File.separator;
 
 public class DARPackageUtil implements Callable<String, IOException> {
 
-    private static final String SEPARATOR = "/";
+    private static final String DEPLOYIT_MANIFEST_XML = "deployit-manifest.xml";
 
     private final String artifactsPath;
     private final String manifestPath;
@@ -42,27 +48,57 @@ public class DARPackageUtil implements Callable<String, IOException> {
         String manifestContent = replaceEnvVarInManifest();
         List<String> filePathsToBeAdded = filterFiles(manifestContent);
         String packagePath = outputFilePath();
-        File darFile = new File(packagePath);
-        darFile.getParentFile().mkdirs();
-
-        try (FileOutputStream fileOutputStream = new FileOutputStream(darFile);
-             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
-            // Add manifest file
-            addEntryToZip("", this.workspace + File.separator + manifestPath, zipOutputStream, false, true);
-
-            for (String filePath : filePathsToBeAdded) {
-                String parentPath = filePath.contains("/") ? filePath.substring(0, filePath.lastIndexOf("/")) : "";
-                File file = new File(workspace + File.separator + filePath);
-                if (file.isDirectory()) {
-                    // Add artifacts directory
-                    addFolderToZip(parentPath, this.workspace + File.separator + artifactsPath + File.separator + filePath, zipOutputStream);
-                } else {
-                    addEntryToZip(parentPath, this.workspace + File.separator + artifactsPath + File.separator + filePath, zipOutputStream, false, false);
-                }
-            }
-
+        try {
+            addManifest(packagePath);
+            addArtifactsAndFolders(filePathsToBeAdded, packagePath);
+        } finally {
+            TVFS.umount();
         }
         return packagePath;
+    }
+
+    private void addArtifactsAndFolders(List<String> filePathsToBeAdded, String packagePath) throws FileNotFoundException {
+        for (String filePath : filePathsToBeAdded) {
+            File sourceFile = new File(this.workspace + separator + artifactsPath + separator + filePath);
+            if (sourceFile.isDirectory()) {
+                TFile targetFolder = new TFile(packagePath + separator + filePath);
+                targetFolder.mkdirs();
+                copyFolder(sourceFile, targetFolder);
+            } else {
+                TFile artifactDir = new TFile(packagePath, stripFilePath(filePath), TArchiveDetector.ALL);
+                artifactDir.mkdirs();
+                copyFile(new FileInputStream(sourceFile), new TFile(artifactDir, sourceFile.getName(), TArchiveDetector.NULL));
+            }
+        }
+    }
+
+    private void addManifest(String packagePath) throws FileNotFoundException {
+        TFile entry = new TFile(packagePath + separator + DEPLOYIT_MANIFEST_XML);
+        copyFile(new FileInputStream(new File(this.workspace + separator + this.manifestPath)), entry);
+    }
+
+    private String stripFilePath(String filePath) {
+        return filePath.contains(separator) ? filePath.substring(0, filePath.lastIndexOf(separator)) : "";
+    }
+
+    private void copyFolder(File sourceFile, TFile targetFolder) throws FileNotFoundException {
+        for (File file : sourceFile.listFiles()) {
+            if (file.isFile()) {
+                copyFile(new FileInputStream(file), new TFile(targetFolder, file.getName(), TArchiveDetector.NULL));
+            } else if (file.isDirectory()) {
+                TFile targetFolder1 = new TFile(targetFolder, file.getName());
+                targetFolder1.mkdirs();
+                copyFolder(file, targetFolder1);
+            }
+        }
+    }
+
+    private void copyFile(final InputStream sourceFile, TFile targetFile) {
+        try (InputStream is = sourceFile; OutputStream os = new TFileOutputStream(targetFile)) {
+            OverthereUtils.write(is, os);
+        } catch (IOException e) {
+            throw new RuntimeIOException(e);
+        }
     }
 
     List<String> filterFiles(String manifestContent) {
@@ -83,7 +119,7 @@ public class DARPackageUtil implements Callable<String, IOException> {
             };
             saxParser.parse(new InputSource(new StringReader(manifestContent)), handler);
         } catch (SAXException | IOException | ParserConfigurationException e) {
-           throw new IllegalArgumentException("Exception Occured while parsing deployit-manifest", e);
+            throw new IllegalArgumentException("Exception Occured while parsing deployit-manifest", e);
         }
         return files;
     }
@@ -101,44 +137,8 @@ public class DARPackageUtil implements Callable<String, IOException> {
         return manifestContent;
     }
 
-    private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip) throws IOException {
-        File folder = new File(srcFolder);
-        if (folder.list().length == 0) {
-            addEntryToZip(path, srcFolder, zip, true, false);
-        } else {
-            for (String fileName : folder.list()) {
-                if (path.equals("")) {
-                    addEntryToZip(folder.getName(), srcFolder + File.separator + fileName, zip, false, false);
-                } else {
-                    addEntryToZip(path + SEPARATOR + folder.getName(), srcFolder + File.separator + fileName, zip, false, false);
-                }
-            }
-        }
-    }
-
-    private void addEntryToZip(String path, String srcFile, ZipOutputStream zip, boolean isFolder, boolean isManifest) throws IOException {
-        File entry = new File(srcFile);
-        if (isFolder == true) {
-            zip.putNextEntry(new ZipEntry(path + SEPARATOR + entry.getName() + SEPARATOR));
-        } else {
-            if (entry.isDirectory()) {
-                addFolderToZip(path, srcFile, zip);
-            } else {
-                byte[] buf = new byte[8192];
-                int len;
-                ZipEntry zipEntry = isManifest ? new ZipEntry(entry.getName()) : new ZipEntry(path + SEPARATOR + entry.getName());
-                zip.putNextEntry(zipEntry);
-                try (FileInputStream in = new FileInputStream(srcFile)) {
-                    while ((len = in.read(buf)) > 0) {
-                        zip.write(buf, 0, len);
-                    }
-                }
-            }
-        }
-    }
-
     private String outputFilePath() {
-        return new StringBuilder(this.workspace).append(File.separator).append(this.darPath).toString();
+        return new StringBuilder(this.workspace).append(separator).append(this.darPath).toString();
     }
 
     @Override
