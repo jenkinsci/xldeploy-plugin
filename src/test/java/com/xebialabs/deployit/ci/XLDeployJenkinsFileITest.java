@@ -69,7 +69,7 @@ public class XLDeployJenkinsFileITest {
     @Test
     @LocalData
     public void shouldStartReleaseWithJenkinsFile() throws Exception {
-        WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflow");
+        WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "rest-o-rant-api");
         job.setDefinition(new CpsFlowDefinition(getJenkinsFileScript(), true));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0).get());
     }
