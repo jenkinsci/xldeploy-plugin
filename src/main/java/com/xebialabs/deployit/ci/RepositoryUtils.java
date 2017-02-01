@@ -1,16 +1,14 @@
 package com.xebialabs.deployit.ci;
 
+import com.google.common.collect.Ordering;
+import com.xebialabs.deployit.ci.Credential.SecondaryServerInfo;
+import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
 
 import java.util.Collection;
 import java.util.List;
-
-import com.google.common.collect.Ordering;
-
-import com.xebialabs.deployit.ci.Credential.SecondaryServerInfo;
-import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
-import com.xebialabs.deployit.ci.server.DeployitServer;
 
 public class RepositoryUtils {
 
@@ -22,7 +20,7 @@ public class RepositoryUtils {
             String secondaryServerUrl = credential.resolveServerUrl(descriptor.getDeployitServerUrl());
 
             SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
-            credential = new Credential(credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(), overridingCredential.getCredentialsId(), serverInfo,overridingCredential.isUseGlobalCredential());
+            credential = new Credential(credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(), overridingCredential.getCredentialsId(), serverInfo, overridingCredential.isUseGlobalCredential());
         }
         DeployitServer deployitServer = descriptor.getDeployitServer(credential);
 
@@ -40,7 +38,7 @@ public class RepositoryUtils {
                 return credential;
             }
         }
-        throw new RuntimeException("Credential with name " + credentialName + " not found");
+        throw new IllegalArgumentException(Messages.DeployitNotifier_credentialsNotFoundError(credentialName));
     }
 
     public static Credential retrieveOverridingCredentialFromProject(AbstractProject project) {
@@ -56,7 +54,7 @@ public class RepositoryUtils {
         DeployitNotifier notifier = null;
         DeployitNotifier.DeployitDescriptor descriptor = (DeployitNotifier.DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
         if (null != project) {
-                notifier = (DeployitNotifier) project.getPublishersList().get(descriptor);
+            notifier = (DeployitNotifier) project.getPublishersList().get(descriptor);
         }
         return notifier;
     }
