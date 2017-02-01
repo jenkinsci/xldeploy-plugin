@@ -21,22 +21,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class XLDeployPublishStep extends AbstractStepImpl {
 
-    public String serverCredentials;
-    public String darPath;
+    public final String serverCredentials;
+    public final String darPath;
 
     @DataBoundConstructor
     public XLDeployPublishStep(String darPath, String serverCredentials) {
         this.darPath = darPath;
-        this.serverCredentials = serverCredentials;
-    }
-
-    @DataBoundSetter
-    public void setDarPath(String darPath) {
-        this.darPath = darPath;
-    }
-
-    @DataBoundSetter
-    public void setServerCredentials(String serverCredentials) {
         this.serverCredentials = serverCredentials;
     }
 

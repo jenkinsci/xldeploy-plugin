@@ -40,7 +40,7 @@ public class RepositoryUtils {
                 return credential;
             }
         }
-        return null;
+        throw new RuntimeException("Credential with name " + credentialName + " not found");
     }
 
     public static Credential retrieveOverridingCredentialFromProject(AbstractProject project) {

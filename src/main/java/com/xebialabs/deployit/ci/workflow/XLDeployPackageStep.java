@@ -15,30 +15,15 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class XLDeployPackageStep extends AbstractStepImpl {
 
-    public String darPath;
-    public String manifestPath;
-    public String artifactsPath;
+    public final String darPath;
+    public final String manifestPath;
+    public final String artifactsPath;
 
     @DataBoundConstructor
     public XLDeployPackageStep(String artifactsPath, String manifestPath, String darPath) {
         this.manifestPath = manifestPath;
         this.darPath = darPath;
         this.artifactsPath = artifactsPath;
-    }
-
-    @DataBoundSetter
-    public void setManifestPath(@NotNull String manifestPath) {
-        this.manifestPath = manifestPath;
-    }
-
-    @DataBoundSetter
-    public void setArtifactsPath(@NotNull String artifactsPath) {
-        this.artifactsPath = artifactsPath;
-    }
-
-    @DataBoundSetter
-    public void setDarPath(@NotNull String darPath) {
-        this.darPath = darPath;
     }
 
     @Override
