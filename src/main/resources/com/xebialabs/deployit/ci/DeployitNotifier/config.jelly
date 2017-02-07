@@ -1,4 +1,5 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:c="/lib/credentials" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:c="/lib/credentials" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:xld="/lib/xld">
+<xld:publisherFix>
 
     <f:block>
         <f:entry title="${%Global server credential}" field="credential" help="/plugin/deployit-plugin/help-credential.html">
@@ -102,4 +103,5 @@
         </table>
     </f:block>
 
+</xld:publisherFix>
 </j:jelly>

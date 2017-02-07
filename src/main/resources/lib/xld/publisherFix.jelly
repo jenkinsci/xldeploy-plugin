@@ -1,0 +1,25 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define">
+    <st:documentation>
+        Workaround for ../credential resolution not working with the Ivy plugin due to its deprecated publisher layout.
+    </st:documentation>
+    <j:choose>
+        <j:when test="${it.class.name=='hudson.ivy.IvyModuleSet'}">
+            <script>
+                Behaviour.specify("INPUT[name='com-xebialabs-deployit-ci-DeployitNotifier']", 'ivy-fix', 200, function (e) {
+                    e.removeAttribute("name");
+                });
+            </script>
+            <tr name="com-xebialabs-deployit-ci-DeployitNotifier">
+                <td colspan="3">
+                    <table>
+                        <d:invokeBody/>
+                    </table>
+                </td>
+            </tr>
+        </j:when>
+        <j:otherwise>
+            <d:invokeBody/>
+        </j:otherwise>
+    </j:choose>
+</j:jelly>
