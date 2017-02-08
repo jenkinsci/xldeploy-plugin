@@ -21,29 +21,14 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class XLDeployDeployStep extends AbstractStepImpl {
 
-    public String serverCredentials;
-    public String packageId;
-    public String environmentId;
+    public final String serverCredentials;
+    public final String packageId;
+    public final String environmentId;
 
     @DataBoundConstructor
     public XLDeployDeployStep(String serverCredentials, String packageId, String environmentId) {
         this.serverCredentials = serverCredentials;
         this.environmentId = environmentId;
-        this.packageId = packageId;
-    }
-
-    @DataBoundSetter
-    public void setServerCredentials(String serverCredentials) {
-        this.serverCredentials = serverCredentials;
-    }
-
-    @DataBoundSetter
-    public void setEnvironmentId(String environmentId) {
-        this.environmentId = environmentId;
-    }
-
-    @DataBoundSetter
-    public void setPackageId(String packageId) {
         this.packageId = packageId;
     }
 
