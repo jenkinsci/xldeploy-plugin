@@ -23,11 +23,29 @@ public class XLDeployPublishStep extends AbstractStepImpl {
 
     public final String serverCredentials;
     public final String darPath;
+    public String overridingCredentialUsername;
+    public String overridingCredentialPassword;
+    public boolean overridingCredentialUseGlobalCredential;
 
     @DataBoundConstructor
     public XLDeployPublishStep(String darPath, String serverCredentials) {
         this.darPath = darPath;
         this.serverCredentials = serverCredentials;
+    }
+    
+    @DataBoundSetter
+    public void setOverridingCredentialUsername(String overridingCredentialUsername) {
+    	this.overridingCredentialUsername = overridingCredentialUsername;
+    }
+
+    @DataBoundSetter
+    public void setOverridingCredentialPassword(String overridingCredentialPassword) {
+    	this.overridingCredentialPassword = overridingCredentialPassword;
+    }
+
+    @DataBoundSetter
+    public void setOverridingCredentialUseGlobalCredential(boolean overridingCredentialUseGlobalCredential) {
+    	this.overridingCredentialUseGlobalCredential = overridingCredentialUseGlobalCredential;
     }
 
     @Extension
@@ -81,7 +99,7 @@ public class XLDeployPublishStep extends AbstractStepImpl {
             final String path = ArtifactView.findFilePathFromPattern(envVars.expand(step.darPath), ws, deploymentListener);
             RemoteAwareLocation location = getRemoteAwareLocation(path);
             try {
-                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, null);
+            	DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, step.overridingCredentialUsername, step.overridingCredentialPassword, step.overridingCredentialUseGlobalCredential);
                 deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
             } finally {
                 location.cleanup();

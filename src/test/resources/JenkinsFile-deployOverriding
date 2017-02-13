@@ -1,0 +1,10 @@
+
+node {
+        git url:'https://github.com/xebialabs/rest-o-rant-api.git'
+        sh './gradlew clean build'
+        env.WORKSPACE = pwd()
+        def projectVersion = 'v1'
+        xldCreatePackage artifactsPath: 'build', manifestPath: 'deployit-manifest.xml', darPath: '$JOB_NAME-$BUILD_NUMBER.dar'
+        xldPublishPackage serverCredentials: 'admin_credential', darPath: '$JOB_NAME-$BUILD_NUMBER.dar'
+        xldDeploy  serverCredentials: 'admin_credential', overridingCredentialUsername: 'admin', overridingCredentialPassword: 'admin', packageId: 'Applications/$JOB_NAME/$BUILD_NUMBER.0', environmentId: 'Environments/localhost'
+}

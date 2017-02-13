@@ -70,17 +70,25 @@ public class XLDeployJenkinsFileITest {
     @LocalData
     public void shouldStartReleaseWithJenkinsFile() throws Exception {
         WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "rest-o-rant-api");
-        job.setDefinition(new CpsFlowDefinition(getJenkinsFileScript(), true));
+        job.setDefinition(new CpsFlowDefinition(getJenkinsFileScript("Jenkinsfile"), true));
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0).get());
+    }
+    
+    @Test
+    @LocalData
+    public void shouldStartReleaseWithJenkinsFileOverridingDeployCredentials() throws Exception {
+        WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "rest-o-rant-api-override-deploy-creds");
+        job.setDefinition(new CpsFlowDefinition(getJenkinsFileScript("Jenkinsfile-deployOverriding"), true));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0).get());
     }
 
 
-    private String getJenkinsFileScript() throws IOException {
+    private String getJenkinsFileScript(String fileName) throws IOException {
         String jenkinsFile = "";
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            Files.copy(Paths.get(getClass().getClassLoader().getResource("JenkinsFile").getFile()), outputStream);
+            Files.copy(Paths.get(getClass().getClassLoader().getResource(fileName).getFile()), outputStream);
             jenkinsFile = new String(outputStream.toByteArray());
         }
         return jenkinsFile;

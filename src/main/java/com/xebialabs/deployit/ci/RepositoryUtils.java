@@ -1,5 +1,7 @@
 package com.xebialabs.deployit.ci;
 
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.google.common.collect.Ordering;
 import com.xebialabs.deployit.ci.Credential.SecondaryServerInfo;
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
@@ -11,6 +13,16 @@ import java.util.Collection;
 import java.util.List;
 
 public class RepositoryUtils {
+
+	public static DeployitServer getDeployitServer(String credentialName, String overridingCredentialUsername, String overridingCredentialPassword, boolean overridingCredentialUseGlobalCredential) {
+		Credential overridingCredential = null;
+
+		if (overridingCredentialUsername != null && overridingCredentialPassword != null) {
+			UsernamePasswordCredentialsImpl cred = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL,java.util.UUID.randomUUID().toString(), "Overriding Credential", overridingCredentialUsername, overridingCredentialPassword);
+			overridingCredential = new Credential(credentialName, cred.getUsername(), cred.getPassword(), cred.getId(), null, overridingCredentialUseGlobalCredential);
+		}
+		return getDeployitServer(credentialName, overridingCredential);
+	}
 
     public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential) {
         Credential credential = findCredential(credentialName);
