@@ -165,19 +165,16 @@ dependencies {
 
 }
 
-//runBuildTasks.dependsOn(publish)
-
 release {
-    failOnCommitNeeded = false
-    buildTasks = ['blankTask']
+    buildTasks = ['publishTask']
     tagTemplate = 'xldeploy-plugin-$version'
-    preTagCommitMessage = 'Released Jenkins XL Deploy plugin $version'
+    preTagCommitMessage = 'Released Jenkins XL Deploy plugin '
     tagCommitMessage = 'Tag for xldeploy-plugin-$version'
-    newVersionCommitMessage = 'Set development version to $version'
+    newVersionCommitMessage = 'Set development version to '
 }
 
-task blankTask (){
-    print "BLANK###################### RELEASE"
+task publishTask (){
+    print "* Publish task *"
 }
 
 test {
