@@ -21,16 +21,13 @@
  * Floor, Boston, MA 02110-1301  USA
  */
 
-group = "com.xebialabs.deployit.ci"
-version = "6.1.2-SNAPSHOT"
-description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs XL Deploy&lt;/a&gt;."
-
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'jpi'
 apply plugin: 'obake'
 apply plugin: 'provided-base'
+apply plugin: 'net.researchgate.release'
 
 build.dependsOn jpi
 
@@ -65,6 +62,7 @@ buildscript {
         classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.0'
         classpath 'org.bitbucket.grimrose:gradle-obake-plugin:0.5'
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:1.12.+'
+        classpath 'net.researchgate:gradle-release:2.3.4'
     }
 }
 
@@ -167,10 +165,22 @@ dependencies {
 
 }
 
+runBuildTasks.dependsOn(publish)
+
+release {
+    buildTasks = ['blankTask']
+    tagTemplate = 'deployit-plugin-$version'
+    preTagCommitMessage = 'Released Jenkins Deployit plugin '
+    tagCommitMessage = 'Tag for deployit-plugin-'
+    newVersionCommitMessage = 'Set development version to '
+}
+
+task blankTask (){
+}
+
 test {
     exclude '**/*ITest*'
 }
-
 
 task itest(type: Test) {
     description = "Run integration tests"
@@ -188,3 +198,16 @@ if (project.hasProperty('xlDeployIntegration.host')) {
             "xlDeployIntegration.password" : "$password"
     ])
 }
+
+task checkJavaVersion << {
+    def majorVersion = project.version.tokenize('.')[0].toInteger()
+    def message = "This build must be run with java"
+    if(majorVersion < 6 && JavaVersion.current() != JavaVersion.VERSION_1_7) {
+        throw new GradleException("${message} ${JavaVersion.VERSION_1_7}")
+    }
+    if(majorVersion >= 6 && JavaVersion.current() != JavaVersion.VERSION_1_8) {
+        throw new GradleException("${message} ${JavaVersion.VERSION_1_8}")
+    }
+}
+
+tasks.checkJavaVersion.execute()
