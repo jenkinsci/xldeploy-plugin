@@ -24,12 +24,30 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     public final String serverCredentials;
     public final String packageId;
     public final String environmentId;
+    public String overridingCredentialUsername;
+    public String overridingCredentialPassword;
+    public boolean overridingCredentialUseGlobalCredential;
 
     @DataBoundConstructor
     public XLDeployDeployStep(String serverCredentials, String packageId, String environmentId) {
         this.serverCredentials = serverCredentials;
         this.environmentId = environmentId;
         this.packageId = packageId;
+    }
+
+    @DataBoundSetter
+    public void setOverridingCredentialUsername(String overridingCredentialUsername) {
+    	this.overridingCredentialUsername = overridingCredentialUsername;
+    }
+
+    @DataBoundSetter
+    public void setOverridingCredentialPassword(String overridingCredentialPassword) {
+    	this.overridingCredentialPassword = overridingCredentialPassword;
+    }
+
+    @DataBoundSetter
+    public void setOverridingCredentialUseGlobalCredential(boolean overridingCredentialUseGlobalCredential) {
+    	this.overridingCredentialUseGlobalCredential = overridingCredentialUseGlobalCredential;
     }
 
     @Extension
@@ -80,7 +98,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
             String resolvedPackageId = envVars.expand(step.packageId);
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
             JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, null);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, step.overridingCredentialUsername, step.overridingCredentialPassword, step.overridingCredentialUseGlobalCredential);
             deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId,deploymentOptions,deploymentListener);
             return null;
         }
