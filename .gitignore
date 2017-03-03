@@ -3,9 +3,6 @@ syntax: glob
 .gradle/
 *.class
 
-# Gradle environment specific properties
-gradle.properties
-
 # Build output
 build/
 out/
