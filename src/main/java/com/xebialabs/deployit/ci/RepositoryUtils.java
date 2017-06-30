@@ -1,5 +1,6 @@
 package com.xebialabs.deployit.ci;
 
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.google.common.collect.Ordering;
 import com.xebialabs.deployit.ci.Credential.SecondaryServerInfo;
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
@@ -46,6 +47,19 @@ public class RepositoryUtils {
         DeployitNotifier notifier = retrieveDeployitNotifierFromProject(project);
         if (null != notifier) {
             overridingCredential = notifier.getOverridingCredential();
+            if ((null == overridingCredential.getUsername() || "".equals(overridingCredential.getUsername()))
+                    && null != overridingCredential.getCredentialsId()) {
+                DeployitNotifier.DeployitDescriptor descriptor = (DeployitNotifier.DeployitDescriptor) notifier.getDescriptor();
+                String secondaryProxyUrl = overridingCredential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());
+                String secondaryServerUrl = overridingCredential.resolveServerUrl(descriptor.getDeployitServerUrl());
+                SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
+
+                StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(overridingCredential.getCredentialsId(), project);
+                if (null != cred) {
+                    overridingCredential = new Credential(overridingCredential.getName(), cred.getUsername(), cred.getPassword(),
+                            overridingCredential.getCredentialsId(), serverInfo, false);
+                }
+            }
         }
         return overridingCredential;
     }

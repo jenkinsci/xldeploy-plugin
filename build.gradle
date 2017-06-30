@@ -134,6 +134,7 @@ dependencies {
 
     provided 'org.slf4j:slf4j-api:1.7.7'
 
+
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     jenkinsPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
 
@@ -143,6 +144,13 @@ dependencies {
 
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
+	testCompile "org.jenkins-ci.plugins:cloudbees-folder:6.0.4@jar"    
+    testCompile "org.jenkins-ci.main:jenkins-test-harness:2.15"
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@jar"
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-support:1.10@jar"
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-scm-step:1.10@jar"        
+    testCompile "org.jenkins-ci.plugins:scm-api:1.1@jar"
+
 
     slf4j "org.slf4j:slf4j-api:1.7.7"
     slf4j "org.slf4j:log4j-over-slf4j:1.7.7"
