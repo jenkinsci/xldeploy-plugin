@@ -144,7 +144,7 @@ dependencies {
 
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
-	testCompile "org.jenkins-ci.plugins:cloudbees-folder:6.0.4@jar"    
+    testCompile "org.jenkins-ci.plugins:cloudbees-folder:6.0.4@jar"    
     testCompile "org.jenkins-ci.main:jenkins-test-harness:2.15"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-support:1.10@jar"
