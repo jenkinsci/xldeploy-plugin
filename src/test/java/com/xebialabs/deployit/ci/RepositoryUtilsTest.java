@@ -18,8 +18,8 @@ import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Matchers.any;
-
 
 public class RepositoryUtilsTest {
     static final String ID = "id";
@@ -42,11 +42,11 @@ public class RepositoryUtilsTest {
         Credential overridingCredentialProvided = new Credential(null, "", null, credentials.getId(), null, true);
         DeployitNotifier.DeployitDescriptor descriptor = new DeployitNotifier.DeployitDescriptor();
 
-        DeployitNotifier notifierSpy = Mockito.spy(new DeployitNotifier("AdminGlobal1", "app1", null, null, null, null, false, null, overridingCredentialProvided));
+        DeployitNotifier notifierSpy = spy(new DeployitNotifier("AdminGlobal1", "app1", null, null, null, null, false, null, overridingCredentialProvided));
         doReturn(descriptor).when(notifierSpy).getDescriptor();
         doReturn(overridingCredentialProvided).when(notifierSpy).getOverridingCredential();
 
-        FreeStyleProject freeStyleProjectSpy = Mockito.spy(new FreeStyleProject(f, "folder1/proj1"));
+        FreeStyleProject freeStyleProjectSpy = spy(new FreeStyleProject(f, "folder1/proj1"));
         freeStyleProjectSpy.addPublisher(notifierSpy);
 
         DescribableList<Publisher, Descriptor<Publisher>> publisherListMock = Mockito.mock(DescribableList.class);

@@ -242,9 +242,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         );
     }
 
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, Item itemGroup) {
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, Item item) {
         return CredentialsMatchers.firstOrNull(
-                lookupCredentials(StandardUsernamePasswordCredentials.class, itemGroup, ACL.SYSTEM,
+                lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM,
                         HTTP_SCHEME, HTTPS_SCHEME),
                 CredentialsMatchers.withId(credentialsId));
     }

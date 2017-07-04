@@ -11,11 +11,16 @@ import hudson.model.Hudson;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
+import static com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
+
+
 public class RepositoryUtils {
 
     public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential) {
         Credential credential = findCredential(credentialName);
-        DeployitNotifier.DeployitDescriptor descriptor = (DeployitNotifier.DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
+        DeployitDescriptor descriptor = (DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
         if (null != credential && null != overridingCredential) {
             String secondaryProxyUrl = credential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());
             String secondaryServerUrl = credential.resolveServerUrl(descriptor.getDeployitServerUrl());
@@ -29,7 +34,7 @@ public class RepositoryUtils {
     }
 
     private static List<Credential> getGlobalCredentials() {
-        DeployitNotifier.DeployitDescriptor descriptor = (DeployitNotifier.DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
+        DeployitDescriptor descriptor = (DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
         return descriptor.getCredentials();
     }
 
@@ -47,9 +52,9 @@ public class RepositoryUtils {
         DeployitNotifier notifier = retrieveDeployitNotifierFromProject(project);
         if (null != notifier) {
             overridingCredential = notifier.getOverridingCredential();
-            if ((null == overridingCredential.getUsername() || "".equals(overridingCredential.getUsername()))
+            if (StringUtils.isEmpty(overridingCredential.getUsername())
                     && null != overridingCredential.getCredentialsId()) {
-                DeployitNotifier.DeployitDescriptor descriptor = (DeployitNotifier.DeployitDescriptor) notifier.getDescriptor();
+                DeployitDescriptor descriptor = (DeployitDescriptor) notifier.getDescriptor();
                 String secondaryProxyUrl = overridingCredential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());
                 String secondaryServerUrl = overridingCredential.resolveServerUrl(descriptor.getDeployitServerUrl());
                 SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
@@ -66,7 +71,7 @@ public class RepositoryUtils {
 
     public static DeployitNotifier retrieveDeployitNotifierFromProject(AbstractProject project) {
         DeployitNotifier notifier = null;
-        DeployitNotifier.DeployitDescriptor descriptor = (DeployitNotifier.DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
+        DeployitDescriptor descriptor = (DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
         if (null != project) {
             notifier = (DeployitNotifier) project.getPublishersList().get(descriptor);
         }
