@@ -35,6 +35,7 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.Project;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
@@ -239,6 +240,13 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                         HTTP_SCHEME, HTTPS_SCHEME),
                 CredentialsMatchers.withId(credentialsId)
         );
+    }
+
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, Item item) {
+        return CredentialsMatchers.firstOrNull(
+                lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM,
+                        HTTP_SCHEME, HTTPS_SCHEME),
+                CredentialsMatchers.withId(credentialsId));
     }
 
     @Extension
