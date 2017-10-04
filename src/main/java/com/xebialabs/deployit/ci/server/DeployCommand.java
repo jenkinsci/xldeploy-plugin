@@ -210,20 +210,22 @@ public class DeployCommand {
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= taskState.getNrSteps(); i++) {
-            final StepState stepInfo = taskService.getStep(taskId, i, null);
+        int stepCount = 0;
+        for (StepState stepInfo : taskService.getSteps(taskId).getSteps()) {
+
             final String description = stepInfo.getDescription();
             final String log = stepInfo.getLog();
             String stepInfoMessage;
             if (StringUtils.isEmpty(log) || description.equals(log)) {
-                stepInfoMessage = format("%s step #%d %s\t%s", taskId, i, stepInfo.getState(), description);
+                stepInfoMessage = format("%s step #%d %s\t%s", taskId, stepCount, stepInfo.getState(), description);
             } else {
-                stepInfoMessage = format("%s step #%d %s\t%s\n%s", taskId, i, stepInfo.getState(), description, log);
+                stepInfoMessage = format("%s step #%d %s\t%s\n%s", taskId, stepCount, stepInfo.getState(), description, log);
             }
 
             listener.info(stepInfoMessage);
             if (StepExecutionState.FAILED.equals(stepInfo.getState()))
                 sb.append(stepInfoMessage);
+            stepCount++;
         }
 
         if (taskState.getState().isExecutionHalted())
