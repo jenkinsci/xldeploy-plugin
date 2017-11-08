@@ -122,7 +122,7 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2016.2.1"
+    xlPlatformVersion = "2016.2.6"
 
 }
 
