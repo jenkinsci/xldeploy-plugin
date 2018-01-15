@@ -52,7 +52,7 @@ public class RepositoryUtils {
         DeployitNotifier notifier = retrieveDeployitNotifierFromProject(project);
         if (null != notifier) {
             overridingCredential = notifier.getOverridingCredential();
-            if (StringUtils.isEmpty(overridingCredential.getUsername())
+            if (null != overridingCredential && StringUtils.isEmpty(overridingCredential.getUsername())
                     && null != overridingCredential.getCredentialsId()) {
                 DeployitDescriptor descriptor = (DeployitDescriptor) notifier.getDescriptor();
                 String secondaryProxyUrl = overridingCredential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());

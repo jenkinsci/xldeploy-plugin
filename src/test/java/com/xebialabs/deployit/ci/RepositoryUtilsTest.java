@@ -14,12 +14,11 @@ import hudson.util.DescribableList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
 
 public class RepositoryUtilsTest {
     static final String ID = "id";
@@ -49,13 +48,21 @@ public class RepositoryUtilsTest {
         FreeStyleProject freeStyleProjectSpy = spy(new FreeStyleProject(f, "folder1/proj1"));
         freeStyleProjectSpy.addPublisher(notifierSpy);
 
-        DescribableList<Publisher, Descriptor<Publisher>> publisherListMock = Mockito.mock(DescribableList.class);
+        DescribableList<Publisher, Descriptor<Publisher>> publisherListMock = mock(DescribableList.class);
         doReturn(notifierSpy).when(publisherListMock).get(any(DeployitNotifier.DeployitDescriptor.class));
         doReturn(publisherListMock).when(freeStyleProjectSpy).getPublishersList();
 
         Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(freeStyleProjectSpy);
         assertEquals(USERNAME, overridingCredential.getUsername());
         assertEquals(PASSWORD, overridingCredential.getPassword().getPlainText());
+    }
+
+    @Test
+    public void shouldNotRetrieveOverridingCredentialFromProjectWhenNotDefined() throws Exception {
+        Folder f = r.jenkins.createProject(Folder.class, "folder1");
+        FreeStyleProject freeStyleProjectSpy = spy(new FreeStyleProject(f, "folder1/proj1"));
+
+        assertNull(RepositoryUtils.retrieveOverridingCredentialFromProject(freeStyleProjectSpy));
     }
 
     CredentialsStore getFolderStore(Folder f) {
