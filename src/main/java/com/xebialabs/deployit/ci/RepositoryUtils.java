@@ -19,8 +19,6 @@ import static com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
 
 public class RepositoryUtils {
 
-    private static DeployitDescriptor descriptor = (DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
-
     public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential) {
         Credential credential = findCredential(credentialName);
         if (null != credential && null != overridingCredential) {
@@ -28,8 +26,9 @@ public class RepositoryUtils {
                     credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(),
                     overridingCredential.isUseGlobalCredential());
         }
-        DeployitServer deployitServer = descriptor.getDeployitServer(credential);
-        return deployitServer;
+        DeployitDescriptor descriptor = getDeployitDescriptor();
+        return descriptor.getDeployitServer(credential);
+
     }
 
     public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId){
@@ -37,18 +36,19 @@ public class RepositoryUtils {
         if (null != credential && null != credentialId) {
             StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credentialId);
             if(null == cred){
-                throw new IllegalArgumentException(Messages.DeployitNotifier_credentialsNotFoundError(credentialId));
+                throw new IllegalArgumentException(Messages.DeployitNotifier_credentialIdNotFoundError(credentialId));
             }
             credential = retrieveOverridingCredential(credential, credentialId, credential.getName(),
                     cred.getUsername(), cred.getPassword(), true);
         }
-        DeployitServer deployitServer = descriptor.getDeployitServer(credential);
-        return deployitServer;
+        DeployitDescriptor descriptor = getDeployitDescriptor();
+        return descriptor.getDeployitServer(credential);
     }
 
 
     private static Credential retrieveOverridingCredential(Credential credential, String credentialId, String name,
                                                            String username, Secret password, boolean useGlobalCredential) {
+        DeployitDescriptor descriptor = getDeployitDescriptor();
         String secondaryProxyUrl = credential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());
         String secondaryServerUrl = credential.resolveServerUrl(descriptor.getDeployitServerUrl());
         SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
@@ -57,7 +57,7 @@ public class RepositoryUtils {
     }
 
     private static List<Credential> getGlobalCredentials() {
-        return descriptor.getCredentials();
+        return getDeployitDescriptor().getCredentials();
     }
 
     public static Credential findCredential(String credentialName) {
@@ -93,6 +93,7 @@ public class RepositoryUtils {
 
     public static DeployitNotifier retrieveDeployitNotifierFromProject(AbstractProject project) {
         DeployitNotifier notifier = null;
+        DeployitDescriptor descriptor = getDeployitDescriptor();
         if (null != project) {
             notifier = (DeployitNotifier) project.getPublishersList().get(descriptor);
         }
@@ -119,6 +120,10 @@ public class RepositoryUtils {
 
     public static Collection<String> getPropertiesOf(final DeployitServer deployitServer, String type) {
         return deployitServer.getDescriptorRegistry().getEditablePropertiesForDeployableType(type);
+    }
+
+    private static DeployitDescriptor getDeployitDescriptor(){
+        return (DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
     }
 
 }
