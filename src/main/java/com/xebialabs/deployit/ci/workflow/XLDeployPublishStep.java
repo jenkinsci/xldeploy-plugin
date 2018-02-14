@@ -17,17 +17,18 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 public class XLDeployPublishStep extends AbstractStepImpl {
 
     public final String serverCredentials;
+    public final String overrideCredentialId;
     public final String darPath;
 
     @DataBoundConstructor
-    public XLDeployPublishStep(String darPath, String serverCredentials) {
+    public XLDeployPublishStep(String darPath, String serverCredentials, String overrideCredentialId) {
         this.darPath = darPath;
         this.serverCredentials = serverCredentials;
+        this.overrideCredentialId = overrideCredentialId;
     }
 
     @Extension
@@ -81,7 +82,8 @@ public class XLDeployPublishStep extends AbstractStepImpl {
             final String path = ArtifactView.findFilePathFromPattern(envVars.expand(step.darPath), ws, deploymentListener);
             RemoteAwareLocation location = getRemoteAwareLocation(path);
             try {
-                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, null);
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
+                        step.serverCredentials, step.overrideCredentialId);
                 deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
             } finally {
                 location.cleanup();

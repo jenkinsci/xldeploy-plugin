@@ -16,7 +16,6 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
 
 public class XLDeployDeployStep extends AbstractStepImpl {
@@ -24,10 +23,13 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     public final String serverCredentials;
     public final String packageId;
     public final String environmentId;
+    public final String overrideCredentialId;
 
     @DataBoundConstructor
-    public XLDeployDeployStep(String serverCredentials, String packageId, String environmentId) {
+    public XLDeployDeployStep(String serverCredentials, String overrideCredentialId, String packageId,
+                              String environmentId) {
         this.serverCredentials = serverCredentials;
+        this.overrideCredentialId = overrideCredentialId;
         this.environmentId = environmentId;
         this.packageId = packageId;
     }
@@ -80,7 +82,8 @@ public class XLDeployDeployStep extends AbstractStepImpl {
             String resolvedPackageId = envVars.expand(step.packageId);
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
             JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, null);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
+                    step.serverCredentials, step.overrideCredentialId);
             deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId,deploymentOptions,deploymentListener);
             return null;
         }
