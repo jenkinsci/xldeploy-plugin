@@ -90,6 +90,13 @@ public class DeployitServerImpl implements DeployitServer {
         new DeployCommand(deploymentService, taskService, repositoryService, deploymentOptions, listener).deploy(deploymentPackage, environment, deploymentProperties);
     }
 
+    @Override
+    public void undeploy(String deployedApplication, JenkinsDeploymentListener listener) {
+        DeploymentService deploymentService = getCommunicator().getProxies().getDeploymentService();
+        TaskService taskService = getCommunicator().getProxies().getTaskService();
+        RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
+        new UndeployCommand(taskService, listener, deploymentService, repositoryService).undeploy(deployedApplication);
+    }
 
     @Override
     public DeployitCommunicator newCommunicator() {
