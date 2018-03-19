@@ -27,6 +27,8 @@ public interface DeployitServer {
 
     void undeploy(String deployedApplication, JenkinsDeploymentListener listener);
 
+    void executeControlTask(String hostId, String controlTask, Map<String, String> parameters, JenkinsDeploymentListener listener);
+
     DeployitCommunicator newCommunicator();
 
     DeployitDescriptorRegistry getDescriptorRegistry();

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.xebialabs.deployit.engine.api.ControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +97,14 @@ public class DeployitServerImpl implements DeployitServer {
         TaskService taskService = getCommunicator().getProxies().getTaskService();
         RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
         new UndeployCommand(taskService, listener, deploymentService, repositoryService).undeploy(deployedApplication);
+    }
+
+    @Override
+    public void executeControlTask(String hostId, String controlTask, Map<String, String> parameters, JenkinsDeploymentListener listener) {
+        TaskService taskService = getCommunicator().getProxies().getTaskService();
+        ControlService controlService = getCommunicator().getProxies().getControlService();
+        RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
+        new ExecuteControlTaskCommand(taskService, listener, controlService, repositoryService).executeControlTask(hostId, controlTask, parameters);
     }
 
     @Override
