@@ -15,8 +15,6 @@ public interface DeployitServer {
     public static final int DEFAULT_POOL_SIZE = 10;
     public static final int DEFAULT_SOCKET_TIMEOUT = 60000;
 
-    void setConnectionPoolSize(int poolSize);
-
     List<String> search(String type);
 
     List<String> search(String type, String namePattern);

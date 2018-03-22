@@ -31,12 +31,11 @@ public class DeployitServerImpl implements DeployitServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployitServerImpl.class);
     private BooterConfig booterConfig;
     private DeployitDescriptorRegistry descriptorRegistry;
-    private int poolSize;
 
     DeployitServerImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
         BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
-            .withConnectionPoolSize(poolSize)
+            .withConnectionPoolSize(booterConfig.getConnectionPoolSize())
             .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
             .withSocketTimeout(booterConfig.getSocketTimeout())
             .build();
@@ -46,11 +45,6 @@ public class DeployitServerImpl implements DeployitServer {
 
     private DeployitCommunicator getCommunicator() {
         return getDescriptorRegistry().getCommunicator();
-    }
-
-    @Override
-    public void setConnectionPoolSize(final int poolSize) {
-        this.poolSize = poolSize;
     }
 
     @Override
