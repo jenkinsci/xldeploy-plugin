@@ -17,6 +17,9 @@ import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepEx
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class XLDeployDeployStep extends AbstractStepImpl {
 
@@ -24,6 +27,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     public final String packageId;
     public final String environmentId;
     public final String overrideCredentialId;
+    public final Map<String, String> deploymentProperties = null;
 
     @DataBoundConstructor
     public XLDeployDeployStep(String serverCredentials, String overrideCredentialId, String packageId,
@@ -81,10 +85,14 @@ public class XLDeployDeployStep extends AbstractStepImpl {
             String resolvedEnvironmentId = envVars.expand(step.environmentId);
             String resolvedPackageId = envVars.expand(step.packageId);
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
-            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true);
+            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true, null);
             DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
                     step.serverCredentials, step.overrideCredentialId);
-            deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId,deploymentOptions,deploymentListener);
+            Map<String, String> deploymentProperties = step.deploymentProperties;
+            if (deploymentProperties == null) {
+                deploymentProperties = new HashMap<String, String>();
+            }
+            deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId, deploymentProperties,deploymentOptions,deploymentListener);
             return null;
         }
 

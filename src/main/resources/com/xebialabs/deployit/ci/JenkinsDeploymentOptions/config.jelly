@@ -21,5 +21,25 @@
     <f:entry title="${%Rollback on Error}" field="rollbackOnError" help="/plugin/deployit-plugin/help-rollbackonerror.html">
         <f:checkbox/>
     </f:entry>
+    
+    <f:entry title="${%Deployment Properties}" description="Deployment Properties" field="deploymentProperties" help="/plugin/deployit-plugin/help-deployment-properties.html">
+        <f:repeatable var="property" field="deploymentProperties">
+            <table width="100%">
+                <f:entry title="${%Name}" field="propertyName">
+                    <f:select />
+                </f:entry>
+
+                <f:entry title="${%Value}" field="propertyValue">
+                    <f:textbox />
+                </f:entry>
+
+                <f:entry title="">
+                    <div align="right">
+                        <f:repeatableDeleteButton />
+                    </div>
+                </f:entry>
+            </table>
+        </f:repeatable>
+    </f:entry>
 
 </j:jelly>
