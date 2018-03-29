@@ -2,7 +2,9 @@ package com.xebialabs.deployit.ci.server;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import com.xebialabs.deployit.engine.api.ControlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +31,11 @@ public class DeployitServerImpl implements DeployitServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeployitServerImpl.class);
     private BooterConfig booterConfig;
     private DeployitDescriptorRegistry descriptorRegistry;
-    private int poolSize;
 
     DeployitServerImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
         BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
-            .withConnectionPoolSize(poolSize)
+            .withConnectionPoolSize(booterConfig.getConnectionPoolSize())
             .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
             .withSocketTimeout(booterConfig.getSocketTimeout())
             .build();
@@ -44,11 +45,6 @@ public class DeployitServerImpl implements DeployitServer {
 
     private DeployitCommunicator getCommunicator() {
         return getDescriptorRegistry().getCommunicator();
-    }
-
-    @Override
-    public void setConnectionPoolSize(final int poolSize) {
-        this.poolSize = poolSize;
     }
 
     @Override
@@ -82,13 +78,28 @@ public class DeployitServerImpl implements DeployitServer {
     }
 
     @Override
-    public void deploy(String deploymentPackage, String environment,  JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
+    public void deploy(String deploymentPackage, String environment, Map<String, String> deploymentProperties, JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
         DeploymentService deploymentService = getCommunicator().getProxies().getDeploymentService();
         TaskService taskService = getCommunicator().getProxies().getTaskService();
         RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
-        new DeployCommand(deploymentService, taskService, repositoryService, deploymentOptions, listener).deploy(deploymentPackage, environment);
+        new DeployCommand(deploymentService, taskService, repositoryService, deploymentOptions, listener).deploy(deploymentPackage, environment, deploymentProperties);
     }
 
+    @Override
+    public void undeploy(String deployedApplication, JenkinsDeploymentListener listener) {
+        DeploymentService deploymentService = getCommunicator().getProxies().getDeploymentService();
+        TaskService taskService = getCommunicator().getProxies().getTaskService();
+        RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
+        new UndeployCommand(taskService, listener, deploymentService, repositoryService).undeploy(deployedApplication);
+    }
+
+    @Override
+    public void executeControlTask(String hostId, String controlTask, Map<String, String> parameters, JenkinsDeploymentListener listener) {
+        TaskService taskService = getCommunicator().getProxies().getTaskService();
+        ControlService controlService = getCommunicator().getProxies().getControlService();
+        RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
+        new ExecuteControlTaskCommand(taskService, listener, controlService, repositoryService).executeControlTask(hostId, controlTask, parameters);
+    }
 
     @Override
     public DeployitCommunicator newCommunicator() {

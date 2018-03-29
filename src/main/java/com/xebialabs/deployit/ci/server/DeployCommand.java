@@ -26,6 +26,7 @@ package com.xebialabs.deployit.ci.server;
 import java.text.SimpleDateFormat;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -87,7 +88,7 @@ public class DeployCommand {
 
     }
 
-    public void deploy(String deploymentPackage, String environment) {
+    public void deploy(String deploymentPackage, String environment, Map<String, String> deploymentProperties) {
         listener.debug(deploymentOptions.toString());
 
         verifyPackageExistInRemoteRepository(deploymentPackage);
@@ -106,6 +107,11 @@ public class DeployCommand {
         if (deploymentOptions.generateDeployedOnUpgrade) {
             listener.debug("prepareAutoDeployeds");
             deployment = deploymentService.prepareAutoDeployeds(deployment);
+        }
+
+        for (Map.Entry<String, String> deploymentProperty : deploymentProperties.entrySet()) {
+            listener.debug(String.format("Setting deployment property %s = %s", deploymentProperty.getKey(), deploymentProperty.getValue()));
+            deployment.getDeployedApplication().setProperty(deploymentProperty.getKey(), deploymentProperty.getValue());
         }
 
         listener.debug(" dump Deployeds");

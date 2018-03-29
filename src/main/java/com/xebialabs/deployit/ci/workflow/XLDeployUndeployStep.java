@@ -2,9 +2,7 @@ package com.xebialabs.deployit.ci.workflow;
 
 import com.google.inject.Inject;
 import com.xebialabs.deployit.ci.DeployitNotifier;
-import com.xebialabs.deployit.ci.JenkinsDeploymentOptions;
 import com.xebialabs.deployit.ci.RepositoryUtils;
-import com.xebialabs.deployit.ci.VersionKind;
 import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 import hudson.EnvVars;
@@ -17,25 +15,16 @@ import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepEx
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.util.HashMap;
-import java.util.Map;
 
-
-public class XLDeployDeployStep extends AbstractStepImpl {
+public class XLDeployUndeployStep extends AbstractStepImpl {
 
     public final String serverCredentials;
-    public final String packageId;
-    public final String environmentId;
-    public final String overrideCredentialId;
-    public final Map<String, String> deploymentProperties = null;
+    public final String deployedApplicationId;
 
     @DataBoundConstructor
-    public XLDeployDeployStep(String serverCredentials, String overrideCredentialId, String packageId,
-                              String environmentId) {
+    public XLDeployUndeployStep(String serverCredentials, String deployedApplicationId) {
         this.serverCredentials = serverCredentials;
-        this.overrideCredentialId = overrideCredentialId;
-        this.environmentId = environmentId;
-        this.packageId = packageId;
+        this.deployedApplicationId = deployedApplicationId;
     }
 
     @Extension
@@ -44,18 +33,18 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         private DeployitNotifier.DeployitDescriptor deployitDescriptor;
 
         public XLDeployDeployStepDescriptor() {
-            super(XLDeployPublishExecution.class);
+            super(XLDeployUndeployExecution.class);
             deployitDescriptor = new DeployitNotifier.DeployitDescriptor();
         }
 
         @Override
         public String getFunctionName() {
-            return "xldDeploy";
+            return "xldUndeploy";
         }
 
         @Override
         public String getDisplayName() {
-            return "Deploy a package to a environment";
+            return "Undeploy a deployed application";
         }
 
         public ListBoxModel doFillServerCredentialsItems() {
@@ -69,10 +58,10 @@ public class XLDeployDeployStep extends AbstractStepImpl {
 
     }
 
-    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    public static final class XLDeployUndeployExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
 
         @Inject
-        private transient XLDeployDeployStep step;
+        private transient XLDeployUndeployStep step;
 
         @StepContextParameter
         private transient EnvVars envVars;
@@ -82,17 +71,10 @@ public class XLDeployDeployStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-            String resolvedEnvironmentId = envVars.expand(step.environmentId);
-            String resolvedPackageId = envVars.expand(step.packageId);
+            String resolvedDeployedApplicationId = envVars.expand(step.deployedApplicationId);
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
-            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true, null);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
-                    step.serverCredentials, step.overrideCredentialId);
-            Map<String, String> deploymentProperties = step.deploymentProperties;
-            if (deploymentProperties == null) {
-                deploymentProperties = new HashMap<String, String>();
-            }
-            deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId, deploymentProperties,deploymentOptions,deploymentListener);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(step.serverCredentials, null);
+            deployitServer.undeploy(resolvedDeployedApplicationId, deploymentListener);
             return null;
         }
 
