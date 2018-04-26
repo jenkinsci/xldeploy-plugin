@@ -24,6 +24,7 @@
 package com.xebialabs.deployit.ci.server;
 
 import java.nio.charset.Charset;
+import java.util.HashMap;
 
 import org.junit.Test;
 
@@ -48,7 +49,7 @@ public class DeployCommandTest {
         DeploymentService deploymentService = mock(DeploymentService.class);
         TaskService taskService = mock(TaskService.class);
         RepositoryService repositoryService = mock(RepositoryService.class);
-        JenkinsDeploymentOptions jenkinsOptions = new JenkinsDeploymentOptions("test", VersionKind.Packaged, false, false, false, false);
+        JenkinsDeploymentOptions jenkinsOptions = new JenkinsDeploymentOptions("test", VersionKind.Packaged, false, false, false, false, null);
         JenkinsDeploymentListener jenkinsDeploymentListener = new JenkinsDeploymentListener(new StreamBuildListener(System.out, Charset.defaultCharset()), true);
         DeployCommand deployCommand = new DeployCommand(deploymentService, taskService, repositoryService, jenkinsOptions, jenkinsDeploymentListener);
 
@@ -70,7 +71,7 @@ public class DeployCommandTest {
                 .thenThrow(new MyTestValidationException("Expect this to be rethrown"));
 
         try {
-            deployCommand.deploy("pkg", "test");
+            deployCommand.deploy("pkg", "test", new HashMap<String, String>());
             fail("Expected exception after 5 failed attempts.");
         } catch  (MyTestValidationException e ) {
             //success

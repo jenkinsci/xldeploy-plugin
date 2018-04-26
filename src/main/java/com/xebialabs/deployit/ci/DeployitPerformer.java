@@ -8,7 +8,9 @@ import hudson.model.AbstractBuild;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -127,8 +129,15 @@ class DeployitPerformer {
 
             final String versionId = Joiner.on("/").join(resolvedApplication, packageVersion);
             deploymentListener.info(Messages.DeployitNotifier_deploy(versionId, resolvedEnvironment));
+
+            Map<String, String> deploymentProperties = new HashMap<String, String>();
+            if (deploymentParameters.deploymentOptions.deploymentProperties != null) {
+                for (DeploymentProperty deploymentProperty : deploymentParameters.deploymentOptions.deploymentProperties) {
+                    deploymentProperties.put(deploymentProperty.propertyName, envVars.expand(deploymentProperty.propertyValue));
+                }
+            }
             try {
-                deployitServer.deploy(versionId, resolvedEnvironment, deploymentParameters.deploymentOptions, deploymentListener);
+                deployitServer.deploy(versionId, resolvedEnvironment, deploymentProperties, deploymentParameters.deploymentOptions, deploymentListener);
             } catch (Exception e) {
                 deploymentListener.error(Messages._DeployitNotifier_errorDeploy(e.getMessage()));
                 return false;
