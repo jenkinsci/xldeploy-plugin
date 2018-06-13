@@ -77,14 +77,24 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
         return this;
     }
 
+    private DarPackager getDarPackager() {
+        ClassLoader origClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(DarPackager.class.getClassLoader());
+            ManifestWriter mw = new ManifestXmlWriter();
+            return new DarPackager(mw);
+        } finally {
+            Thread.currentThread().setContextClassLoader(origClassLoader);
+        }
+    }
+
     /**
      * Call to be executed via jenkins virtual channel
      */
     @Override
     public String call() throws RuntimeException {
         targetDir.mkdirs();
-        ManifestWriter mw = new ManifestXmlWriter();
-        DarPackager pkger = new DarPackager(mw);
+        DarPackager pkger = getDarPackager();
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);

@@ -23,6 +23,7 @@
 
 package com.xebialabs.xltype.serialization.xstream;
 
+import com.thoughtworks.xstream.converters.DataHolder;
 import hudson.PluginFirstClassLoader;
 
 import java.io.IOException;
@@ -179,13 +180,11 @@ public class XStreamReaderWriter implements MessageBodyReader<Object>, MessageBo
     @Override
     public Object readFrom(Class<Object> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
         logger.trace("Reading {}", genericType);
-        return read(entityStream, type, httpHeaders.getFirst("BOOTER_CONFIG"));
+        return xStream.unmarshal(HIERARCHICAL_STREAM_DRIVER.createReader(entityStream), null, createDataHolder());
     }
 
-    private Object read(InputStream entityStream, Class<Object> type, String booterConfigKey) {
-        MapBackedDataHolder dataHolder = new MapBackedDataHolder();
-        dataHolder.put("BOOTER_CONFIG", booterConfigKey);
-        return xStream.unmarshal(HIERARCHICAL_STREAM_DRIVER.createReader(entityStream), null, dataHolder);
+    protected DataHolder createDataHolder() {
+        return null;
     }
 
     private static final Logger logger = LoggerFactory.getLogger(XStreamReaderWriter.class);

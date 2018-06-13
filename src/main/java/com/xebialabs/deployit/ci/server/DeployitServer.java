@@ -1,6 +1,7 @@
 package com.xebialabs.deployit.ci.server;
 
 import java.util.List;
+import java.util.Map;
 
 import com.xebialabs.deployit.booter.remote.BooterConfig;
 import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
@@ -22,7 +23,11 @@ public interface DeployitServer {
 
     ConfigurationItem importPackage(String darFile);
 
-    void deploy(String deploymentPackage, String environment,  JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener);
+    void deploy(String deploymentPackage, String environment, Map<String, String> deploymentProperties, JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener);
+
+    void undeploy(String deployedApplication, JenkinsDeploymentListener listener);
+
+    void executeControlTask(String hostId, String controlTask, Map<String, String> parameters, JenkinsDeploymentListener listener);
 
     DeployitCommunicator newCommunicator();
 

@@ -19,6 +19,8 @@ public interface DeployitDescriptorRegistry extends Versioned {
     String UDM_ARTIFACT = "udm.Artifact";
     String UDM_DEPLOYABLE = "udm.Deployable";
     String UDM_EMBEDDED_DEPLOYABLE = "udm.EmbeddedDeployable";
+    String UDM_DEPLOYED_APPLICATION = "udm.DeployedApplication";
+    String UDM_CONTAINER = "udm.Container";
 
     Type typeForClass(Class<?> clazz);
 

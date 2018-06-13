@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 
 import com.xebialabs.deployit.ci.ArtifactView;
 import com.xebialabs.deployit.ci.util.Strings2;
+import com.xebialabs.deployit.plugin.api.udm.base.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,11 +62,6 @@ import com.xebialabs.deployit.plugin.api.udm.EmbeddedDeployable;
 import com.xebialabs.deployit.plugin.api.udm.Version;
 import com.xebialabs.deployit.plugin.api.udm.artifact.FolderArtifact;
 import com.xebialabs.deployit.plugin.api.udm.artifact.SourceArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployable;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployableFileArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployableFolderArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseEmbeddedDeployable;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
@@ -217,6 +213,15 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         return ci;
     }
 
+    private Object getPropertyDescriptorDefaultValue(RemoteDescriptor remoteDescriptor, String propertyName) {
+        for (PropertyDescriptor pd : remoteDescriptor.getPropertyDescriptors()) {
+            if (propertyName.equals(pd.getName())) {
+                return pd.getDefaultValue();
+            }
+        }
+        return null;
+    }
+
     private ConfigurationItem newInstance(Type type, String id) {
         try {
             RemoteDescriptor remoteDescriptor = (RemoteDescriptor) getDescriptor(type);
@@ -231,6 +236,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
                 } else {
                     ci = new BaseDeployableFileArtifact();
                 }
+                ((BaseDeployableArtifact) ci).setTextFileNamesRegex(String.valueOf(getPropertyDescriptorDefaultValue(remoteDescriptor, "textFileNamesRegex")));
             } else if (remoteDescriptor.isAssignableTo(typeForClass(Deployable.class))) {
                 ci = new BaseDeployable();
             } else {
