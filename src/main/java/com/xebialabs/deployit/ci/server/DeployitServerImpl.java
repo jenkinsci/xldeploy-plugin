@@ -2,6 +2,7 @@ package com.xebialabs.deployit.ci.server;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,13 +83,20 @@ public class DeployitServerImpl implements DeployitServer {
     }
 
     @Override
-    public void deploy(String deploymentPackage, String environment,  JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
+    public void deploy(String deploymentPackage, String environment, Map<String, String> deploymentProperties, JenkinsDeploymentOptions deploymentOptions, JenkinsDeploymentListener listener) {
         DeploymentService deploymentService = getCommunicator().getProxies().getDeploymentService();
         TaskService taskService = getCommunicator().getProxies().getTaskService();
         RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
-        new DeployCommand(deploymentService, taskService, repositoryService, deploymentOptions, listener).deploy(deploymentPackage, environment);
+        new DeployCommand(deploymentService, taskService, repositoryService, deploymentOptions, listener).deploy(deploymentPackage, environment, deploymentProperties);
     }
 
+    @Override
+    public void undeploy(String deployedApplication, JenkinsDeploymentListener listener) {
+        DeploymentService deploymentService = getCommunicator().getProxies().getDeploymentService();
+        TaskService taskService = getCommunicator().getProxies().getTaskService();
+        RepositoryService repositoryService = getCommunicator().getProxies().getRepositoryService();
+        new UndeployCommand(taskService, listener, deploymentService, repositoryService).undeploy(deployedApplication);
+    }
 
     @Override
     public DeployitCommunicator newCommunicator() {
