@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 
 public class XLDeployDeployStep extends AbstractStepImpl {
@@ -23,15 +24,19 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     public final String serverCredentials;
     public final String packageId;
     public final String environmentId;
-    public final String overrideCredentialId;
+    public String overrideCredentialId;
 
     @DataBoundConstructor
-    public XLDeployDeployStep(String serverCredentials, String overrideCredentialId, String packageId,
+    public XLDeployDeployStep(String serverCredentials, String packageId,
                               String environmentId) {
         this.serverCredentials = serverCredentials;
-        this.overrideCredentialId = overrideCredentialId;
         this.environmentId = environmentId;
         this.packageId = packageId;
+    }
+
+    @DataBoundSetter
+    public void setOverrideCredentialId(String overrideCredentialId) {
+        this.overrideCredentialId = overrideCredentialId;
     }
 
     @Extension
