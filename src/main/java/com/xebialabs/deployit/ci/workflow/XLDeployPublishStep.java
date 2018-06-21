@@ -17,17 +17,22 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public class XLDeployPublishStep extends AbstractStepImpl {
 
     public final String serverCredentials;
-    public final String overrideCredentialId;
+    public String overrideCredentialId;
     public final String darPath;
 
     @DataBoundConstructor
-    public XLDeployPublishStep(String darPath, String serverCredentials, String overrideCredentialId) {
+    public XLDeployPublishStep(String darPath, String serverCredentials) {
         this.darPath = darPath;
         this.serverCredentials = serverCredentials;
+    }
+
+    @DataBoundSetter
+    public void setOverrideCredentialId(String overrideCredentialId) {
         this.overrideCredentialId = overrideCredentialId;
     }
 
@@ -92,7 +97,7 @@ public class XLDeployPublishStep extends AbstractStepImpl {
             return null;
         }
 
-        private RemoteAwareLocation getRemoteAwareLocation (final String path) {
+        private RemoteAwareLocation getRemoteAwareLocation(final String path) {
             return new RemoteAwareLocation() {
                 @Override
                 public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener, EnvVars envVars) {
