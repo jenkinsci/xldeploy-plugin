@@ -1,25 +1,25 @@
 package com.xebialabs.deployit.ci;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.google.common.collect.Ordering;
-import com.xebialabs.deployit.ci.Credential.SecondaryServerInfo;
-import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
-import com.xebialabs.deployit.ci.server.DeployitServer;
-import hudson.model.AbstractProject;
-import hudson.model.Hudson;
-
 import java.util.Collection;
 import java.util.List;
 
-import hudson.util.Secret;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.google.common.collect.Ordering;
+import com.xebialabs.deployit.ci.Credential.SecondaryServerInfo;
+import com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
+import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
+
 import org.apache.commons.lang.StringUtils;
 
-import static com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
+import hudson.model.AbstractProject;
+import hudson.model.Hudson;
+import hudson.util.Secret;
 
 
 public class RepositoryUtils {
 
-    public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential) {
+    public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential, AbstractProject<?,?> context) {
         Credential credential = findCredential(credentialName);
         if (null != credential && null != overridingCredential) {
             credential = retrieveOverridingCredential(credential, overridingCredential.getCredentialsId(),
@@ -27,22 +27,23 @@ public class RepositoryUtils {
                     overridingCredential.isUseGlobalCredential());
         }
         DeployitDescriptor descriptor = getDeployitDescriptor();
-        return descriptor.getDeployitServer(credential);
+        return descriptor.getDeployitServer(credential, context);
 
     }
 
-    public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId){
+    public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId, AbstractProject<?,?> context) {
         Credential credential = findCredential(serverCredentialName);
         if (null != credential && null != credentialId) {
-            StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credentialId);
-            if(null == cred){
+            StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credentialId, context.getParent());
+            if ( null == cred )
+            {
                 throw new IllegalArgumentException(Messages.DeployitNotifier_credentialIdNotFoundError(credentialId));
             }
             credential = retrieveOverridingCredential(credential, credentialId, credential.getName(),
                     cred.getUsername(), cred.getPassword(), true);
         }
         DeployitDescriptor descriptor = getDeployitDescriptor();
-        return descriptor.getDeployitServer(credential);
+        return descriptor.getDeployitServer(credential, context);
     }
 
 
@@ -69,7 +70,7 @@ public class RepositoryUtils {
         throw new IllegalArgumentException(Messages.DeployitNotifier_credentialsNotFoundError(credentialName));
     }
 
-    public static Credential retrieveOverridingCredentialFromProject(AbstractProject project) {
+    public static Credential retrieveOverridingCredentialFromProject(AbstractProject<?,?> project) {
         Credential overridingCredential = null;
         DeployitNotifier notifier = retrieveDeployitNotifierFromProject(project);
         if (null != notifier) {
@@ -81,7 +82,7 @@ public class RepositoryUtils {
                 String secondaryServerUrl = overridingCredential.resolveServerUrl(descriptor.getDeployitServerUrl());
                 SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
 
-                StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(overridingCredential.getCredentialsId(), project);
+                StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(overridingCredential.getCredentialsId(), project.getParent());
                 if (null != cred) {
                     overridingCredential = new Credential(overridingCredential.getName(), cred.getUsername(), cred.getPassword(),
                             overridingCredential.getCredentialsId(), serverInfo, false);
@@ -91,7 +92,7 @@ public class RepositoryUtils {
         return overridingCredential;
     }
 
-    public static DeployitNotifier retrieveDeployitNotifierFromProject(AbstractProject project) {
+    public static DeployitNotifier retrieveDeployitNotifierFromProject(AbstractProject<?,?> project) {
         DeployitNotifier notifier = null;
         DeployitDescriptor descriptor = getDeployitDescriptor();
         if (null != project) {

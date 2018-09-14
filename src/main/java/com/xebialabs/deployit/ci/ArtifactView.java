@@ -161,7 +161,7 @@ public class ArtifactView extends DeployableView {
         {
             String creds = credentialExistingArtifacts != null ? credentialExistingArtifacts : credentialNewArtifacts;
             Credential credential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, credential);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, credential, project);
             return of(RepositoryUtils.getAllArtifactTypes(deployitServer));
         }
     }

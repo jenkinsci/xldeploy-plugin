@@ -46,6 +46,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
@@ -106,7 +108,8 @@ public class DeployitNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingCredential);
+        Project context = (Project) build.getProject();
+        DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingCredential, context);
         DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
         DeployitPerformer performer = new DeployitPerformer(build, launcher, listener, deployitServer, performerParameters);
         return performer.doPerform();
@@ -138,6 +141,8 @@ public class DeployitNotifier extends Notifier {
         private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
         private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
 
+        private static final Logger LOGGER = Logger.getLogger(Credential.class.getName());
+
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
         private final transient Map<String, SoftReference<DeployitServer>> credentialServerMap = new HashMap<String, SoftReference<DeployitServer>>();
 
@@ -145,24 +150,29 @@ public class DeployitNotifier extends Notifier {
             load();  //deserialize from xml
         }
 
-        private DeployitServer newDeployitServer(Credential credential) {
+        private DeployitServer newDeployitServer(Credential credential, AbstractProject<?,?> context) {
             String serverUrl = credential.resolveServerUrl(deployitServerUrl);
             String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
 
             int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : DeployitServer.DEFAULT_POOL_SIZE;
             int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
 
+            LOGGER.fine(String.format("[XLD] newDeployitServer: name:%s, username:%s, key:%s, isGlobal:%s", credential.getName(), credential.getUsername(), credential.getKey(), credential.isUseGlobalCredential()));
             String userName = credential.getUsername();
             String password = credential.getPassword().getPlainText();
             if (credential.isUseGlobalCredential()) {
-                StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
+                StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId(), context.getParent());
+                if ( cred == null )
+                {
+                    throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
+                }
                 userName =  cred.getUsername();
                 password = cred.getPassword().getPlainText();
             }
             return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
         }
 
-        public DeployitServer getDeployitServer(Credential credential) {
+        public DeployitServer getDeployitServer(Credential credential, @AncestorInPath AbstractProject<?,?> context) {
             DeployitServer deployitServer = null;
             if (null != credential) {
                 SoftReference<DeployitServer> deployitServerRef = credentialServerMap.get(credential.getKey());
@@ -173,7 +183,7 @@ public class DeployitNotifier extends Notifier {
 
                 if (null == deployitServer) {
                     synchronized (this) {
-                        deployitServer = newDeployitServer(credential);
+                        deployitServer = newDeployitServer(credential, context);
                         credentialServerMap.put(credential.getKey(), new SoftReference<DeployitServer>(deployitServer));
                     }
                 }
@@ -305,7 +315,7 @@ public class DeployitNotifier extends Notifier {
             if (deployitNotifier != null) {
                 Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
 
-                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(deployitNotifier.credential, overridingcredential);
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(deployitNotifier.credential, overridingcredential, project);
                 if (null != deployitServer) {
                     List<String> applicationSuggestions = deployitServer.search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
                     for (String applicationSuggestion : applicationSuggestions) {
@@ -326,7 +336,7 @@ public class DeployitNotifier extends Notifier {
             final String applicationName = DeployitServerFactory.getNameFromId(resolvedName);
 
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
             List<String> candidates = deployitServer.search(DeployitDescriptorRegistry.UDM_APPLICATION, applicationName + "%");
             for (String candidate : candidates) {
                 if (candidate.endsWith("/" + applicationName)) {
@@ -344,7 +354,7 @@ public class DeployitNotifier extends Notifier {
         {
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {
-                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential);
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
                 if (null == deployitServer)
                     return error("Server not found for credential.");
                 deployitServer.reload();
