@@ -150,18 +150,17 @@ public class DeployitNotifier extends Notifier {
             load();  //deserialize from xml
         }
 
-        private DeployitServer newDeployitServer(Credential credential, AbstractProject<?,?> context) {
+        private DeployitServer newDeployitServer(Credential credential, ItemGroup<?> itemGroup) {
             String serverUrl = credential.resolveServerUrl(deployitServerUrl);
             String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
 
             int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : DeployitServer.DEFAULT_POOL_SIZE;
             int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
 
-            LOGGER.fine(String.format("[XLD] newDeployitServer: name:%s, username:%s, key:%s, isGlobal:%s", credential.getName(), credential.getUsername(), credential.getKey(), credential.isUseGlobalCredential()));
             String userName = credential.getUsername();
             String password = credential.getPassword().getPlainText();
             if (credential.isUseGlobalCredential()) {
-                StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId(), context.getParent());
+                StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId(), itemGroup);
                 if ( cred == null )
                 {
                     throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
@@ -172,7 +171,7 @@ public class DeployitNotifier extends Notifier {
             return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
         }
 
-        public DeployitServer getDeployitServer(Credential credential, @AncestorInPath AbstractProject<?,?> context) {
+        public DeployitServer getDeployitServer(Credential credential, @AncestorInPath AbstractProject<?,?> project) {
             DeployitServer deployitServer = null;
             if (null != credential) {
                 SoftReference<DeployitServer> deployitServerRef = credentialServerMap.get(credential.getKey());
@@ -183,7 +182,7 @@ public class DeployitNotifier extends Notifier {
 
                 if (null == deployitServer) {
                     synchronized (this) {
-                        deployitServer = newDeployitServer(credential, context);
+                        deployitServer = newDeployitServer(credential, project.getParent());
                         credentialServerMap.put(credential.getKey(), new SoftReference<DeployitServer>(deployitServer));
                     }
                 }

@@ -19,7 +19,7 @@ import hudson.util.Secret;
 
 public class RepositoryUtils {
 
-    public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential, AbstractProject<?,?> context) {
+    public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential, AbstractProject<?,?> project) {
         Credential credential = findCredential(credentialName);
         if (null != credential && null != overridingCredential) {
             credential = retrieveOverridingCredential(credential, overridingCredential.getCredentialsId(),
@@ -27,14 +27,14 @@ public class RepositoryUtils {
                     overridingCredential.isUseGlobalCredential());
         }
         DeployitDescriptor descriptor = getDeployitDescriptor();
-        return descriptor.getDeployitServer(credential, context);
+        return descriptor.getDeployitServer(credential, project);
 
     }
 
-    public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId, AbstractProject<?,?> context) {
+    public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId, AbstractProject<?,?> project) {
         Credential credential = findCredential(serverCredentialName);
         if (null != credential && null != credentialId) {
-            StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credentialId, context.getParent());
+            StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credentialId, project.getParent());
             if ( null == cred )
             {
                 throw new IllegalArgumentException(Messages.DeployitNotifier_credentialIdNotFoundError(credentialId));
@@ -43,7 +43,7 @@ public class RepositoryUtils {
                     cred.getUsername(), cred.getPassword(), true);
         }
         DeployitDescriptor descriptor = getDeployitDescriptor();
-        return descriptor.getDeployitServer(credential, context);
+        return descriptor.getDeployitServer(credential, project);
     }
 
 

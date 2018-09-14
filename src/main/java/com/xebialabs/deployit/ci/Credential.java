@@ -241,23 +241,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
-    // public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) 
-    // {
-    //     List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM, HTTP_SCHEME, HTTPS_SCHEME);
-    //     if ( LOGGER.isLoggable(Level.FINE) )
-    //     {
-    //         LOGGER.fine(String.format("[XLD] lookup credentials for '%s' in root context. Found '%s'", credentialsId, creds.isEmpty() ? "nothing" : Integer.toString(creds.size())+" items"));
-    //         for (StandardUsernamePasswordCredentials cred : creds )
-    //         {
-    //             LOGGER.fine(String.format("[XLD]  >> id:%s, name:%s, scope:%s", cred.getId(), cred.getUsername(), cred.getScope().getDisplayName()));
-    //         }
-    //     }
-
-    //     return CredentialsMatchers.firstOrNull(creds,
-    //             CredentialsMatchers.withId(credentialsId)
-    //     );
-    // }
-
     public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item) 
     {
         StandardUsernamePasswordCredentials result = null;
@@ -306,7 +289,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 return error("%s is not a valid URL.", url);
             }
             return ok();
-
         }
 
         public FormValidation doCheckSecondaryServerUrl(@QueryParameter String secondaryServerUrl) {
@@ -342,30 +324,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
-        // public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
-        //     try {
-        //         String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
-        //         String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
-
-        //         if (Strings.isNullOrEmpty(credentialsId)) {
-        //             return FormValidation.error("No credentials specified");
-        //         }
-        //         StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
-        //         if (credentials == null) {
-        //             return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
-        //         }
-        //         if (Strings.isNullOrEmpty(serverUrl)) {
-        //             return FormValidation.error("No server URL specified");
-        //         }
-
-        //         return validateConnection(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
-        //     } catch (IllegalStateException e) {
-        //         return FormValidation.error(e.getMessage());
-        //     } catch (Exception e) {
-        //         return FormValidation.error("XL Deploy configuration is not valid! %s", e.getMessage());
-        //     }
-        // }
-
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
             ServerInfo serverInfo = deployitServer.getServerInfo();
@@ -374,5 +332,4 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
-// StamplerConverterImpl
 }
