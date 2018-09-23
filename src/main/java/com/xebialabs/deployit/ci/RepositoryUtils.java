@@ -14,12 +14,13 @@ import org.apache.commons.lang.StringUtils;
 
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
+import hudson.model.Job;
 import hudson.util.Secret;
 
 
 public class RepositoryUtils {
 
-    public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential, AbstractProject<?,?> project) {
+    public static DeployitServer getDeployitServer(String credentialName, Credential overridingCredential, Job<?,?> project) {
         Credential credential = findCredential(credentialName);
         if (null != credential && null != overridingCredential) {
             credential = retrieveOverridingCredential(credential, overridingCredential.getCredentialsId(),
@@ -31,7 +32,7 @@ public class RepositoryUtils {
 
     }
 
-    public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId, AbstractProject<?,?> project) {
+    public static DeployitServer getDeployitServerFromCredentialsId(String serverCredentialName, String credentialId, Job<?,?> project) {
         Credential credential = findCredential(serverCredentialName);
         if (null != credential && null != credentialId) {
             StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credentialId, project.getParent());
@@ -92,10 +93,12 @@ public class RepositoryUtils {
         return overridingCredential;
     }
 
-    public static DeployitNotifier retrieveDeployitNotifierFromProject(AbstractProject<?,?> project) {
+    public static DeployitNotifier retrieveDeployitNotifierFromProject(AbstractProject<?,?> project) 
+    {
         DeployitNotifier notifier = null;
         DeployitDescriptor descriptor = getDeployitDescriptor();
-        if (null != project) {
+        if ( null != project )
+        {
             notifier = (DeployitNotifier) project.getPublishersList().get(descriptor);
         }
         return notifier;

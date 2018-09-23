@@ -124,19 +124,17 @@ public class DeployitNotifier extends Notifier {
     }
 
     @Extension
-    public static final class DeployitDescriptor extends BuildStepDescriptor<Publisher> {
+    public static final class DeployitDescriptor extends BuildStepDescriptor<Publisher> 
+    {
 
         // ************ SERIALIZED GLOBAL PROPERTIES *********** //
-
         private String deployitServerUrl;
-
         private String deployitClientProxyUrl;
 
         private int connectionPoolSize = DeployitServer.DEFAULT_POOL_SIZE;
 
         // credentials are actually globally available credentials
         private List<Credential> credentials = new ArrayList<Credential>();
-
 
         private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
         private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
@@ -171,7 +169,7 @@ public class DeployitNotifier extends Notifier {
             return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
         }
 
-        public DeployitServer getDeployitServer(Credential credential, @AncestorInPath AbstractProject<?,?> project) {
+        public DeployitServer getDeployitServer(Credential credential, Job<?,?> project) {
             DeployitServer deployitServer = null;
             if (null != credential) {
                 SoftReference<DeployitServer> deployitServerRef = credentialServerMap.get(credential.getKey());
@@ -326,7 +324,7 @@ public class DeployitNotifier extends Notifier {
             return applicationCadidates;
         }
 
-        public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project)
+        public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?,?> project)
         {
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
@@ -365,7 +363,7 @@ public class DeployitNotifier extends Notifier {
             }
         }
 
-        public String expandValue(final String value, final AbstractProject project) {
+        public String expandValue(final String value, final Job project) {
             String resolvedValue = null;
 
             try {

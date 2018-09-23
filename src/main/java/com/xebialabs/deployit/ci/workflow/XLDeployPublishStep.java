@@ -18,7 +18,8 @@ import org.kohsuke.stapler.DataBoundSetter;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
 
@@ -73,9 +74,6 @@ public class XLDeployPublishStep extends AbstractStepImpl {
     public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
 
         @Inject
-        private transient AbstractProject<?,?> project;
-
-        @Inject
         private transient XLDeployPublishStep step;
 
         @StepContextParameter
@@ -87,14 +85,18 @@ public class XLDeployPublishStep extends AbstractStepImpl {
         @StepContextParameter
         private transient FilePath ws;
 
+        @StepContextParameter
+        private transient Run<?,?> run;
+
         @Override
         protected Void run() throws Exception {
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
             final String path = ArtifactView.findFilePathFromPattern(envVars.expand(step.darPath), ws, deploymentListener);
             RemoteAwareLocation location = getRemoteAwareLocation(path);
             try {
-                DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
-                        step.serverCredentials, step.overrideCredentialId, project);
+                Job<?,?> job = this.run.getParent();
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(step.serverCredentials, step.overrideCredentialId, job);
+
                 deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
             } finally {
                 location.cleanup();
