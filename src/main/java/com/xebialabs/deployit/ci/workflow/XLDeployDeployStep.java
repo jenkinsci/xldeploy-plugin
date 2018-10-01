@@ -17,7 +17,8 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
 
@@ -73,11 +74,8 @@ public class XLDeployDeployStep extends AbstractStepImpl {
 
     }
 
-    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
-
-        @Inject
-        private transient AbstractProject<?,?> project;
-
+    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void> 
+    {
         @Inject
         private transient XLDeployDeployStep step;
 
@@ -87,17 +85,21 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         @StepContextParameter
         private transient TaskListener listener;
 
+        @StepContextParameter
+        private transient Run<?,?> run;
+
         @Override
         protected Void run() throws Exception {
             String resolvedEnvironmentId = envVars.expand(step.environmentId);
             String resolvedPackageId = envVars.expand(step.packageId);
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
             JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true);
+
+            Job<?,?> job = this.run.getParent();
             DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
-                    step.serverCredentials, step.overrideCredentialId, project);
+                    step.serverCredentials, step.overrideCredentialId, job);
             deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId,deploymentOptions,deploymentListener);
             return null;
         }
-
     }
 }
