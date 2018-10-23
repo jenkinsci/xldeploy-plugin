@@ -8,6 +8,7 @@ import com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
 import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
+import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -71,7 +72,7 @@ public class XLDeployPublishStep extends AbstractStepImpl {
 
     }
 
-    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<String> {
 
         @Inject
         private transient XLDeployPublishStep step;
@@ -89,7 +90,7 @@ public class XLDeployPublishStep extends AbstractStepImpl {
         private transient Run<?,?> run;
 
         @Override
-        protected Void run() throws Exception {
+        protected String run() throws Exception {
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
             final String path = ArtifactView.findFilePathFromPattern(envVars.expand(step.darPath), ws, deploymentListener);
             RemoteAwareLocation location = getRemoteAwareLocation(path);
@@ -97,12 +98,12 @@ public class XLDeployPublishStep extends AbstractStepImpl {
                 Job<?,?> job = this.run.getParent();
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(step.serverCredentials, step.overrideCredentialId, job);
 
-                deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
+                ConfigurationItem importedCI = deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
+                return importedCI.getId();
             } finally {
                 location.cleanup();
             }
 
-            return null;
         }
 
         private RemoteAwareLocation getRemoteAwareLocation(final String path) {
