@@ -59,13 +59,13 @@ public class PackageProperty extends NameValuePair {
         public ListBoxModel doFillPropertyNameItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialExistingProps,
                 @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialNewProps,
-                @AncestorInPath AbstractProject project)
+                @AncestorInPath AbstractProject<?,?> project)
         {
             String creds = credentialExistingProps != null ? credentialExistingProps : credentialNewProps;
             String type = PACKAGE_TYPE;
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             // load type descriptor
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential );
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential, project);
             DeployitDescriptorRegistry descriptorRegistry = deployitServer.getDescriptorRegistry();
             descriptorRegistry.typeForName(PACKAGE_TYPE);
             Collection<String> properties = descriptorRegistry.getPropertiesForDeployableType(type, ONLY_SIMPLE_EDITABLE_PROPERTIES);

@@ -23,37 +23,43 @@
 
 package com.xebialabs.deployit.ci;
 
+import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
+import static hudson.util.FormValidation.error;
+import static hudson.util.FormValidation.ok;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.server.DeployitServerFactory;
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
+
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
-import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Project;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-
-import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
-import static hudson.util.FormValidation.error;
-import static hudson.util.FormValidation.ok;
 
 public class Credential extends AbstractDescribableImpl<Credential> {
 
@@ -73,6 +79,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
     private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
 
+    private static final Logger LOGGER = Logger.getLogger(Credential.class.getName());
 
     @DataBoundConstructor
     public Credential(String name, String username, Secret password, String credentialsId, SecondaryServerInfo secondaryServerInfo, boolean useGlobalCredential) {
@@ -234,19 +241,27 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
-        return CredentialsMatchers.firstOrNull(
-                lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM,
-                        HTTP_SCHEME, HTTPS_SCHEME),
-                CredentialsMatchers.withId(credentialsId)
-        );
-    }
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item) 
+    {
+        StandardUsernamePasswordCredentials result = null;
 
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, Item item) {
-        return CredentialsMatchers.firstOrNull(
-                lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM,
-                        HTTP_SCHEME, HTTPS_SCHEME),
-                CredentialsMatchers.withId(credentialsId));
+        List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, HTTP_SCHEME, HTTPS_SCHEME);
+        if ( LOGGER.isLoggable(Level.FINE) )
+        {
+            LOGGER.fine(String.format("[XLD] lookup credentials for '%s' in context '%s'. Found '%s'", credentialsId, item.getFullName(), creds.isEmpty() ? "nothing" : Integer.toString(creds.size())+" items"));
+            for (StandardUsernamePasswordCredentials cred : creds )
+            {
+                LOGGER.fine(String.format("[XLD]  >> id:%s, name:%s", cred.getId(), cred.getUsername()));
+            }
+            LOGGER.fine("[XLD] ------------------ end creds list");
+        }
+        if ( creds.size() > 0 )
+        {
+            result = CredentialsMatchers.firstOrNull(creds, CredentialsMatchers.withId(credentialsId));
+            LOGGER.fine(String.format("[XLD] using credentails '%s'", result.getId()));
+        }
+
+        return result; 
     }
 
     @Extension
@@ -274,7 +289,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 return error("%s is not a valid URL.", url);
             }
             return ok();
-
         }
 
         public FormValidation doCheckSecondaryServerUrl(@QueryParameter String secondaryServerUrl) {
@@ -310,30 +324,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
-        public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
-            try {
-                String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
-                String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
-
-                if (Strings.isNullOrEmpty(credentialsId)) {
-                    return FormValidation.error("No credentials specified");
-                }
-                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
-                if (credentials == null) {
-                    return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
-                }
-                if (Strings.isNullOrEmpty(serverUrl)) {
-                    return FormValidation.error("No server URL specified");
-                }
-
-                return validateConnection(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
-            } catch (IllegalStateException e) {
-                return FormValidation.error(e.getMessage());
-            } catch (Exception e) {
-                return FormValidation.error("XL Deploy configuration is not valid! %s", e.getMessage());
-            }
-        }
-
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
             ServerInfo serverInfo = deployitServer.getServerInfo();
@@ -342,5 +332,4 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
-// StamplerConverterImpl
 }

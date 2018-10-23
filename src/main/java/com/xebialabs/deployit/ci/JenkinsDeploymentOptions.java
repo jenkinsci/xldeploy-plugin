@@ -91,7 +91,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             List<String> environments = new ArrayList<String>();
             if (!isNullOrEmpty(creds)) {
-                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential);
+                DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential, project);
                 environments = RepositoryUtils.environments(deployitServer);
             }
             return new ComboBoxModel(environments);
@@ -100,14 +100,14 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
         public FormValidation doCheckEnvironment(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential,
             @QueryParameter(value = "credential") String credential2,
             @QueryParameter final String value,
-            @AncestorInPath AbstractProject project)
+            @AncestorInPath AbstractProject<?,?> project)
         {
             if (isNullOrEmpty(value) || "Environments/".equals(value))
                 return ok("Fill in the target environment ID, eg Environments/MyEnv");
 
             String creds = !isNullOrEmpty(credential) ? credential : credential2;
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential, project);
 
             DeployitNotifier.DeployitDescriptor deployitDescriptor = getDeployitDescriptor();
             String resolvedValue = deployitDescriptor.expandValue(value, project);

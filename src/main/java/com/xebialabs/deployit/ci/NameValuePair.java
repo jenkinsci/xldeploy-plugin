@@ -68,10 +68,10 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
         public ListBoxModel doFillPropertyNameItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialExistingProps,
                 @QueryParameter(value = "credential") @RelativePath(value = "../../..") String credentialNewProps,
-                @AncestorInPath AbstractProject project,
+                @AncestorInPath AbstractProject<?,?> project,
                 @QueryParameter @RelativePath(value = "..") String type) {
             String creds = credentialExistingProps != null ? credentialExistingProps : credentialNewProps;
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, RepositoryUtils.retrieveOverridingCredentialFromProject(project));
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, RepositoryUtils.retrieveOverridingCredentialFromProject(project), project);
             Collection<String> properties = RepositoryUtils.getPropertiesOf(deployitServer, type);
             return ListBoxModels.of(properties);
         }

@@ -44,11 +44,11 @@ public class EmbeddedView extends DeployableView {
         public ListBoxModel doFillTypeItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingEmbeddeds,
                 @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewEmbeddeds,
-                @AncestorInPath AbstractProject project)
+                @AncestorInPath AbstractProject<?,?> project)
         {
             String creds = credentialExistingEmbeddeds != null ? credentialExistingEmbeddeds : credentialNewEmbeddeds;
             Credential credential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, credential);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, credential, project);
             return of(RepositoryUtils.getAllEmbeddedResourceTypes(deployitServer));
         }
     }

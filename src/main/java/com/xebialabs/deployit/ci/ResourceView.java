@@ -56,11 +56,11 @@ public class ResourceView extends DeployableView {
         public ListBoxModel doFillTypeItems(
                 @QueryParameter(value = "credential") @RelativePath(value = "..") String credentialExistingResources,
                 @QueryParameter(value = "credential") @RelativePath(value = "../..") String credentialNewResources,
-                @AncestorInPath AbstractProject project
+                @AncestorInPath AbstractProject<?,?> project
         ) {
             String creds = credentialExistingResources != null ? credentialExistingResources : credentialNewResources;
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
-            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential);
+            DeployitServer deployitServer = RepositoryUtils.getDeployitServer(creds, overridingCredential, project);
             return of(RepositoryUtils.getAllResourceTypes(deployitServer ));
         }
     }
