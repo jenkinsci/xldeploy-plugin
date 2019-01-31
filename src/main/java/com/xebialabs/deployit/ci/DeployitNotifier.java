@@ -1,21 +1,21 @@
 /**
  * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
- *
- *
+ * <p>
+ * <p>
  * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
  * <https://github.com/jenkinsci/deployit-plugin/blob/master/LICENSE>.
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify it under the terms
  * of the GNU General Public License as published by the Free Software Foundation; version 2
  * of the License.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
  * Floor, Boston, MA 02110-1301  USA
@@ -108,11 +108,31 @@ public class DeployitNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        Project context = (Project) build.getProject();
-        DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingCredential, context);
-        DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
-        DeployitPerformer performer = new DeployitPerformer(build, launcher, listener, deployitServer, performerParameters);
-        return performer.doPerform();
+
+        if (credential != null) {
+            String cred = credential;
+            Credential credential = RepositoryUtils.findCredential(cred);
+
+            if (null != credential && null != overridingCredential) {
+                credential = RepositoryUtils.retrieveOverridingCredential(credential, overridingCredential.getCredentialsId(),
+                        credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(),
+                        overridingCredential.isUseGlobalCredential());
+            }
+
+            DeployitDescriptor descriptor = RepositoryUtils.getDeployitDescriptor();
+
+            DeployitServer deployitServer = descriptor.getDeployitServer(credential, build.getProject());
+
+            DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
+
+            DeployitPerformer performer = new DeployitPerformer(build, launcher, listener, deployitServer, performerParameters);
+
+            return performer.doPerform();
+        } else {
+            throw error("Credentials are missing or have not been initialized");
+        }
+
+
     }
 
     public boolean showGolbalCredentials() {
@@ -124,8 +144,7 @@ public class DeployitNotifier extends Notifier {
     }
 
     @Extension
-    public static final class DeployitDescriptor extends BuildStepDescriptor<Publisher> 
-    {
+    public static final class DeployitDescriptor extends BuildStepDescriptor<Publisher> {
 
         // ************ SERIALIZED GLOBAL PROPERTIES *********** //
         private String deployitServerUrl;
@@ -158,18 +177,17 @@ public class DeployitNotifier extends Notifier {
             String userName = credential.getUsername();
             String password = credential.getPassword().getPlainText();
             if (credential.isUseGlobalCredential()) {
-                StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId(), itemGroup);
-                if ( cred == null )
-                {
+                StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credential.getCredentialsId(), itemGroup);
+                if (cred == null) {
                     throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
                 }
-                userName =  cred.getUsername();
+                userName = cred.getUsername();
                 password = cred.getPassword().getPlainText();
             }
             return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
         }
 
-        public DeployitServer getDeployitServer(Credential credential, Job<?,?> project) {
+        public DeployitServer getDeployitServer(Credential credential, Job<?, ?> project) {
             DeployitServer deployitServer = null;
             if (null != credential) {
                 SoftReference<DeployitServer> deployitServerRef = credentialServerMap.get(credential.getKey());
@@ -195,7 +213,7 @@ public class DeployitNotifier extends Notifier {
             deployitServerUrl = json.get("deployitServerUrl").toString();
             deployitClientProxyUrl = json.get("deployitClientProxyUrl").toString();
             String connectionPoolSizeString = json.get("connectionPoolSize").toString();
-            if(!Strings.isNullOrEmpty(connectionPoolSizeString)) {
+            if (!Strings.isNullOrEmpty(connectionPoolSizeString)) {
                 connectionPoolSize = Integer.parseInt(connectionPoolSizeString);
             }
             credentials = req.bindJSONToList(Credential.class, json.get("credentials"));
@@ -241,7 +259,7 @@ public class DeployitNotifier extends Notifier {
                     new URL(url);
                 }
             } catch (MalformedURLException e) {
-                return error("%s is not a valid URL.",url);
+                return error("%s is not a valid URL.", url);
             }
             return ok();
 
@@ -259,7 +277,7 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckConnectionPoolSize(@QueryParameter String connectionPoolSize) {
-            if(Strings.isNullOrEmpty(connectionPoolSize)) {
+            if (Strings.isNullOrEmpty(connectionPoolSize)) {
                 return error("Connection pool size is required.");
             }
             try {
@@ -324,8 +342,7 @@ public class DeployitNotifier extends Notifier {
             return applicationCadidates;
         }
 
-        public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?,?> project)
-        {
+        public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
@@ -342,13 +359,12 @@ public class DeployitNotifier extends Notifier {
             }
             if (!candidates.isEmpty()) {
                 return warning("Application does not exist, but will be created upon package import. Did you mean to type one of the following: %s?",
-                    candidates);
+                        candidates);
             }
             return warning("Application does not exist, but will be created upon package import.");
         }
 
-        public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project)
-        {
+        public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
@@ -356,10 +372,9 @@ public class DeployitNotifier extends Notifier {
                     return error("Server not found for credential.");
                 deployitServer.reload();
                 return ok("Types reloaded from XL Deploy version " + deployitServer.getServerInfo().getVersion() +
-                    " at " + deployitServer.getBooterConfig().getUrl());
-            }
-            catch (DeployitPluginException ex) {
-                return error (String.format("Unable to reload types. Cause: %s.", ex.getMessage()));
+                        " at " + deployitServer.getBooterConfig().getUrl());
+            } catch (DeployitPluginException ex) {
+                return error(String.format("Unable to reload types. Cause: %s.", ex.getMessage()));
             }
         }
 
