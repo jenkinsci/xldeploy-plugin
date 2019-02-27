@@ -48,7 +48,7 @@ public class RepositoryUtils {
     }
 
 
-    private static Credential retrieveOverridingCredential(Credential credential, String credentialId, String name,
+    public static Credential retrieveOverridingCredential(Credential credential, String credentialId, String name,
                                                            String username, Secret password, boolean useGlobalCredential) {
         DeployitDescriptor descriptor = getDeployitDescriptor();
         String secondaryProxyUrl = credential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());
@@ -126,7 +126,7 @@ public class RepositoryUtils {
         return deployitServer.getDescriptorRegistry().getEditablePropertiesForDeployableType(type);
     }
 
-    private static DeployitDescriptor getDeployitDescriptor(){
+    public static DeployitDescriptor getDeployitDescriptor(){
         return (DeployitDescriptor) Hudson.getInstance().getDescriptor(DeployitNotifier.class);
     }
 
