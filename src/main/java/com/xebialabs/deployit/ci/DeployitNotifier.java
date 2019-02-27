@@ -108,7 +108,7 @@ public class DeployitNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        Project context = (Project) build.getProject();
+        AbstractProject context = (AbstractProject) build.getProject();
         DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingCredential, context);
         DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
         DeployitPerformer performer = new DeployitPerformer(build, launcher, listener, deployitServer, performerParameters);
