@@ -49,6 +49,7 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
@@ -302,6 +303,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
+        @RequirePOST
         public static Credential fromStapler(@QueryParameter String name, @QueryParameter String username, @QueryParameter Secret password,
                                              @QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl,
                                              @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId, @QueryParameter boolean useGlobalCredential) {

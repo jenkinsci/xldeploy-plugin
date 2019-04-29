@@ -39,6 +39,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.server.DeployitServer;
@@ -83,6 +84,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             return "DeploymentOptions";
         }
 
+        @RequirePOST
         public ComboBoxModel doFillEnvironmentItems(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential,
             @QueryParameter(value = "credential") String credential2,
             @AncestorInPath AbstractProject project)
@@ -102,7 +104,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             @QueryParameter final String value,
             @AncestorInPath AbstractProject<?,?> project)
         {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            project.checkPermission(Jenkins.ADMINISTER);
             if (isNullOrEmpty(value) || "Environments/".equals(value))
                 return ok("Fill in the target environment ID, eg Environments/MyEnv");
 

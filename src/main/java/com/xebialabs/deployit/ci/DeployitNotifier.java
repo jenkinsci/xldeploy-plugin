@@ -23,6 +23,7 @@
 
 package com.xebialabs.deployit.ci;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
@@ -49,6 +50,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.POST;
+
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.AncestorInPath;
@@ -67,11 +70,14 @@ import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCreden
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 import static hudson.util.FormValidation.warning;
+import jenkins.model.Jenkins;
 
 /**
  * Runs XL Deploy tasks after the build has completed.
  */
-public class DeployitNotifier extends Notifier {
+public class
+
+                                DeployitNotifier extends Notifier {
 
     public final String credential;
     public final String application;
@@ -309,6 +315,11 @@ public class DeployitNotifier extends Notifier {
 
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
             if (project == null) { // no context
+                if (!project.hasPermission(Jenkins.ADMINISTER)) {
+                    return FormValidation.ok();
+                }
+            } else if (!project.hasPermission(Item.EXTENDED_READ)
+                    && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
             project.checkPermission(AbstractProject.CONFIGURE);
@@ -349,6 +360,11 @@ public class DeployitNotifier extends Notifier {
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
             if (project == null) { // no context
+                if (!project.hasPermission(Jenkins.ADMINISTER)) {
+                    return FormValidation.ok();
+                }
+            } else if (!project.hasPermission(Item.EXTENDED_READ)
+                    && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
             project.checkPermission(AbstractProject.CONFIGURE);
@@ -374,6 +390,7 @@ public class DeployitNotifier extends Notifier {
             return warning("Application does not exist, but will be created upon package import.");
         }
 
+        @POST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
             if (project == null) { // no context
                 return FormValidation.ok();
