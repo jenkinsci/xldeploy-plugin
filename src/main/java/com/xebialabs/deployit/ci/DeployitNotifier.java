@@ -75,9 +75,7 @@ import jenkins.model.Jenkins;
 /**
  * Runs XL Deploy tasks after the build has completed.
  */
-public class
-
-                                DeployitNotifier extends Notifier {
+public class DeployitNotifier extends Notifier {
 
     public final String credential;
     public final String application;
@@ -393,6 +391,11 @@ public class
         @POST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
             if (project == null) { // no context
+                if (!project.hasPermission(Jenkins.ADMINISTER)) {
+                    return FormValidation.ok();
+                }
+            } else if (!project.hasPermission(Item.EXTENDED_READ)
+                    && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
                 return FormValidation.ok();
             }
             project.checkPermission(AbstractProject.CONFIGURE);
