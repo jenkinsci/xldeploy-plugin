@@ -281,6 +281,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
 
         private FormValidation validateOptionalUrl(String url) {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
                 if (!Strings.isNullOrEmpty(url)) {
                     new URL(url);
@@ -292,10 +293,12 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
 
         public FormValidation doCheckSecondaryServerUrl(@QueryParameter String secondaryServerUrl) {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(secondaryServerUrl);
         }
 
         public FormValidation doCheckSecondaryProxyUrl(@QueryParameter String secondaryProxyUrl) {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
@@ -308,6 +311,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public FormValidation doValidateUserNamePassword(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String username,
                                                          @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
@@ -325,6 +329,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
 
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
             ServerInfo serverInfo = deployitServer.getServerInfo();
             deployitServer.newCommunicator();

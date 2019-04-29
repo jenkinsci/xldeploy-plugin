@@ -102,6 +102,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             @QueryParameter final String value,
             @AncestorInPath AbstractProject<?,?> project)
         {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             if (isNullOrEmpty(value) || "Environments/".equals(value))
                 return ok("Fill in the target environment ID, eg Environments/MyEnv");
 

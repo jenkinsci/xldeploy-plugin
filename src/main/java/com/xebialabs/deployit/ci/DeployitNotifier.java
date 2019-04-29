@@ -308,6 +308,11 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
+            if (project == null) { // no context
+                return FormValidation.ok();
+            }
+            project.checkPermission(AbstractProject.CONFIGURE);
+
             DeployitNotifier deployitNotifier = RepositoryUtils.retrieveDeployitNotifierFromProject(project);
             String warningMsg = "Changing credentials may unintentionally change your deployables' types - check the definitions afterward.";
             if (null != deployitNotifier) {
@@ -343,6 +348,11 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
+            if (project == null) { // no context
+                return FormValidation.ok();
+            }
+            project.checkPermission(AbstractProject.CONFIGURE);
+
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
@@ -365,6 +375,11 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
+            if (project == null) { // no context
+                return FormValidation.ok();
+            }
+            project.checkPermission(AbstractProject.CONFIGURE);
+
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
