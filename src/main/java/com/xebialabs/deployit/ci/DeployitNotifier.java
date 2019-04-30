@@ -50,7 +50,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.POST;
 
 import net.sf.json.JSONObject;
 
@@ -270,6 +269,8 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckDeployitServerUrl(@QueryParameter String deployitServerUrl) {
+
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             if (Strings.isNullOrEmpty(deployitServerUrl)) {
                 return error("Url required.");
             }
@@ -277,10 +278,14 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckDeployitClientProxyUrl(@QueryParameter String deployitClientProxyUrl) {
+
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(deployitClientProxyUrl);
         }
 
         public FormValidation doCheckConnectionPoolSize(@QueryParameter String connectionPoolSize) {
+
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             if (Strings.isNullOrEmpty(connectionPoolSize)) {
                 return error("Connection pool size is required.");
             }
@@ -312,16 +317,8 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
-            if (project == null) { // no context
-                if (!project.hasPermission(Jenkins.ADMINISTER)) {
-                    return FormValidation.ok();
-                }
-            } else if (!project.hasPermission(Item.EXTENDED_READ)
-                    && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
-                return FormValidation.ok();
-            }
-            project.checkPermission(AbstractProject.CONFIGURE);
 
+            project.checkPermission(Jenkins.ADMINISTER);
             DeployitNotifier deployitNotifier = RepositoryUtils.retrieveDeployitNotifierFromProject(project);
             String warningMsg = "Changing credentials may unintentionally change your deployables' types - check the definitions afterward.";
             if (null != deployitNotifier) {
@@ -336,6 +333,7 @@ public class DeployitNotifier extends Notifier {
         }
 
         public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
+
             String resolvedApplicationName = expandValue(value, project);
             final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
 
@@ -357,16 +355,8 @@ public class DeployitNotifier extends Notifier {
         }
 
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
-            if (project == null) { // no context
-                if (!project.hasPermission(Jenkins.ADMINISTER)) {
-                    return FormValidation.ok();
-                }
-            } else if (!project.hasPermission(Item.EXTENDED_READ)
-                    && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
-                return FormValidation.ok();
-            }
-            project.checkPermission(AbstractProject.CONFIGURE);
 
+            project.checkPermission(Jenkins.ADMINISTER);
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
@@ -388,18 +378,9 @@ public class DeployitNotifier extends Notifier {
             return warning("Application does not exist, but will be created upon package import.");
         }
 
-        @POST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
-            if (project == null) { // no context
-                if (!project.hasPermission(Jenkins.ADMINISTER)) {
-                    return FormValidation.ok();
-                }
-            } else if (!project.hasPermission(Item.EXTENDED_READ)
-                    && !project.hasPermission(CredentialsProvider.USE_ITEM)) {
-                return FormValidation.ok();
-            }
-            project.checkPermission(AbstractProject.CONFIGURE);
 
+            project.checkPermission(Jenkins.ADMINISTER);
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
