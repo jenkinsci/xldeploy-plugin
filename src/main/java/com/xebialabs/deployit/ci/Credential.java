@@ -281,6 +281,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 
+        @RequirePOST
         private FormValidation validateOptionalUrl(String url) {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
@@ -293,11 +294,13 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return ok();
         }
 
+        @RequirePOST
         public FormValidation doCheckSecondaryServerUrl(@QueryParameter String secondaryServerUrl) {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(secondaryServerUrl);
         }
 
+        @RequirePOST
         public FormValidation doCheckSecondaryProxyUrl(@QueryParameter String secondaryProxyUrl) {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(secondaryProxyUrl);
@@ -310,6 +313,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return new Credential(name, username, password, credentialsId, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl), useGlobalCredential);
         }
 
+        @RequirePOST
         public FormValidation doValidateUserNamePassword(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String username,
                                                          @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
@@ -329,6 +333,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
+        @RequirePOST
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);

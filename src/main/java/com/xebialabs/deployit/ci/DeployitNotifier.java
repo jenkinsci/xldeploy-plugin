@@ -57,6 +57,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import com.google.common.base.Strings;
 
@@ -256,6 +257,7 @@ public class DeployitNotifier extends Notifier {
             return connectionPoolSize;
         }
 
+        @RequirePOST
         private FormValidation validateOptionalUrl(String url) {
             try {
                 if (!Strings.isNullOrEmpty(url)) {
@@ -268,6 +270,7 @@ public class DeployitNotifier extends Notifier {
 
         }
 
+        @RequirePOST
         public FormValidation doCheckDeployitServerUrl(@QueryParameter String deployitServerUrl) {
 
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
@@ -277,12 +280,14 @@ public class DeployitNotifier extends Notifier {
             return validateOptionalUrl(deployitServerUrl);
         }
 
+        @RequirePOST
         public FormValidation doCheckDeployitClientProxyUrl(@QueryParameter String deployitClientProxyUrl) {
 
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(deployitClientProxyUrl);
         }
 
+        @RequirePOST
         public FormValidation doCheckConnectionPoolSize(@QueryParameter String connectionPoolSize) {
 
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
@@ -316,6 +321,7 @@ public class DeployitNotifier extends Notifier {
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 
+        @RequirePOST
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
 
             project.checkPermission(Jenkins.ADMINISTER);
@@ -354,6 +360,7 @@ public class DeployitNotifier extends Notifier {
             return applicationCadidates;
         }
 
+        @RequirePOST
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
 
             project.checkPermission(Jenkins.ADMINISTER);
@@ -378,6 +385,7 @@ public class DeployitNotifier extends Notifier {
             return warning("Application does not exist, but will be created upon package import.");
         }
 
+        @RequirePOST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
 
             project.checkPermission(Jenkins.ADMINISTER);
