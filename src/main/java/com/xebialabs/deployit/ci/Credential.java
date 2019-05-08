@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -274,6 +275,13 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
+
+            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
+                    context != null && !context.hasPermission(context.EXTENDED_READ) &&
+                            !context.hasPermission(CredentialsProvider.USE_ITEM)) {
+                return new StandardUsernameListBoxModel();
+            }
+
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);

@@ -89,6 +89,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             @QueryParameter(value = "credential") String credential2,
             @AncestorInPath AbstractProject project)
         {
+            project.checkPermission(Jenkins.ADMINISTER);
             String creds = !isNullOrEmpty(credential) ? credential : credential2;
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             List<String> environments = new ArrayList<String>();
@@ -99,6 +100,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
             return new ComboBoxModel(environments);
         }
 
+        @RequirePOST
         public FormValidation doCheckEnvironment(@QueryParameter(value = "credential") @RelativePath(value = "..") String credential,
             @QueryParameter(value = "credential") String credential2,
             @QueryParameter final String value,

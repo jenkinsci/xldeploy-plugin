@@ -257,7 +257,7 @@ public class DeployitNotifier extends Notifier {
             return connectionPoolSize;
         }
 
-        @RequirePOST
+
         private FormValidation validateOptionalUrl(String url) {
             try {
                 if (!Strings.isNullOrEmpty(url)) {
@@ -338,8 +338,10 @@ public class DeployitNotifier extends Notifier {
             return ok();
         }
 
+        @RequirePOST
         public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
 
+            project.checkPermission(Jenkins.ADMINISTER);
             String resolvedApplicationName = expandValue(value, project);
             final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
 
