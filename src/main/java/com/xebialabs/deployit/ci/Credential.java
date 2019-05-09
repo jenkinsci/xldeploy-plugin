@@ -36,10 +36,8 @@ import java.util.logging.Logger;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
@@ -117,15 +115,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return useGlobalCredential;
     }
 
-    public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
-        // TODO: also add requirement on host derived from URL ?
-        List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
-                ACL.SYSTEM,
-                HTTP_SCHEME, HTTPS_SCHEME);
-
-        return new StandardUsernameListBoxModel().withAll(creds);
-    }
-
     public String getSecondaryServerUrl() {
         if (secondaryServerInfo != null) {
             return secondaryServerInfo.secondaryServerUrl;
@@ -152,14 +141,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return secondaryServerInfo.resolveProxyUrl(defaultUrl);
         }
         return defaultUrl;
-    }
-
-    public boolean showSecondaryServerSettings() {
-        return secondaryServerInfo != null && secondaryServerInfo.showSecondaryServerSettings();
-    }
-
-    public boolean showGolbalCredentials() {
-        return useGlobalCredential;
     }
 
     @Override
@@ -200,10 +181,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         public SecondaryServerInfo(String secondaryServerUrl, String secondaryProxyUrl) {
             this.secondaryServerUrl = secondaryServerUrl;
             this.secondaryProxyUrl = secondaryProxyUrl;
-        }
-
-        public boolean showSecondaryServerSettings() {
-            return !Strings.isNullOrEmpty(secondaryServerUrl) || !Strings.isNullOrEmpty(secondaryProxyUrl);
         }
 
         public String resolveServerUrl(String defaultUrl) {
