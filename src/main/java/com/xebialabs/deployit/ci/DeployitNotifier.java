@@ -46,8 +46,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 import net.sf.json.JSONObject;
 
@@ -55,6 +55,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import com.google.common.base.Strings;
 
@@ -67,6 +68,7 @@ import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCreden
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 import static hudson.util.FormValidation.warning;
+import jenkins.model.Jenkins;
 
 /**
  * Runs XL Deploy tasks after the build has completed.
@@ -253,6 +255,7 @@ public class DeployitNotifier extends Notifier {
             return connectionPoolSize;
         }
 
+
         private FormValidation validateOptionalUrl(String url) {
             try {
                 if (!Strings.isNullOrEmpty(url)) {
@@ -265,18 +268,27 @@ public class DeployitNotifier extends Notifier {
 
         }
 
+        @RequirePOST
         public FormValidation doCheckDeployitServerUrl(@QueryParameter String deployitServerUrl) {
+
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             if (Strings.isNullOrEmpty(deployitServerUrl)) {
                 return error("Url required.");
             }
             return validateOptionalUrl(deployitServerUrl);
         }
 
+        @RequirePOST
         public FormValidation doCheckDeployitClientProxyUrl(@QueryParameter String deployitClientProxyUrl) {
+
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(deployitClientProxyUrl);
         }
 
+        @RequirePOST
         public FormValidation doCheckConnectionPoolSize(@QueryParameter String connectionPoolSize) {
+
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             if (Strings.isNullOrEmpty(connectionPoolSize)) {
                 return error("Connection pool size is required.");
             }
@@ -307,7 +319,10 @@ public class DeployitNotifier extends Notifier {
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 
+        @RequirePOST
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
+
+            project.checkPermission(Jenkins.ADMINISTER);
             DeployitNotifier deployitNotifier = RepositoryUtils.retrieveDeployitNotifierFromProject(project);
             String warningMsg = "Changing credentials may unintentionally change your deployables' types - check the definitions afterward.";
             if (null != deployitNotifier) {
@@ -321,7 +336,10 @@ public class DeployitNotifier extends Notifier {
             return ok();
         }
 
+        @RequirePOST
         public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
+
+            project.checkPermission(Jenkins.ADMINISTER);
             String resolvedApplicationName = expandValue(value, project);
             final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
 
@@ -342,7 +360,10 @@ public class DeployitNotifier extends Notifier {
             return applicationCadidates;
         }
 
+        @RequirePOST
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
+
+            project.checkPermission(Jenkins.ADMINISTER);
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
@@ -364,7 +385,10 @@ public class DeployitNotifier extends Notifier {
             return warning("Application does not exist, but will be created upon package import.");
         }
 
+        @RequirePOST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
+
+            project.checkPermission(Jenkins.ADMINISTER);
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
