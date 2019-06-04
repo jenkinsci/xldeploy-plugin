@@ -324,6 +324,48 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
+        public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId,  @QueryParameter boolean useGlobalCredential) throws IOException {
+            try {
+                LOGGER.info("VALUE FELLIPE IS: "+useGlobalCredential);
+
+                String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
+                String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
+
+                if (Strings.isNullOrEmpty(credentialsId)) {
+                    return FormValidation.error("No credentials specified");
+                }
+                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
+
+                if (credentials == null) {
+                    return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
+                }
+                if (Strings.isNullOrEmpty(serverUrl)) {
+                    return FormValidation.error("No server URL specified");
+                }
+                return validateConnection(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
+            } catch (IllegalStateException e) {
+                return FormValidation.error(e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return FormValidation.error("! %s", e.getMessage());
+            }
+        }
+
+        public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
+            if (credentialsId == null) {
+                return null;
+            }
+
+            return CredentialsMatchers.firstOrNull(
+                    lookupCredentials(StandardUsernamePasswordCredentials.class,
+                            Jenkins.getInstance(),
+                            ACL.SYSTEM,
+                            HTTP_SCHEME,
+                            HTTPS_SCHEME),
+                    CredentialsMatchers.withId(credentialsId)
+            );
+        }
+
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
             ServerInfo serverInfo = deployitServer.getServerInfo();
