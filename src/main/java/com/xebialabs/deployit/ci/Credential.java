@@ -35,7 +35,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
@@ -48,7 +47,6 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
@@ -115,6 +113,15 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return useGlobalCredential;
     }
 
+    public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
+        // TODO: also add requirement on host derived from URL ?
+        List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+                ACL.SYSTEM,
+                HTTP_SCHEME, HTTPS_SCHEME);
+
+        return new StandardUsernameListBoxModel().withAll(creds);
+    }
+
     public String getSecondaryServerUrl() {
         if (secondaryServerInfo != null) {
             return secondaryServerInfo.secondaryServerUrl;
@@ -141,6 +148,14 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return secondaryServerInfo.resolveProxyUrl(defaultUrl);
         }
         return defaultUrl;
+    }
+
+    public boolean showSecondaryServerSettings() {
+        return secondaryServerInfo != null && secondaryServerInfo.showSecondaryServerSettings();
+    }
+
+    public boolean showGolbalCredentials() {
+        return useGlobalCredential;
     }
 
     @Override
@@ -183,6 +198,10 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             this.secondaryProxyUrl = secondaryProxyUrl;
         }
 
+        public boolean showSecondaryServerSettings() {
+            return !Strings.isNullOrEmpty(secondaryServerUrl) || !Strings.isNullOrEmpty(secondaryProxyUrl);
+        }
+
         public String resolveServerUrl(String defaultUrl) {
             if (!Strings.isNullOrEmpty(secondaryServerUrl)) {
                 return secondaryServerUrl;
@@ -220,22 +239,18 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item)
-    {
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item) {
         StandardUsernamePasswordCredentials result = null;
 
         List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, HTTP_SCHEME, HTTPS_SCHEME);
-        if ( LOGGER.isLoggable(Level.FINE) )
-        {
-            LOGGER.fine(String.format("[XLD] lookup credentials for '%s' in context '%s'. Found '%s'", credentialsId, item.getFullName(), creds.isEmpty() ? "nothing" : Integer.toString(creds.size())+" items"));
-            for (StandardUsernamePasswordCredentials cred : creds )
-            {
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(String.format("[XLD] lookup credentials for '%s' in context '%s'. Found '%s'", credentialsId, item.getFullName(), creds.isEmpty() ? "nothing" : Integer.toString(creds.size()) + " items"));
+            for (StandardUsernamePasswordCredentials cred : creds) {
                 LOGGER.fine(String.format("[XLD]  >> id:%s, name:%s", cred.getId(), cred.getUsername()));
             }
             LOGGER.fine("[XLD] ------------------ end creds list");
         }
-        if ( creds.size() > 0 )
-        {
+        if (creds.size() > 0) {
             result = CredentialsMatchers.firstOrNull(creds, CredentialsMatchers.withId(credentialsId));
             LOGGER.fine(String.format("[XLD] using credentails '%s'", result.getId()));
         }
@@ -252,13 +267,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
-
-            if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
-                    context != null && !context.hasPermission(context.EXTENDED_READ) &&
-                            !context.hasPermission(CredentialsProvider.USE_ITEM)) {
-                return new StandardUsernameListBoxModel();
-            }
-
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
@@ -266,9 +274,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 
-        @RequirePOST
         private FormValidation validateOptionalUrl(String url) {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
                 if (!Strings.isNullOrEmpty(url)) {
                     new URL(url);
@@ -279,15 +285,11 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return ok();
         }
 
-        @RequirePOST
         public FormValidation doCheckSecondaryServerUrl(@QueryParameter String secondaryServerUrl) {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(secondaryServerUrl);
         }
 
-        @RequirePOST
         public FormValidation doCheckSecondaryProxyUrl(@QueryParameter String secondaryProxyUrl) {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
@@ -298,10 +300,8 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return new Credential(name, username, password, credentialsId, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl), useGlobalCredential);
         }
 
-        @RequirePOST
         public FormValidation doValidateUserNamePassword(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String username,
                                                          @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
@@ -318,9 +318,48 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
-        @RequirePOST
+        public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+            try {
+
+                String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
+                String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
+
+                if (Strings.isNullOrEmpty(credentialsId)) {
+                    return FormValidation.error("No credentials specified");
+                }
+                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
+
+                if (credentials == null) {
+                    return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
+                }
+                if (Strings.isNullOrEmpty(serverUrl)) {
+                    return FormValidation.error("No server URL specified");
+                }
+                return validateConnection(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
+            } catch (IllegalStateException e) {
+                return FormValidation.error(e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return FormValidation.error("! %s", e.getMessage());
+            }
+        }
+
+        public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
+            if (credentialsId == null) {
+                return null;
+            }
+
+            return CredentialsMatchers.firstOrNull(
+                    lookupCredentials(StandardUsernamePasswordCredentials.class,
+                            Jenkins.getInstance(),
+                            ACL.SYSTEM,
+                            HTTP_SCHEME,
+                            HTTPS_SCHEME),
+                    CredentialsMatchers.withId(credentialsId)
+            );
+        }
+
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
             ServerInfo serverInfo = deployitServer.getServerInfo();
             deployitServer.newCommunicator();
