@@ -7,6 +7,6 @@
         <f:textbox default="Applications/" />
     </f:entry>
     <f:entry title="${%Environment}" field="environmentId" help="/plugin/deployit-plugin/help-environment.html">
-        <f:textbox default="Environments/"/>
+        <f:textbox default="Environments/" checkMethod="post" />
     </f:entry>
 </j:jelly>

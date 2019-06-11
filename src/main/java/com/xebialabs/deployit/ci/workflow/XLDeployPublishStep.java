@@ -6,8 +6,10 @@ import com.xebialabs.deployit.ci.RemoteAwareLocation;
 import com.xebialabs.deployit.ci.RepositoryUtils;
 import com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
 import com.xebialabs.deployit.ci.server.DeployitServer;
+import com.xebialabs.deployit.ci.util.ActionUtils;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
 
+import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -97,7 +99,8 @@ public class XLDeployPublishStep extends AbstractStepImpl {
                 Job<?,?> job = this.run.getParent();
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(step.serverCredentials, step.overrideCredentialId, job);
 
-                deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
+                ConfigurationItem importedPackage = deployitServer.importPackage(location.getDarFileLocation(ws, deploymentListener, envVars));
+                ActionUtils.addPublishAction(this.run, deployitServer.getBooterConfig(), importedPackage);
             } finally {
                 location.cleanup();
             }

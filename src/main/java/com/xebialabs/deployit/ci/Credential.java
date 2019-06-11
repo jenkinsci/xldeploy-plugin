@@ -239,27 +239,23 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
     }
 
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item) 
-    {
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item) {
         StandardUsernamePasswordCredentials result = null;
 
         List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, HTTP_SCHEME, HTTPS_SCHEME);
-        if ( LOGGER.isLoggable(Level.FINE) )
-        {
-            LOGGER.fine(String.format("[XLD] lookup credentials for '%s' in context '%s'. Found '%s'", credentialsId, item.getFullName(), creds.isEmpty() ? "nothing" : Integer.toString(creds.size())+" items"));
-            for (StandardUsernamePasswordCredentials cred : creds )
-            {
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(String.format("[XLD] lookup credentials for '%s' in context '%s'. Found '%s'", credentialsId, item.getFullName(), creds.isEmpty() ? "nothing" : Integer.toString(creds.size()) + " items"));
+            for (StandardUsernamePasswordCredentials cred : creds) {
                 LOGGER.fine(String.format("[XLD]  >> id:%s, name:%s", cred.getId(), cred.getUsername()));
             }
             LOGGER.fine("[XLD] ------------------ end creds list");
         }
-        if ( creds.size() > 0 )
-        {
+        if (creds.size() > 0) {
             result = CredentialsMatchers.firstOrNull(creds, CredentialsMatchers.withId(credentialsId));
             LOGGER.fine(String.format("[XLD] using credentails '%s'", result.getId()));
         }
 
-        return result; 
+        return result;
     }
 
     @Extension
