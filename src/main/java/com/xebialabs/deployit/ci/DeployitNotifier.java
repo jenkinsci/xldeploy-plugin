@@ -123,7 +123,7 @@ public class DeployitNotifier extends Notifier {
 
             DeployitDescriptor descriptor = RepositoryUtils.getDeployitDescriptor();
 
-            DeployitServer deployitServer = descriptor.getDeployitServer(credential, build.getProject());
+            DeployitServer deployitServer = descriptor.getDeployitServer(credential, (AbstractProject) build.getProject());
 
             DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
 
