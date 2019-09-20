@@ -89,7 +89,6 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
                                                     @QueryParameter(value = "credential") String credential2,
                                                     @AncestorInPath AbstractProject project)
         {
-            project.checkPermission(Jenkins.ADMINISTER);
             String creds = !isNullOrEmpty(credential) ? credential : credential2;
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             List<String> environments = new ArrayList<String>();
@@ -106,7 +105,6 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
                                                  @QueryParameter final String value,
                                                  @AncestorInPath AbstractProject<?,?> project)
         {
-            project.checkPermission(Jenkins.ADMINISTER);
             if (isNullOrEmpty(value) || "Environments/".equals(value))
                 return ok("Fill in the target environment ID, eg Environments/MyEnv");
 
