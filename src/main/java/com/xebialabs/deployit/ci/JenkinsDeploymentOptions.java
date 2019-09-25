@@ -28,6 +28,7 @@ import hudson.RelativePath;
 import hudson.model.Describable;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.util.ComboBoxModel;
 import hudson.util.FormValidation;
 
@@ -89,6 +90,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
                                                     @QueryParameter(value = "credential") String credential2,
                                                     @AncestorInPath AbstractProject project)
         {
+            project.checkPermission(Item.CONFIGURE);
             String creds = !isNullOrEmpty(credential) ? credential : credential2;
             Credential overridingCredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             List<String> environments = new ArrayList<String>();
@@ -105,6 +107,7 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
                                                  @QueryParameter final String value,
                                                  @AncestorInPath AbstractProject<?,?> project)
         {
+            project.checkPermission(Item.CONFIGURE);
             if (isNullOrEmpty(value) || "Environments/".equals(value))
                 return ok("Fill in the target environment ID, eg Environments/MyEnv");
 

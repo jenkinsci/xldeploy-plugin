@@ -271,6 +271,7 @@ public class DeployitNotifier extends Notifier {
         @RequirePOST
         public FormValidation doCheckDeployitServerUrl(@QueryParameter String deployitServerUrl) {
 
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             if (Strings.isNullOrEmpty(deployitServerUrl)) {
                 return error("Url required.");
             }
@@ -280,12 +281,14 @@ public class DeployitNotifier extends Notifier {
         @RequirePOST
         public FormValidation doCheckDeployitClientProxyUrl(@QueryParameter String deployitClientProxyUrl) {
 
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             return validateOptionalUrl(deployitClientProxyUrl);
         }
 
         @RequirePOST
         public FormValidation doCheckConnectionPoolSize(@QueryParameter String connectionPoolSize) {
 
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             if (Strings.isNullOrEmpty(connectionPoolSize)) {
                 return error("Connection pool size is required.");
             }
@@ -319,6 +322,7 @@ public class DeployitNotifier extends Notifier {
         @RequirePOST
         public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
 
+            project.checkPermission(Item.CONFIGURE);
             DeployitNotifier deployitNotifier = RepositoryUtils.retrieveDeployitNotifierFromProject(project);
             String warningMsg = "Changing credentials may unintentionally change your deployables' types - check the definitions afterward.";
             if (null != deployitNotifier) {
@@ -335,6 +339,7 @@ public class DeployitNotifier extends Notifier {
         @RequirePOST
         public AutoCompletionCandidates doAutoCompleteApplication(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
 
+            project.checkPermission(Item.CONFIGURE);
             String resolvedApplicationName = expandValue(value, project);
             final AutoCompletionCandidates applicationCadidates = new AutoCompletionCandidates();
 
@@ -358,6 +363,7 @@ public class DeployitNotifier extends Notifier {
         @RequirePOST
         public FormValidation doCheckApplication(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject<?, ?> project) {
 
+            project.checkPermission(Item.CONFIGURE);
             if ("Applications/".equals(value))
                 return ok("Fill in the application ID, eg Applications/PetClinic");
 
@@ -382,6 +388,7 @@ public class DeployitNotifier extends Notifier {
         @RequirePOST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
 
+            project.checkPermission(Item.CONFIGURE);
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {
                 DeployitServer deployitServer = RepositoryUtils.getDeployitServer(credential, overridingcredential, project);
