@@ -319,6 +319,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
 
         public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             try {
 
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
