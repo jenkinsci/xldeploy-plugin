@@ -54,6 +54,7 @@ import hudson.model.Descriptor;
 import hudson.model.ItemGroup;
 import hudson.model.Project;
 import hudson.security.ACL;
+import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -319,6 +320,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
 
         public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+            Jenkins.getInstance().checkPermission(Permission.CREATE);
             try {
 
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;

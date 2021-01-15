@@ -312,6 +312,7 @@ public class DeployitNotifier extends Notifier {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
+          Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
