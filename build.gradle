@@ -71,7 +71,7 @@ jenkinsPlugin {
     coreVersion = '1.642.3' // we need to support LTS versions
     shortName = "deployit-plugin" // short name of the plugin is the ID that uniquely identifies a plugin
     displayName = "XebiaLabs XL Deploy Plugin"
-    url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Deploy+Plugin'
+    url = 'https://github.com/jenkinsci/xldeploy-plugin/blob/master/docs/README.md'
     gitHubUrl = 'https://github.com/jenkinsci/xldeploy-plugin'
 
 
