@@ -139,18 +139,18 @@ dependencies {
     slf4j "org.slf4j:slf4j-jdk14:1.7.7"
     slf4j "org.slf4j:slf4j-simple:1.7.7"
 
-    jenkinsTest ('org.jenkins-ci.main:maven-plugin:1.480@hpi') { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins:credentials:1.16.1@hpi") { transitive = true }
+    testImplementation ('org.jenkins-ci.main:maven-plugin:1.480') { transitive = true }
+    testImplementation ("org.jenkins-ci.plugins:credentials:1.16.1") { transitive = true }
 
     testCompile "org.jenkins-ci.plugins.workflow:workflow-job:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-cps:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-api:1.10@jar"
 
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@hpi")  { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-support:1.10@hpi") { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-cps:1.10@hpi") { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins:git:3.0.1@hpi") { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@hpi") { transitive = true }
+    testImplementation ("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10")  { transitive = true }
+    testImplementation ("org.jenkins-ci.plugins.workflow:workflow-support:1.10") { transitive = true }
+    testImplementation ("org.jenkins-ci.plugins.workflow:workflow-cps:1.10") { transitive = true }
+    testImplementation ("org.jenkins-ci.plugins:git:3.0.1") { transitive = true }
+    testImplementation ("org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10") { transitive = true }
 
 }
 
@@ -166,11 +166,19 @@ test {
     exclude '**/*ITest*'
 }
 
-//task itest(type: Test) {
-//    description = "Run integration tests"
-//    testClassesDir = sourceSets.test.output.classesDir
-//    classpath = sourceSets.test.runtimeClasspath + configurations.slf4j
-//}
+sourceSets {
+    test {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+task itest(type: Test) {
+    description = "Run integration tests"
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath + configurations.slf4j
+    include '**/*ITest*'
+}
 
 if (project.hasProperty('xlDeployIntegration.host')) {
     def host = project.property('xlDeployIntegration.host')

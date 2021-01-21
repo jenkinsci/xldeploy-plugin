@@ -38,6 +38,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class XLDeployJenkinsFileITest {
 
@@ -80,8 +81,8 @@ public class XLDeployJenkinsFileITest {
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            Files.copy(Paths.get(getClass().getClassLoader().getResource("JenkinsFile").getFile()), outputStream);
-            jenkinsFile = new String(outputStream.toByteArray());
+            Files.copy(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource("JenkinsFile")).getFile()), outputStream);
+            jenkinsFile = outputStream.toString();
         }
         return jenkinsFile;
     }
