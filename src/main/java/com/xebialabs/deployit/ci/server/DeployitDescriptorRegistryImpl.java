@@ -334,7 +334,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
 
 
     private Iterable<String> splitValue(String val) {
-        return Splitter.on(',').trimResults().omitEmptyStrings().split(val);
+        return Splitter.on('\n').trimResults().omitEmptyStrings().split(val);
     }
 
     private Iterable<Descriptor> getAllDeployableDescriptors() {
