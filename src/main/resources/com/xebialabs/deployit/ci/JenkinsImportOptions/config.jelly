@@ -1,9 +1,9 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:xld="/lib/xld">
 
     <f:nested>
-        <table style="width:100%">
+        <xld:blockWrapper>
              <f:dropdownDescriptorSelector field="mode" descriptors="${descriptor.locationDescriptors}" />
-        </table>
+        </xld:blockWrapper>
     </f:nested>
 
 </j:jelly>

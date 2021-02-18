@@ -1,4 +1,4 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:xld="/lib/xld">
     <f:section title="XL Deploy">
         <f:entry title="${%Default Server Url}" field="deployitServerUrl">
             <f:textbox checkMethod="post" />
@@ -11,14 +11,14 @@
         </f:entry>
         <f:entry title="Credentials" field="credentials">
             <f:repeatable field="credentials" minimum="${1}">
-                <table style="width:100%">
+                <xld:blockWrapper>
                     <st:include from="${descriptor}" page="${descriptor.configPage}"/>
                     <f:entry>
                         <div align="right">
                             <f:repeatableDeleteButton/>
                         </div>
                     </f:entry>
-                </table>
+                </xld:blockWrapper>
             </f:repeatable>
         </f:entry>
 
