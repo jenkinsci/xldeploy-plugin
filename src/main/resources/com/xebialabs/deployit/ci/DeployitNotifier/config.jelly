@@ -43,7 +43,7 @@
 
     <f:entry title="${%Options}" description="Options" field="packageProperties" help="/plugin/deployit-plugin/help-package-properties.html">
         <f:repeatable var="property" field="packageProperties">
-            <table width="100%">
+            <xld:blockWrapper>
                 <f:entry title="${%Name}" field="propertyName">
                     <f:select />
                 </f:entry>
@@ -57,7 +57,7 @@
                         <f:repeatableDeleteButton />
                     </div>
                 </f:entry>
-            </table>
+            </xld:blockWrapper>
         </f:repeatable>
     </f:entry>
 
@@ -66,7 +66,7 @@
     </f:entry>
 
     <f:block>
-        <table width="100%">
+        <xld:blockWrapper>
             <f:optionalBlock name="packageOptions" checked="${instance.packageOptions != null}" title="Package application" inline="false">
                 <j:set var="field" value="packageOptions" />
 
@@ -74,12 +74,12 @@
                 <j:set var="instance" value="${instance[field]}" />
                 <st:include from="${descriptor}" page="${descriptor.configPage}" />
             </f:optionalBlock>
-        </table>
+        </xld:blockWrapper>
     </f:block>
 
 
     <f:block>
-        <table width="100%">
+        <xld:blockWrapper>
             <f:optionalBlock field="importOptions" checked="${instance.importOptions != null}" title="Publish package to XL Deploy">
                 <j:set var="field" value="importOptions" />
 
@@ -87,12 +87,12 @@
                 <j:set var="instance" value="${instance[field]}" />
                 <st:include from="${descriptor}" page="${descriptor.configPage}" />
             </f:optionalBlock>
-        </table>
+        </xld:blockWrapper>
     </f:block>
 
 
     <f:block>
-        <table width="100%">
+        <xld:blockWrapper>
             <f:optionalBlock field="deploymentOptions" checked="${instance.deploymentOptions != null}" title="Deploy application">
                 <j:set var="field" value="deploymentOptions" />
 
@@ -100,7 +100,7 @@
                 <j:set var="instance" value="${instance[field]}" />
                 <st:include from="${descriptor}" page="${descriptor.configPage}" />
             </f:optionalBlock>
-        </table>
+        </xld:blockWrapper>
     </f:block>
 
 </xld:publisherFix>

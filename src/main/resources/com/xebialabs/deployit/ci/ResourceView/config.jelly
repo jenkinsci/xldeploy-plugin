@@ -1,4 +1,4 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:xld="/lib/xld">
 
 
     <f:entry title="${%Type}" field="type" help="/plugin/deployit-plugin/help-type.html">
@@ -16,7 +16,7 @@
 
     <f:entry title="${%Properties}" description="Properties" field="properties">
         <f:repeatable var="property" field="properties">
-            <table width="100%">
+            <xld:blockWrapper>
                 <f:entry title="${%Name}" field="propertyName">
                     <f:select/>
                 </f:entry>
@@ -30,7 +30,7 @@
                         <f:repeatableDeleteButton/>
                     </div>
                 </f:entry>
-            </table>
+            </xld:blockWrapper>
         </f:repeatable>
     </f:entry>
 
