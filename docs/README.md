@@ -20,8 +20,8 @@ These actions can be executed separately or combined sequentially.
 
 # Requirements
 
--   XL Deploy 4.5.0 or later
--   Jenkins LTS version 1.509.1 or later
+-   XL Deploy versions supported: from 9.5.1 to 10.1.0
+-   Jenkins LTS versions supported: from 2.60.1 to 2.277.2
 -   Java 8
 
 **Note:** In version 6.0.0 and later, the plugin requires the Jenkins
