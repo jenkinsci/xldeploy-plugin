@@ -69,7 +69,7 @@ public class RepositoryUtilsTest {
         Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
         CredentialsStore folderStore = null;
         for (CredentialsStore s : stores) {
-            if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
+            if (s.getContext() == f) {
                 folderStore = s;
                 break;
             }
