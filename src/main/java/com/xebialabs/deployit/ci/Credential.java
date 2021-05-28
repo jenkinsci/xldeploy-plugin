@@ -33,6 +33,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.POST;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
@@ -44,17 +45,13 @@ import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.server.DeployitServerFactory;
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
+import hudson.model.*;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.model.ItemGroup;
-import hudson.model.Project;
 import hudson.security.ACL;
-import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -116,6 +113,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
     public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
         // TODO: also add requirement on host derived from URL ?
+        Jenkins.getInstance().checkPermission(Item.CONFIGURE);
         List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                 ACL.SYSTEM,
                 HTTP_SCHEME, HTTPS_SCHEME);
@@ -268,6 +266,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
@@ -319,8 +318,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
+        @POST
         public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
-            Jenkins.getInstance().checkPermission(Permission.CREATE);
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
 
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
