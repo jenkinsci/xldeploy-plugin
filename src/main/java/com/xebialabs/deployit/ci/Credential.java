@@ -45,11 +45,11 @@ import com.xebialabs.deployit.ci.server.DeployitServer;
 import com.xebialabs.deployit.ci.server.DeployitServerFactory;
 import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 
-import hudson.model.*;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import hudson.model.*;
 import hudson.Extension;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
