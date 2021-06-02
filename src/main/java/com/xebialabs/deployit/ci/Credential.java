@@ -33,7 +33,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.POST;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
@@ -48,6 +47,7 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import hudson.model.*;
 import hudson.Extension;
@@ -113,7 +113,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
     public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
         // TODO: also add requirement on host derived from URL ?
-        Jenkins.getInstance().checkPermission(Item.CONFIGURE);
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                 ACL.SYSTEM,
                 HTTP_SCHEME, HTTPS_SCHEME);
@@ -266,7 +266,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
-            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
@@ -318,7 +318,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
-        @POST
+        @RequirePOST
         public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
