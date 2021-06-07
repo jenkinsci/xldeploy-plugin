@@ -137,9 +137,6 @@ dependencies {
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     jenkinsPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
 
-    compile "org.jenkins-ci.plugins:credentials:1.16.1@jar"
-    compile "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
-
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
     compile "com.google.guava:guava:16.0.1"
