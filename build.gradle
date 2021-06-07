@@ -40,7 +40,7 @@ localizer.dependsOn deleteGeneratedSrcLocalizer
 repositories {
     mavenCentral()
     jcenter()
-    maven { url "http://bits.netbeans.org/maven2" }
+    maven { url "https://plugins.gradle.org/m2/" }
     maven { url "http://repo.jenkins-ci.org/releases" }
     maven { url "http://www.knopflerfish.org/maven2" }
     maven { url "https://dist.xebialabs.com/public/maven2" }
@@ -53,16 +53,16 @@ buildscript {
         // Maven repository, but has dependencies in Maven Central.
         mavenCentral()
         jcenter()
-        maven { url "http://bits.netbeans.org/maven2" }
+        maven { url "https://plugins.gradle.org/m2/" }
         maven { url "http://repo.jenkins-ci.org/releases" }
         maven { url "http://www.knopflerfish.org/maven2" }
         maven { url "https://dist.xebialabs.com/public/maven2" }
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.43.0'
         classpath 'org.bitbucket.grimrose:gradle-obake-plugin:0.5'
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:1.12.+'
-        classpath 'net.researchgate:gradle-release:2.3.4'
+        classpath 'net.researchgate:gradle-release:2.8.1'
     }
 }
 
@@ -134,7 +134,6 @@ dependencies {
 
     provided 'org.slf4j:slf4j-api:1.7.7'
 
-
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     jenkinsPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
 
@@ -144,11 +143,11 @@ dependencies {
 
     testCompile "junit:junit:4.11"
     testCompile "org.mockito:mockito-all:1.9.5"
-    testCompile "org.jenkins-ci.plugins:cloudbees-folder:6.0.4@jar"    
+    testCompile "org.jenkins-ci.plugins:cloudbees-folder:6.0.4@jar"
     testCompile "org.jenkins-ci.main:jenkins-test-harness:2.15"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-support:1.10@jar"
-    testCompile "org.jenkins-ci.plugins.workflow:workflow-scm-step:1.10@jar"        
+    testCompile "org.jenkins-ci.plugins.workflow:workflow-scm-step:1.10@jar"
     testCompile "org.jenkins-ci.plugins:scm-api:1.1@jar"
 
 
@@ -158,18 +157,18 @@ dependencies {
     slf4j "org.slf4j:slf4j-jdk14:1.7.7"
     slf4j "org.slf4j:slf4j-simple:1.7.7"
 
-    jenkinsTest ('org.jenkins-ci.main:maven-plugin:1.480@hpi') { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins:credentials:1.16.1@hpi") { transitive = true }
+    jenkinsTest('org.jenkins-ci.main:maven-plugin:1.480@hpi') { transitive = true }
+    jenkinsTest("org.jenkins-ci.plugins:credentials:1.16.1@hpi") { transitive = true }
 
     testCompile "org.jenkins-ci.plugins.workflow:workflow-job:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-cps:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-api:1.10@jar"
 
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@hpi")  { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-support:1.10@hpi") { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-cps:1.10@hpi") { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins:git:3.0.1@hpi") { transitive = true }
-    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@hpi") { transitive = true }
+    jenkinsTest("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@hpi") { transitive = true }
+    jenkinsTest("org.jenkins-ci.plugins.workflow:workflow-support:1.10@hpi") { transitive = true }
+    jenkinsTest("org.jenkins-ci.plugins.workflow:workflow-cps:1.10@hpi") { transitive = true }
+    jenkinsTest("org.jenkins-ci.plugins:git:3.0.1@hpi") { transitive = true }
+    jenkinsTest("org.jenkins-ci.plugins.workflow:workflow-aggregator:1.10@hpi") { transitive = true }
 
 }
 
@@ -187,7 +186,6 @@ test {
 
 task itest(type: Test) {
     description = "Run integration tests"
-    testClassesDir = project.sourceSets.test.output.classesDir
     classpath = project.sourceSets.test.runtimeClasspath + configurations.slf4j
 }
 
@@ -196,21 +194,22 @@ if (project.hasProperty('xlDeployIntegration.host')) {
     def username = project.property('xlDeployIntegration.username')
     def password = project.property('xlDeployIntegration.password')
     test.systemProperties([
-            "xlDeployIntegration.host" : "$host",
-            "xlDeployIntegration.username" : "$username",
-            "xlDeployIntegration.password" : "$password"
+            "xlDeployIntegration.host"    : "$host",
+            "xlDeployIntegration.username": "$username",
+            "xlDeployIntegration.password": "$password"
     ])
 }
 
-task checkJavaVersion << {
-    def majorVersion = project.version.tokenize('.')[0].toInteger()
-    def message = "This build must be run with java"
-    if(majorVersion < 6 && JavaVersion.current() != JavaVersion.VERSION_1_7) {
-        throw new GradleException("${message} ${JavaVersion.VERSION_1_7}")
-    }
-    if(majorVersion >= 6 && JavaVersion.current() != JavaVersion.VERSION_1_8) {
-        throw new GradleException("${message} ${JavaVersion.VERSION_1_8}")
+task checkJavaVersion {
+    doLast {
+        def majorVersion = project.version.tokenize('.')[0].toInteger()
+        def message = "This build must be run with java"
+        if (majorVersion < 6 && JavaVersion.current() != JavaVersion.VERSION_1_7) {
+            throw new GradleException("${message} ${JavaVersion.VERSION_1_7}")
+        }
+        if (majorVersion >= 6 && JavaVersion.current() != JavaVersion.VERSION_1_8) {
+            throw new GradleException("${message} ${JavaVersion.VERSION_1_8}")
+        }
     }
 }
 
-tasks.checkJavaVersion.execute()
