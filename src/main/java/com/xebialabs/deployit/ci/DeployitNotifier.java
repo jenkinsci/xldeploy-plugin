@@ -26,6 +26,12 @@ package com.xebialabs.deployit.ci;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
+import com.google.common.base.Strings;
+import com.xebialabs.deployit.ci.DeployitPerformer.DeployitPerformerParameters;
+import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
+import com.xebialabs.deployit.ci.server.DeployitServer;
+import com.xebialabs.deployit.ci.server.DeployitServerFactory;
+import com.xebialabs.deployit.ci.util.PluginLogger;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
@@ -36,39 +42,25 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-
-import java.io.IOException;
-import java.lang.ref.SoftReference;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
-
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import com.google.common.base.Strings;
-
-import com.xebialabs.deployit.ci.DeployitPerformer.DeployitPerformerParameters;
-import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
-import com.xebialabs.deployit.ci.server.DeployitServer;
-import com.xebialabs.deployit.ci.server.DeployitServerFactory;
+import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
-import static hudson.util.FormValidation.error;
-import static hudson.util.FormValidation.ok;
-import static hudson.util.FormValidation.warning;
-import jenkins.model.Jenkins;
+import static hudson.util.FormValidation.*;
 
 /**
  * Runs XL Deploy tasks after the build has completed.
@@ -79,7 +71,7 @@ public class DeployitNotifier extends Notifier {
     public final String application;
     public final String version;
     public final JenkinsPackageOptions packageOptions;
-    public List<PackageProperty> packageProperties = Collections.emptyList();
+    public List<PackageProperty> packageProperties;
     public final JenkinsImportOptions importOptions;
     public final JenkinsDeploymentOptions deploymentOptions;
     public final boolean verbose;
@@ -101,6 +93,7 @@ public class DeployitNotifier extends Notifier {
         this.verbose = verbose;
         this.packageProperties = packageProperties;
         this.overridingCredential = overridingCredential;
+        PluginLogger.getInstance().setVerbose(verbose);
     }
 
     @Override
@@ -123,11 +116,11 @@ public class DeployitNotifier extends Notifier {
 
             DeployitDescriptor descriptor = RepositoryUtils.getDeployitDescriptor();
 
-            DeployitServer deployitServer = descriptor.getDeployitServer(credential, (AbstractProject) build.getProject());
+            DeployitServer deployitServer = descriptor.getDeployitServer(credential, build.getProject());
 
             DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
 
-            DeployitPerformer performer = new DeployitPerformer(build, launcher, listener, deployitServer, performerParameters);
+            DeployitPerformer performer = new DeployitPerformer(build, listener, deployitServer, performerParameters);
 
             return performer.doPerform();
         } else {
@@ -159,8 +152,6 @@ public class DeployitNotifier extends Notifier {
 
         private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
         private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
-
-        private static final Logger LOGGER = Logger.getLogger(Credential.class.getName());
 
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
         private final transient Map<String, SoftReference<DeployitServer>> credentialServerMap = new HashMap<String, SoftReference<DeployitServer>>();
@@ -255,7 +246,6 @@ public class DeployitNotifier extends Notifier {
             return connectionPoolSize;
         }
 
-
         private FormValidation validateOptionalUrl(String url) {
             try {
                 if (!Strings.isNullOrEmpty(url)) {
@@ -312,7 +302,7 @@ public class DeployitNotifier extends Notifier {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
-          Jenkins.getInstance().checkPermission(Item.CONFIGURE);
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);

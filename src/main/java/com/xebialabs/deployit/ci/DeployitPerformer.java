@@ -2,13 +2,15 @@ package com.xebialabs.deployit.ci;
 
 import hudson.EnvVars;
 import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
@@ -34,7 +36,7 @@ class DeployitPerformer {
     private DeployitServer deployitServer;
     private DeployitPerformerParameters deploymentParameters;
 
-    DeployitPerformer(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener buildListener, DeployitServer deployitServer, DeployitPerformerParameters deploymentParameters) {
+    DeployitPerformer(final AbstractBuild<?, ?> build, BuildListener buildListener, DeployitServer deployitServer, DeployitPerformerParameters deploymentParameters) {
         this.build = build;
         this.buildListener = buildListener;
         this.deployitServer = deployitServer;

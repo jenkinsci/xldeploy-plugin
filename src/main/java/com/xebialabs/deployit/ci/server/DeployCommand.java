@@ -67,8 +67,7 @@ public class DeployCommand {
     }
 
     private void verifyPackageExistInRemoteRepository(String deploymentPackage) {
-        boolean found = false;
-        Type foundType = null;
+        Type foundType;
         try {
             ConfigurationItem repoPackage = repositoryService.read(deploymentPackage);
             foundType = repoPackage.getType();

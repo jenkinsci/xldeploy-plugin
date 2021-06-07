@@ -1,21 +1,21 @@
 /**
  * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
- *
- *
+ * <p>
+ * <p>
  * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
  * <https://github.com/jenkinsci/deployit-plugin/blob/master/LICENSE>.
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify it under the terms
  * of the GNU General Public License as published by the Free Software Foundation; version 2
  * of the License.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
  * Floor, Boston, MA 02110-1301  USA
@@ -23,26 +23,16 @@
 
 package com.xebialabs.deployit.ci;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.util.JenkinsDeploymentListener;
+import com.xebialabs.deployit.ci.util.PluginLogger;
 import com.xebialabs.deployit.plugin.api.udm.Application;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
 import com.xebialabs.deployit.plugin.api.udm.Deployable;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
-
 import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -51,11 +41,21 @@ import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.xebialabs.deployit.ci.util.Strings2.stripEnclosingQuotes;
 
 public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions> {
+
+    public final PluginLogger pluginLogger = PluginLogger.getInstance();
 
     private final List<DeployableView> deployables;
 
@@ -77,7 +77,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         Application application = registry.newInstance(Application.class, applicationName);
         DeploymentPackage deploymentPackage = registry.newInstance(DeploymentPackage.class, version);
         deploymentPackage.setApplication(application);
-        Map<String,ConfigurationItem> deployablesByFqn = newHashMap();
+        Map<String, ConfigurationItem> deployablesByFqn = newHashMap();
         if (null == deployables) {
             String msg = String.format("No deployables defined for deployment package. Application: '%s'.", applicationName);
             throw new DeployitPluginException(msg);
@@ -86,7 +86,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         for (DeployableView deployableView : sortedDeployables) {
             ConfigurationItem deployable = deployableView.toConfigurationItem(registry, workspace, envVars, listener);
             if (deployableView instanceof EmbeddedView) {
-                linkEmbeddedToParent(deployablesByFqn, deployable, (EmbeddedView)deployableView, registry, listener);
+                linkEmbeddedToParent(deployablesByFqn, deployable, (EmbeddedView) deployableView, registry, listener);
             } else {
                 deploymentPackage.addDeployable((Deployable) deployable);
             }
@@ -98,6 +98,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
             for (NameValuePair pair : packageProperties) {
                 String value = stripEnclosingQuotes(nullToEmpty(pair.propertyValue));
                 value = envVars.expand(value);
+                pluginLogger.debug("Registering a property for ci = {}, propName = {}, value = {} ", deploymentPackage, pair.propertyName, value);
                 registry.setProperty(deploymentPackage, pair.propertyName, value);
             }
         }
@@ -107,7 +108,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
     private List<DeployableView> sortDeployables(List<DeployableView> deployables) {
         List<DeployableView> result = Lists.newArrayList(Iterables.filter(deployables, Predicates.not(Predicates.instanceOf(EmbeddedView.class))));
         List<EmbeddedView> embeddeds = /* double cast: dirty but quick */
-                (List<EmbeddedView>)(Object)Lists.newArrayList(Iterables.filter(deployables, Predicates.instanceOf(EmbeddedView.class)));
+                (List<EmbeddedView>) (Object) Lists.newArrayList(Iterables.filter(deployables, Predicates.instanceOf(EmbeddedView.class)));
         // sort the embeddeds on the number of /'s in the parent name
         Collections.sort(embeddeds, new Comparator<EmbeddedView>() {
             @Override
@@ -119,7 +120,7 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         return result;
     }
 
-    private void linkEmbeddedToParent(Map<String, ConfigurationItem> deployablesByFqn, ConfigurationItem deployable, final EmbeddedView embeddedView,DeployitDescriptorRegistry registry, JenkinsDeploymentListener listener) {
+    private void linkEmbeddedToParent(Map<String, ConfigurationItem> deployablesByFqn, ConfigurationItem deployable, final EmbeddedView embeddedView, DeployitDescriptorRegistry registry, JenkinsDeploymentListener listener) {
         ConfigurationItem parent = deployablesByFqn.get(embeddedView.getParentName());
         if (parent == null) {
             listener.error("Failed to find parent [" + embeddedView.getParentName() + "] that embeds [" + deployable + "]");
@@ -127,7 +128,6 @@ public class JenkinsPackageOptions implements Describable<JenkinsPackageOptions>
         }
         registry.addEmbedded(parent, deployable);
     }
-
 
 
     @Extension

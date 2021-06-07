@@ -1,38 +1,27 @@
 /**
  * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
- *
- *
+ * <p>
+ * <p>
  * The XL Deploy plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
  * <https://github.com/jenkinsci/deployit-plugin/blob/master/LICENSE>.
- *
+ * <p>
  * This program is free software; you can redistribute it and/or modify it under the terms
  * of the GNU General Public License as published by the Free Software Foundation; version 2
  * of the License.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
  * Floor, Boston, MA 02110-1301  USA
  */
 
 package com.xebialabs.deployit.ci.server;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
-import com.xebialabs.deployit.ci.ArtifactView;
-import com.xebialabs.deployit.ci.util.Strings2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -41,39 +30,29 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.Monitor;
-
-import com.xebialabs.deployit.booter.remote.BooterConfig;
-import com.xebialabs.deployit.booter.remote.DeployitCommunicator;
-import com.xebialabs.deployit.booter.remote.RemoteBooter;
-import com.xebialabs.deployit.booter.remote.RemoteDescriptor;
-import com.xebialabs.deployit.booter.remote.RemoteDescriptorRegistry;
-import com.xebialabs.deployit.booter.remote.RemotePropertyDescriptor;
+import com.xebialabs.deployit.booter.remote.*;
+import com.xebialabs.deployit.ci.ArtifactView;
 import com.xebialabs.deployit.ci.DeployitPluginException;
-import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
-import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
-import com.xebialabs.deployit.plugin.api.reflect.PropertyDescriptor;
-import com.xebialabs.deployit.plugin.api.reflect.PropertyKind;
-import com.xebialabs.deployit.plugin.api.reflect.Type;
-import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
-import com.xebialabs.deployit.plugin.api.udm.Deployable;
-import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
-import com.xebialabs.deployit.plugin.api.udm.EmbeddedDeployable;
-import com.xebialabs.deployit.plugin.api.udm.Version;
+import com.xebialabs.deployit.ci.util.PluginLogger;
+import com.xebialabs.deployit.ci.util.Strings2;
+import com.xebialabs.deployit.plugin.api.reflect.*;
+import com.xebialabs.deployit.plugin.api.udm.*;
 import com.xebialabs.deployit.plugin.api.udm.artifact.FolderArtifact;
 import com.xebialabs.deployit.plugin.api.udm.artifact.SourceArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseConfigurationItem;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployable;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployableFileArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseDeployableFolderArtifact;
-import com.xebialabs.deployit.plugin.api.udm.base.BaseEmbeddedDeployable;
+import com.xebialabs.deployit.plugin.api.udm.base.*;
+
+import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
 public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistry {
-    private static final Logger LOG = LoggerFactory.getLogger(DeployitDescriptorRegistryImpl.class);
     private BooterConfig booterConfig;
+    public final PluginLogger pluginLogger = PluginLogger.getInstance();
 
     private Monitor LOCK = new Monitor();
     private Iterable<Descriptor> allDeployableDescriptors;
@@ -93,13 +72,12 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
             if (null == communicator) {
                 try {
                     communicator = RemoteBooter.getCommunicator(booterConfig);
-                    LOG.debug("Reusing existing communicator for config: {}.", safeBooterConfigKey());
+                    pluginLogger.debug("Reusing existing communicator for config: {}.", safeBooterConfigKey());
                 } catch (IllegalStateException ex) {
-                    LOG.debug("No communicator found for config: {}. Creating new DeployitCommunicator.", safeBooterConfigKey());
+                    pluginLogger.debug("No communicator found for config: {}. Creating new DeployitCommunicator.", safeBooterConfigKey());
                     DescriptorRegistry.remove(booterConfig);
                     communicator = RemoteBooter.boot(booterConfig);
                 }
-
                 fixVersionDepl6949();
             }
         } finally {
@@ -110,17 +88,17 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     }
 
     private String safeBooterConfigKey() {
-        String safePassword = booterConfig.getPassword().replaceAll(".", "*");
+        String safePassword = booterConfig.getPassword().replaceAll("\\.", "*");
         return BooterConfig.builder()
-            .withProtocol(booterConfig.getProtocol())
-            .withCredentials(booterConfig.getUsername(), safePassword)
-            .withHost(booterConfig.getHost())
-            .withPort(booterConfig.getPort())
-            .withContext(booterConfig.getContext())
-            .withProxyHost(booterConfig.getProxyHost())
-            .withProxyPort(booterConfig.getProxyPort())
-            .build()
-            .getKey();
+                .withProtocol(booterConfig.getProtocol())
+                .withCredentials(booterConfig.getUsername(), safePassword)
+                .withHost(booterConfig.getHost())
+                .withPort(booterConfig.getPort())
+                .withContext(booterConfig.getContext())
+                .withProxyHost(booterConfig.getProxyHost())
+                .withProxyPort(booterConfig.getProxyPort())
+                .build()
+                .getKey();
     }
 
     private RemoteDescriptorRegistry getDescriptorRegistry() {
@@ -244,14 +222,14 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
                     String propertyName = pd.getName();
                     if (null == ci.getProperty(propertyName)) {
                         switch (pd.getKind()) {
-                        case LIST_OF_CI:
-                            ci.setProperty(propertyName, newArrayList());
-                            break;
-                        case SET_OF_CI:
-                            ci.setProperty(propertyName, newHashSet());
-                            break;
-                        default:
-                            break;
+                            case LIST_OF_CI:
+                                ci.setProperty(propertyName, newArrayList());
+                                break;
+                            case SET_OF_CI:
+                                ci.setProperty(propertyName, newHashSet());
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }
@@ -287,7 +265,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     }
 
     private Object convertValue(String val, PropertyDescriptor pd) {
-        if (val == null) {
+        if (val == null || pd == null) {
             return null;
         }
         switch (pd.getKind()) {
@@ -385,8 +363,8 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
         Predicate<PropertyDescriptor> editablePropertyDescriptors = new Predicate<PropertyDescriptor>() {
             @Override
             public boolean apply(PropertyDescriptor pd) {
-                return !pd.isHidden() && !pd.getName().equals("tags")  && !pd.getName().equals(ArtifactView.FILE_URI_PROPERTY)
-                		&& !isEmbeddedProperty(pd, embeddedDeployableType);
+                return !pd.isHidden() && !pd.getName().equals("tags") && !pd.getName().equals(ArtifactView.FILE_URI_PROPERTY)
+                        && !isEmbeddedProperty(pd, embeddedDeployableType);
             }
         };
         return getPropertiesForDeployableType(type, editablePropertyDescriptors);
@@ -422,7 +400,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     public void reload() {
         LOCK.enter();
         try {
-            LOG.warn("About to reload descriptor registry for config: {}.", safeBooterConfigKey());
+            pluginLogger.warn("About to reload descriptor registry for config: {}.", safeBooterConfigKey());
             version = UUID.randomUUID().toString();
             getDescriptorRegistry().reboot(getCommunicator());
             allDeployableDescriptors = null;
