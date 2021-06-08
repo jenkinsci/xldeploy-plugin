@@ -51,10 +51,10 @@ import static com.google.common.collect.Sets.newHashSet;
 import static com.google.common.collect.Sets.newLinkedHashSet;
 
 public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistry {
-    private BooterConfig booterConfig;
+    private final BooterConfig booterConfig;
     public final PluginLogger pluginLogger = PluginLogger.getInstance();
 
-    private Monitor LOCK = new Monitor();
+    private final Monitor LOCK = new Monitor();
     private Iterable<Descriptor> allDeployableDescriptors;
 
     private DeployitCommunicator communicator;
@@ -261,11 +261,16 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
     @Override
     public void setProperty(ConfigurationItem ci, String propName, String value) {
         PropertyDescriptor pd = getDescriptor(ci.getType()).getPropertyDescriptor(propName);
-        pd.set(ci, convertValue(value, pd));
+        if (pd == null) {
+            pluginLogger.debug("Property descriptor for requested type {} has not been found.", ci.getType());
+            pluginLogger.debug("Skipping setting into property = {} value = {}", propName, value);
+        } else {
+            pd.set(ci, convertValue(value, pd));
+        }
     }
 
     private Object convertValue(String val, PropertyDescriptor pd) {
-        if (val == null || pd == null) {
+        if (val == null) {
             return null;
         }
         switch (pd.getKind()) {
