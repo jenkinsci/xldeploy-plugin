@@ -47,14 +47,11 @@ import com.xebialabs.deployit.engine.api.dto.ServerInfo;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import hudson.model.*;
 import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.model.ItemGroup;
-import hudson.model.Project;
 import hudson.security.ACL;
-import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -116,6 +113,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
     public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
         // TODO: also add requirement on host derived from URL ?
+        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
         List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                 ACL.SYSTEM,
                 HTTP_SCHEME, HTTPS_SCHEME);
@@ -268,6 +266,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
@@ -319,8 +318,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             }
         }
 
+        @RequirePOST
         public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
-            Jenkins.getInstance().checkPermission(Permission.CREATE);
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
 
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
