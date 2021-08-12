@@ -124,7 +124,7 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2019.2.11"
+    xlPlatformVersion = "2016.2.6"
 
 }
 
