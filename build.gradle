@@ -44,6 +44,7 @@ repositories {
     maven { url "http://repo.jenkins-ci.org/releases" }
     maven { url "http://www.knopflerfish.org/maven2" }
     maven { url "https://dist.xebialabs.com/public/maven2" }
+    maven { url "https://repo.jenkins-ci.org/public" }
 }
 
 
@@ -57,9 +58,10 @@ buildscript {
         maven { url "http://repo.jenkins-ci.org/releases" }
         maven { url "http://www.knopflerfish.org/maven2" }
         maven { url "https://dist.xebialabs.com/public/maven2" }
+        maven { url "https://repo.jenkins-ci.org/public" }
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.43.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.19.0'
         classpath 'org.bitbucket.grimrose:gradle-obake-plugin:0.5'
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:1.12.+'
         classpath 'net.researchgate:gradle-release:2.8.1'
