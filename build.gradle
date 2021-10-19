@@ -117,9 +117,9 @@ configurations {
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
     providedRuntime.exclude group: 'ch.qos.logback', module: 'logback-classic'
     providedRuntime.exclude group: 'ch.qos.logback', module: 'logback-core'
-    providedRuntime.exclude group: 'org.slf4j', module: 'slf4j-api'
     providedRuntime.exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
     providedRuntime.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+
     slf4j
 }
 
@@ -165,6 +165,7 @@ dependencies {
     testCompile "org.jenkins-ci.plugins.workflow:workflow-job:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-cps:1.10@jar"
     testCompile "org.jenkins-ci.plugins.workflow:workflow-api:1.10@jar"
+    testCompile "org.slf4j:slf4j-api:1.7.7"
 
     jenkinsTest("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@hpi") { transitive = true }
     jenkinsTest("org.jenkins-ci.plugins.workflow:workflow-support:1.10@hpi") { transitive = true }
