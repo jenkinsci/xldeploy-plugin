@@ -113,6 +113,7 @@ public class DeployitNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+
         if (credential != null) {
             String cred = credential;
             Credential credential = RepositoryUtils.findCredential(cred);
@@ -128,7 +129,6 @@ public class DeployitNotifier extends Notifier {
             DeployitServer deployitServer = descriptor.getDeployitServer(credential, build.getProject());
 
             DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose, loadTypesOnStartup);
-
             DeployitPerformer performer = new DeployitPerformer(build, listener, deployitServer, performerParameters);
 
             return performer.doPerform();
@@ -387,6 +387,7 @@ public class DeployitNotifier extends Notifier {
 
         @RequirePOST
         public FormValidation doReloadTypes(@QueryParameter String credential, @AncestorInPath AbstractProject project) {
+
             project.checkPermission(Item.CONFIGURE);
             Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
             try {

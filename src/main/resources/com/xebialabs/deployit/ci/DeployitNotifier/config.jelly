@@ -34,7 +34,6 @@
        <f:checkbox />
     </f:entry>
 
-
     <f:validateButton title="${%Reload types for credential}" with="credential" method="reloadTypes" />
 
     <f:entry title="${%Application}" field="application" help="/plugin/deployit-plugin/help-application.html">

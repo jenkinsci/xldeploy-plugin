@@ -17,7 +17,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -66,7 +65,6 @@ public class RepositoryUtilsTest {
         assertNull(RepositoryUtils.retrieveOverridingCredentialFromProject(freeStyleProjectSpy));
     }
 
-
     @Test
     public void shouldRetrieveLoadTypesFlag() throws Exception {
         Folder f = r.jenkins.createProject(Folder.class, "folder-relead");
@@ -84,7 +82,6 @@ public class RepositoryUtilsTest {
         assertNotNull(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy));
         assertEquals(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy).loadTypesOnStartup, true);
     }
-
 
     CredentialsStore getFolderStore(Folder f) {
         Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
