@@ -30,7 +30,7 @@
         </f:optionalBlock>
     </f:block>
 
-    <f:entry title="${%Reload types automatically}" field="reloadDeployTypes">
+    <f:entry title="${%Load types automatically}" field="loadTypesOnStartup">
        <f:checkbox />
     </f:entry>
 

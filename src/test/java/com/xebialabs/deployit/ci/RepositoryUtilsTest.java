@@ -68,7 +68,7 @@ public class RepositoryUtilsTest {
 
 
     @Test
-    public void shouldReloadWhenEnabled() throws Exception {
+    public void shouldRetrieveLoadTypesFlag() throws Exception {
         Folder f = r.jenkins.createProject(Folder.class, "folder-relead");
         FreeStyleProject freeStyleProjectSpy = spy(new FreeStyleProject(f, "folder-reload/proj1"));
 
@@ -82,7 +82,7 @@ public class RepositoryUtilsTest {
         doReturn(publisherListMock).when(freeStyleProjectSpy).getPublishersList();
 
         assertNotNull(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy));
-        assertEquals(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy).reloadDeployTypes, true);
+        assertEquals(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy).loadTypesOnStartup, true);
     }
 
 
