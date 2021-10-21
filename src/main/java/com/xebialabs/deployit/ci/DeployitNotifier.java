@@ -75,15 +75,24 @@ public class DeployitNotifier extends Notifier {
     public final JenkinsImportOptions importOptions;
     public final JenkinsDeploymentOptions deploymentOptions;
     public final boolean verbose;
+    public final boolean loadTypesOnStartup;
 
     public Credential overridingCredential;
 
     public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties) {
-        this(credential, application, version, packageOptions, importOptions, deploymentOptions, verbose, packageProperties, null);
+        this(credential, application, version, packageOptions, importOptions, deploymentOptions, verbose, packageProperties, null, false);
+    }
+
+    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties, boolean loadTypesOnStartup) {
+        this(credential, application, version, packageOptions, importOptions, deploymentOptions, verbose, packageProperties, null, loadTypesOnStartup);
+    }
+
+    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties, Credential overridingCredential) {
+        this(credential, application, version, packageOptions, importOptions, deploymentOptions, verbose, packageProperties, overridingCredential, false);
     }
 
     @DataBoundConstructor
-    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties, Credential overridingCredential) {
+    public DeployitNotifier(String credential, String application, String version, JenkinsPackageOptions packageOptions, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions, boolean verbose, List<PackageProperty> packageProperties, Credential overridingCredential, boolean loadTypesOnStartup) {
         this.credential = credential;
         this.application = application;
         this.version = version;
@@ -93,6 +102,7 @@ public class DeployitNotifier extends Notifier {
         this.verbose = verbose;
         this.packageProperties = packageProperties;
         this.overridingCredential = overridingCredential;
+        this.loadTypesOnStartup = loadTypesOnStartup;
         PluginLogger.getInstance().setVerbose(verbose);
     }
 
@@ -118,8 +128,7 @@ public class DeployitNotifier extends Notifier {
 
             DeployitServer deployitServer = descriptor.getDeployitServer(credential, build.getProject());
 
-            DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose);
-
+            DeployitPerformerParameters performerParameters = new DeployitPerformerParameters(packageOptions, packageProperties, importOptions, deploymentOptions, application, version, verbose, loadTypesOnStartup);
             DeployitPerformer performer = new DeployitPerformer(build, listener, deployitServer, performerParameters);
 
             return performer.doPerform();

@@ -65,6 +65,24 @@ public class RepositoryUtilsTest {
         assertNull(RepositoryUtils.retrieveOverridingCredentialFromProject(freeStyleProjectSpy));
     }
 
+    @Test
+    public void shouldRetrieveLoadTypesFlag() throws Exception {
+        Folder f = r.jenkins.createProject(Folder.class, "folder-relead");
+        FreeStyleProject freeStyleProjectSpy = spy(new FreeStyleProject(f, "folder-reload/proj1"));
+
+        DeployitNotifier.DeployitDescriptor descriptor = new DeployitNotifier.DeployitDescriptor();
+        DeployitNotifier notifierSpy = spy(new DeployitNotifier("AdminGlobal2", "app1", null, null, null, null, false, null, true));
+        doReturn(descriptor).when(notifierSpy).getDescriptor();
+        freeStyleProjectSpy.addPublisher(notifierSpy);
+
+        DescribableList<Publisher, Descriptor<Publisher>> publisherListMock = mock(DescribableList.class);
+        doReturn(notifierSpy).when(publisherListMock).get(any(DeployitNotifier.DeployitDescriptor.class));
+        doReturn(publisherListMock).when(freeStyleProjectSpy).getPublishersList();
+
+        assertNotNull(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy));
+        assertEquals(RepositoryUtils.retrieveDeployitNotifierFromProject(freeStyleProjectSpy).loadTypesOnStartup, true);
+    }
+
     CredentialsStore getFolderStore(Folder f) {
         Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
         CredentialsStore folderStore = null;

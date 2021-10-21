@@ -45,6 +45,9 @@ class DeployitPerformer {
     }
 
     public boolean doPerform() throws InterruptedException, IOException {
+        if (deploymentParameters.loadTypesOnStartup) {
+            deployitServer.reload();
+        }
         final EnvVars envVars = build.getEnvironment(buildListener);
         String resolvedApplication = envVars.expand(deploymentParameters.application);
 
@@ -171,6 +174,7 @@ class DeployitPerformer {
         public String application;
         public String version;
         public boolean verbose;
+        public boolean loadTypesOnStartup;
 
         public DeployitPerformerParameters(JenkinsPackageOptions packageOptions, List<PackageProperty> packageProperties, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions,
             String application, String version, boolean verbose) {
@@ -181,6 +185,18 @@ class DeployitPerformer {
             this.application = application;
             this.version = version;
             this.verbose = verbose;
+            this.loadTypesOnStartup = false;
+        }
+        public DeployitPerformerParameters(JenkinsPackageOptions packageOptions, List<PackageProperty> packageProperties, JenkinsImportOptions importOptions, JenkinsDeploymentOptions deploymentOptions,
+                                           String application, String version, boolean verbose, boolean loadTypesOnStartup) {
+            this.packageOptions = packageOptions;
+            this.packageProperties = packageProperties;
+            this.importOptions = importOptions;
+            this.deploymentOptions = deploymentOptions;
+            this.application = application;
+            this.version = version;
+            this.verbose = verbose;
+            this.loadTypesOnStartup = loadTypesOnStartup;
         }
     }
 }

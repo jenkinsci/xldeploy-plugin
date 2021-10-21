@@ -30,6 +30,9 @@
         </f:optionalBlock>
     </f:block>
 
+    <f:entry title="${%Load types automatically}" field="loadTypesOnStartup">
+       <f:checkbox />
+    </f:entry>
 
     <f:validateButton title="${%Reload types for credential}" with="credential" method="reloadTypes" />
 
