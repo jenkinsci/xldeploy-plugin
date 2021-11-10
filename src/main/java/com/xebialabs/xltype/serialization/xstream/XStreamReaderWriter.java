@@ -62,6 +62,7 @@ import com.thoughtworks.xstream.io.xml.XppDriver;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
+import com.xebialabs.deployit.engine.api.dto.Deployment;
 
 import nl.javadude.scannit.Scannit;
 
@@ -83,6 +84,9 @@ public class XStreamReaderWriter implements MessageBodyReader<Object>, MessageBo
     }
 
     protected void init() {
+        xStream.allowTypes(new Class[] {
+            com.xebialabs.deployit.engine.api.dto.Deployment.class
+        });
         Collection<Converter> converters = allConverters();
         for (Converter converter : converters) {
             registerConverter(converter);
