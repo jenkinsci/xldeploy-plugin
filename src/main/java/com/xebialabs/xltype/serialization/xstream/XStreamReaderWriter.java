@@ -85,7 +85,7 @@ public class XStreamReaderWriter implements MessageBodyReader<Object>, MessageBo
 
     protected void init() {
         xStream.allowTypes(new Class[] {
-            com.xebialabs.deployit.engine.api.dto.Deployment.class
+            Deployment.class
         });
         Collection<Converter> converters = allConverters();
         for (Converter converter : converters) {
