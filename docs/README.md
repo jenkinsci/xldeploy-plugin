@@ -1,15 +1,13 @@
 | Plugin Information                                                                                              |
 |-----------------------------------------------------------------------------------------------------------------|
-| View XebiaLabs XL Deploy [on the plugin site](https://plugins.jenkins.io/deployit-plugin) for more information. |
-
 Older versions of this plugin may not be safe to use. Please review the
 following warnings before using an older version:
 
 -   [CSRF vulnerability and missing permission check allow
     SSRF](https://jenkins.io/security/advisory/2019-04-17/#SECURITY-983)
 
-The XL Deploy Plugin integrates Jenkins with [XebiaLabs XL
-Deploy](https://xebialabs.com/products/xl-deploy) by adding three
+The Digital.ai Deploy Plugin integrates Jenkins with [Digital.ai
+Deploy](https://docs.digital.ai/bundle/devops-deploy-version-v.10.2) by adding three
 post-build actions to your Jenkins installation:
 
 -   Package your application
@@ -20,8 +18,8 @@ These actions can be executed separately or combined sequentially.
 
 # Requirements
 
--   XL Deploy versions supported: from 9.5.1 to 10.1.0
--   Jenkins LTS versions supported: from 2.60.1 to 2.277.2
+-   Digital.ai Deploy versions supported: from 9.7.x to 10.3.x
+-   Jenkins LTS versions supported: from 2.289.1 to 2.303.3
 -   Java 8
 
 **Note:** In version 6.0.0 and later, the plugin requires the Jenkins
@@ -42,5 +40,5 @@ or later.
     (supported in version 6.1.0 and later)
 
 For information about configuring and using the plugin, visit the
-[XebiaLabs documentation
+[Digital.ai documentation
 site](https://docs.xebialabs.com/deploy/concept/jenkins-xl-deploy-plugin.html).
