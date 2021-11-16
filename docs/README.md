@@ -20,7 +20,7 @@ These actions can be executed separately or combined sequentially.
 
 # Requirements
 
--   Digital.ai Deploy versions supported: from 9.7.x to 10.3.x
+-   [A supported version of DAI Deploy.](https://support.digital.ai/hc/en-us/articles/360016879780-XebiaLabs-Supported-Product-Versions#support-overview-0-3) 
 -   Jenkins LTS versions supported: from 2.289.1 to 2.303.1
 -   Java 8
 
