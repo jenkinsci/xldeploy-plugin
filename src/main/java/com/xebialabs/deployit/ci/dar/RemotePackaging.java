@@ -37,6 +37,9 @@ import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
 import com.xebialabs.deployit.plugin.api.udm.DeploymentPackage;
 import org.jenkinsci.remoting.RoleChecker;
+import scala.Function0;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Wrapper for the packaging operation.
@@ -50,7 +53,7 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     private BooterConfig booterConfig;
     private Collection<Descriptor> descriptors;
     private String registryVersion;
-
+    private Function0<MessageDigest> messageDigest;
 
     public RemotePackaging forDeploymentPackage(DeploymentPackage deploymentPackage) {
         this.deploymentPackage = deploymentPackage;
@@ -81,10 +84,15 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
      * Call to be executed via jenkins virtual channel
      */
     @Override
-    public String call() throws RuntimeException {
+    public String call() throws RuntimeException  {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
-        DarPackager pkger = new DarPackager(mw);
+        try {
+            messageDigest = (Function0<MessageDigest>) MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e){
+            System.out.println(e);
+        }
+        DarPackager pkger = new DarPackager(mw,messageDigest);
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);

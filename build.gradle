@@ -124,8 +124,7 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2016.2.6"
-
+    xlPlatformVersion = "10.0.8"
 }
 
 dependencies {
