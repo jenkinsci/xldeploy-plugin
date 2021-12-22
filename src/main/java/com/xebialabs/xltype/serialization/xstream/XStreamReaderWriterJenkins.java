@@ -62,6 +62,8 @@ import com.thoughtworks.xstream.io.xml.XppDriver;
 import com.xebialabs.deployit.plugin.api.reflect.Descriptor;
 import com.xebialabs.deployit.plugin.api.reflect.DescriptorRegistry;
 import com.xebialabs.deployit.plugin.api.udm.ConfigurationItem;
+import com.xebialabs.deployit.engine.api.dto.Deployment;
+import com.xebialabs.deployit.engine.api.dto.ConfigurationItemId;
 
 import nl.javadude.scannit.Scannit;
 
@@ -72,17 +74,20 @@ import nl.javadude.scannit.Scannit;
 @Provider
 @Produces({"application/*+xml", "text/*+xml"})
 @Consumes({"application/*+xml", "text/*+xml"})
-public class XStreamReaderWriter implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
+public class XStreamReaderWriterJenkins implements MessageBodyReader<Object>, MessageBodyWriter<Object> {
     public static final XppDriver HIERARCHICAL_STREAM_DRIVER = new XppDriver(new XmlFriendlyNameCoder("_-", "_"));
     private static final XStream xStream = new XStreamWithoutReflectionConverter(HIERARCHICAL_STREAM_DRIVER);
     private static final AtomicReference<List<Converter>> CONVERTERS = new AtomicReference<List<Converter>>(Lists.<Converter>newArrayList());
 
-    public XStreamReaderWriter() {
-        logger.debug("Created XStreamReaderWriter");
+    public XStreamReaderWriterJenkins() {
+        logger.debug("Created XStreamReaderWriterJenkins");
         init();
     }
 
     protected void init() {
+        xStream.allowTypes(new Class[] {
+                Deployment.class , ConfigurationItemId.class
+        });
         Collection<Converter> converters = allConverters();
         for (Converter converter : converters) {
             registerConverter(converter);
@@ -188,7 +193,7 @@ public class XStreamReaderWriter implements MessageBodyReader<Object>, MessageBo
         return xStream.unmarshal(HIERARCHICAL_STREAM_DRIVER.createReader(entityStream), null, dataHolder);
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(XStreamReaderWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(XStreamReaderWriterJenkins.class);
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
