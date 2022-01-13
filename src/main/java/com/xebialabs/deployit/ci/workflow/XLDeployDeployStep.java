@@ -24,11 +24,11 @@ import hudson.util.ListBoxModel;
 
 
 public class XLDeployDeployStep extends AbstractStepImpl {
-
     public final String serverCredentials;
     public final String packageId;
     public final String environmentId;
     public String overrideCredentialId;
+    public Boolean rollbackOnError;
 
     @DataBoundConstructor
     public XLDeployDeployStep(String serverCredentials, String packageId,
@@ -36,11 +36,21 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         this.serverCredentials = serverCredentials;
         this.environmentId = environmentId;
         this.packageId = packageId;
+        this.rollbackOnError = false;
     }
 
     @DataBoundSetter
     public void setOverrideCredentialId(String overrideCredentialId) {
         this.overrideCredentialId = overrideCredentialId;
+    }
+
+    @DataBoundSetter
+    public void setRollbackOnError(Boolean rollbackOnError) {
+        if (rollbackOnError == null) {
+            this.rollbackOnError = false;
+        } else {
+            this.rollbackOnError = rollbackOnError;
+        }
     }
 
     @Extension
@@ -74,7 +84,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
 
     }
 
-    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void> 
+    public static final class XLDeployPublishExecution extends AbstractSynchronousNonBlockingStepExecution<Void>
     {
         @Inject
         private transient XLDeployDeployStep step;
@@ -92,8 +102,9 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         protected Void run() throws Exception {
             String resolvedEnvironmentId = envVars.expand(step.environmentId);
             String resolvedPackageId = envVars.expand(step.packageId);
+            String resolvedRollbackOnError = envVars.expand(Boolean.toString(step.rollbackOnError));
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
-            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, true);
+            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, Boolean.parseBoolean(resolvedRollbackOnError));
 
             Job<?,?> job = this.run.getParent();
             DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
