@@ -102,9 +102,6 @@ server.doFirst {
         f.withOutputStream { o -> m.write(o); }
     }
 }
-configurations.archives.with {
-    artifacts.remove artifacts.find { it.toString().contains("packager-10.0.8.jar") }
-}
 
 configurations {
     compile.transitive = true
@@ -134,10 +131,9 @@ dependencies {
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
-    //Added this New Packager with Changes in
+    //Added this New Packager with Changes in Packager module
     compile files('src/main/resources/packager-10.0.11.jar')
     compile fileTree(dir: 'src/main/resources/', include: ['application.conf'])
-    compile group: 'de.schlichtherle.truezip', name: 'truezip-file', version: '7.7.10'
     provided 'org.slf4j:slf4j-api:1.7.7'
 
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
