@@ -90,12 +90,18 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
-        try {
-            messageDigest = (Function0<MessageDigest>) MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e){
-            logger.info(e.getMessage());
-        }
-        DarPackager pkger = new DarPackager(mw,messageDigest);
+        DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
+            @Override
+            public MessageDigest apply(){
+                MessageDigest messageDigest = null;
+                try {
+                    messageDigest = MessageDigest.getInstance("SHA1");
+                } catch (NoSuchAlgorithmException e){
+                    logger.info(e.getMessage());
+                }
+                return messageDigest;
+            }
+        });
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
