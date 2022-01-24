@@ -131,8 +131,6 @@ dependencies {
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
-    //Added this New Packager with Changes in Packager module
-    compile files('src/main/resources/packager-10.0.11.jar')
     compile fileTree(dir: 'src/main/resources/', include: ['application.conf'])
     provided 'org.slf4j:slf4j-api:1.7.7'
 
