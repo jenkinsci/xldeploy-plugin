@@ -96,21 +96,11 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
-//        System.setProperty("config.file", "src/main/resources/reference.conf");
-//        String newLocation = System.getProperty("config.file");
-//        String reader = new InputStreamReader(src/main/resources/reference.conf);
         InputStream ioStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("reference.conf");
-      //  String value = new String(ioStream.readAllBytes(), StandardCharsets.UTF_8);
         Reader reader = new InputStreamReader(ioStream);
         Config config = ConfigFactory.parseReader(reader);
-       // System.out.println("11111111111111111111"+value);
-//        System.out.println(config);
-//       // System.out.println(newLocation);
-//        String configPrefix = "xl.xldeploy.placeholders";
-//        System.out.println(config.getConfig(configPrefix));
-
         DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
             @Override
             public MessageDigest apply(){
