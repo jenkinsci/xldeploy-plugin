@@ -42,6 +42,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.Config;
+import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.InputStream;
 
 /**
  * Wrapper for the packaging operation.
@@ -90,6 +96,21 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
+//        System.setProperty("config.file", "src/main/resources/reference.conf");
+//        String newLocation = System.getProperty("config.file");
+//        String reader = new InputStreamReader(src/main/resources/reference.conf);
+        InputStream ioStream = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("reference.conf");
+      //  String value = new String(ioStream.readAllBytes(), StandardCharsets.UTF_8);
+        Reader reader = new InputStreamReader(ioStream);
+        Config config = ConfigFactory.parseReader(reader);
+       // System.out.println("11111111111111111111"+value);
+//        System.out.println(config);
+//       // System.out.println(newLocation);
+//        String configPrefix = "xl.xldeploy.placeholders";
+//        System.out.println(config.getConfig(configPrefix));
+
         DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
             @Override
             public MessageDigest apply(){
@@ -101,7 +122,7 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
                 }
                 return messageDigest;
             }
-        });
+        },config);
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
