@@ -39,7 +39,6 @@ localizer.dependsOn deleteGeneratedSrcLocalizer
 
 repositories {
     mavenCentral()
-    mavenLocal()
     jcenter()
     maven { url "https://plugins.gradle.org/m2/" }
     maven { url "http://repo.jenkins-ci.org/releases" }
@@ -54,7 +53,6 @@ buildscript {
         // The plugin is currently only available via the Jenkins
         // Maven repository, but has dependencies in Maven Central.
         mavenCentral()
-        mavenLocal()
         jcenter()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url "http://repo.jenkins-ci.org/releases" }
@@ -129,7 +127,6 @@ ext {
 }
 
 dependencies {
-
     compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
