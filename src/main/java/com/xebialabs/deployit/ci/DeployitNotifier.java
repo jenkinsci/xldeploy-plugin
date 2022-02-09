@@ -38,6 +38,7 @@ import hudson.model.*;
 import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
+import hudson.security.Permission;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
@@ -311,11 +312,10 @@ public class DeployitNotifier extends Notifier {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
-            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
+            Jenkins.getInstance().checkPermission(Jenkins.READ);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
-
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 

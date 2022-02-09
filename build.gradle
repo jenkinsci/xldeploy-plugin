@@ -125,24 +125,16 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "10.0.8"
+    xlPlatformVersion = "10.0.11"
 }
 
 dependencies {
 
-   //compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
+    compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
-    compile fileTree(dir: 'src/main/resources/', include: ['packager-10.0.12.jar'])
-    compile fileTree(dir: 'src/main/resources/', include: ['reference.conf'])
     provided 'org.slf4j:slf4j-api:1.7.7'
-    compile group: 'com.typesafe', name: 'config', version: '1.4.1'
-    compile "de.schlichtherle.truezip:truezip-driver-file:7.7.10"
-    compile "de.schlichtherle.truezip:truezip-driver-zip:7.7.10"
-    compile "de.schlichtherle.truezip:truezip-driver-tar:7.7.10"
-    compile "de.schlichtherle.truezip:truezip-file:7.7.10"
-    compile "de.schlichtherle.truezip:truezip-kernel:7.7.10"
 
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     jenkinsPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
