@@ -318,7 +318,7 @@ public class DeployitDescriptorRegistryImpl implements DeployitDescriptorRegistr
 
     private Iterable<String> splitValue(String val) {
 	if (val.contains(";")) {
-		return Splitter.on(';').trimResults().omitEmptyStrings().split(val);
+	    return Splitter.on(';').trimResults().omitEmptyStrings().split(val);
 	}
         return Splitter.on('\n').trimResults().omitEmptyStrings().split(val);
     }
