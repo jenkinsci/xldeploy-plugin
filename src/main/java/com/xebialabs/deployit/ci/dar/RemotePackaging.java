@@ -42,6 +42,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.Config;
+import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.InputStream;
 
 /**
  * Wrapper for the packaging operation.
@@ -90,12 +96,23 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
-        try {
-            messageDigest = (Function0<MessageDigest>) MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e){
-            logger.info(e.getMessage());
-        }
-        DarPackager pkger = new DarPackager(mw,messageDigest);
+        InputStream ioStream = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("reference.conf");
+        Reader reader = new InputStreamReader(ioStream);
+        Config config = ConfigFactory.parseReader(reader);
+        DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
+            @Override
+            public MessageDigest apply(){
+                MessageDigest messageDigest = null;
+                try {
+                    messageDigest = MessageDigest.getInstance("SHA1");
+                } catch (NoSuchAlgorithmException e){
+                    logger.info(e.getMessage());
+                }
+                return messageDigest;
+            }
+        },config);
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);

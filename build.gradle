@@ -103,7 +103,6 @@ server.doFirst {
     }
 }
 
-
 configurations {
     compile.transitive = true
     compile.exclude group: 'com.xebialabs.xl-platform', module: 'xl-utils'
@@ -124,7 +123,7 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "10.0.8"
+    xlPlatformVersion = "10.0.11"
 }
 
 dependencies {
@@ -132,7 +131,6 @@ dependencies {
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "org.jdom:jdom2:2.0.5"
-
     provided 'org.slf4j:slf4j-api:1.7.7'
 
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
