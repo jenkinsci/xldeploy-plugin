@@ -36,7 +36,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         this.serverCredentials = serverCredentials;
         this.environmentId = environmentId;
         this.packageId = packageId;
-        this.rollbackOnError = false;
+        this.rollbackOnError = true;
     }
 
     @DataBoundSetter
@@ -47,7 +47,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     @DataBoundSetter
     public void setRollbackOnError(Boolean rollbackOnError) {
         if (rollbackOnError == null) {
-            this.rollbackOnError = false;
+            this.rollbackOnError = true;
         } else {
             this.rollbackOnError = rollbackOnError;
         }
