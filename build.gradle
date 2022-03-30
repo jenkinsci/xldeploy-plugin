@@ -40,6 +40,7 @@ localizer.dependsOn deleteGeneratedSrcLocalizer
 repositories {
     mavenCentral()
     jcenter()
+	mavenLocal()
     maven { url "https://plugins.gradle.org/m2/" }
     maven { url "http://repo.jenkins-ci.org/releases" }
     maven { url "http://www.knopflerfish.org/maven2" }
@@ -54,6 +55,7 @@ buildscript {
         // Maven repository, but has dependencies in Maven Central.
         mavenCentral()
         jcenter()
+		mavenLocal()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url "http://repo.jenkins-ci.org/releases" }
         maven { url "http://www.knopflerfish.org/maven2" }
@@ -129,7 +131,8 @@ ext {
 dependencies {
     compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
-    compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
+    // The Remote Booter 10.0.13 is not Released , so using a local plugin (Please Download and build the remote-booter from xl-platform), In future remove this and replace with released version.
+	compile "com.xebialabs.deployit.engine:remote-booter:10.0.13-SNAPSHOT"
     compile "org.jdom:jdom2:2.0.5"
     provided 'org.slf4j:slf4j-api:1.7.7'
 
