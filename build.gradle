@@ -130,7 +130,7 @@ dependencies {
     compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
     compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
     // The Remote Booter 10.0.13 is not Released , so using a local plugin (Please Download and build the remote-booter from xl-platform-10.0.x-maintanance), In future remove this and replace with released version.
-    //compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersio"
+    //compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
     compile "com.xebialabs.deployit.engine:remote-booter:10.0.13-SNAPSHOT"
     compile "org.jdom:jdom2:2.0.5"
     provided 'org.slf4j:slf4j-api:1.7.7'
