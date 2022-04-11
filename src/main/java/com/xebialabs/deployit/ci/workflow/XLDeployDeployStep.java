@@ -29,6 +29,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     public final String environmentId;
     public String overrideCredentialId;
     public Boolean rollbackOnError;
+    public Boolean failOnArchive;
 
     @DataBoundConstructor
     public XLDeployDeployStep(String serverCredentials, String packageId,
@@ -37,6 +38,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         this.environmentId = environmentId;
         this.packageId = packageId;
         this.rollbackOnError = true;
+        this.failOnArchive = true;
     }
 
     @DataBoundSetter
@@ -50,6 +52,15 @@ public class XLDeployDeployStep extends AbstractStepImpl {
             this.rollbackOnError = true;
         } else {
             this.rollbackOnError = rollbackOnError;
+        }
+    }
+
+    @DataBoundSetter
+    public void setFailOnArchive(Boolean failOnArchive) {
+        if (failOnArchive == null) {
+            this.failOnArchive = true;
+        } else {
+            this.failOnArchive = failOnArchive;
         }
     }
 
@@ -103,9 +114,9 @@ public class XLDeployDeployStep extends AbstractStepImpl {
             String resolvedEnvironmentId = envVars.expand(step.environmentId);
             String resolvedPackageId = envVars.expand(step.packageId);
             String resolvedRollbackOnError = envVars.expand(Boolean.toString(step.rollbackOnError));
+            String resolvedFailOnArchive = envVars.expand(Boolean.toString(step.failOnArchive));
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
-            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, Boolean.parseBoolean(resolvedRollbackOnError));
-
+            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, Boolean.parseBoolean(resolvedRollbackOnError), Boolean.parseBoolean(resolvedFailOnArchive));
             Job<?,?> job = this.run.getParent();
             DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
                     step.serverCredentials, step.overrideCredentialId, job);

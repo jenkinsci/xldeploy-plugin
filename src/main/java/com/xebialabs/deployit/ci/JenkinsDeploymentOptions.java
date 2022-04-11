@@ -59,16 +59,18 @@ public class JenkinsDeploymentOptions implements Describable<JenkinsDeploymentOp
     public boolean skipMode;
     public boolean testMode;
     public boolean rollbackOnError;
+    public boolean failOnArchive;
 
     public final VersionKind versionKind;
     public String version;
 
     @DataBoundConstructor
-    public JenkinsDeploymentOptions(String environment, VersionKind versionKind, boolean generateDeployedOnUpgrade, boolean skipMode, boolean testMode, boolean rollbackOnError) {
+    public JenkinsDeploymentOptions(String environment, VersionKind versionKind, boolean generateDeployedOnUpgrade, boolean skipMode, boolean testMode, boolean rollbackOnError, boolean failOnArchive) {
         this.generateDeployedOnUpgrade = generateDeployedOnUpgrade;
         this.skipMode = skipMode;
         this.testMode = testMode;
         this.rollbackOnError = rollbackOnError;
+        this.failOnArchive = failOnArchive;
         this.environment = environment;
         this.versionKind = versionKind;
     }
