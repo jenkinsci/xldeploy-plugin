@@ -177,7 +177,7 @@ public class DeployCommand {
             startTaskAndWait(taskId);
             checkTaskState(taskId);
             try {
-                taskService.archive(taskId); // Do whatever you want to do with the file
+                taskService.archive(taskId);
             }
             catch (Exception e) {
                 if(deploymentOptions.failOnArchive) {
