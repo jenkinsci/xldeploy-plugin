@@ -176,13 +176,21 @@ public class DeployCommand {
             listener.info("Start deployment task " + taskId);
             startTaskAndWait(taskId);
             checkTaskState(taskId);
-            taskService.archive(taskId);
+            try {
+                taskService.archive(taskId); // Do whatever you want to do with the file
+            }
+            catch (Exception e) {
+                if(deploymentOptions.failOnArchive) {
+                    throw new RuntimeException();
+                } else {
+                    listener.info("Error while Archiving Task : " + e);
+                }
+            }
             return true;
         } catch (RuntimeException e) {
             String msg = format("Error when executing task %s", taskId);
             throw new DeployitPluginException(msg);
         }
-
     }
 
     private List<Integer> range(int end) {
