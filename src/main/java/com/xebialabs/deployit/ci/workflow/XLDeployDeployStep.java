@@ -29,7 +29,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     public final String environmentId;
     public String overrideCredentialId;
     public Boolean rollbackOnError;
-    public Boolean failOnArchive;
+    public Boolean failOnArchiveFailure;
 
     @DataBoundConstructor
     public XLDeployDeployStep(String serverCredentials, String packageId,
@@ -38,7 +38,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         this.environmentId = environmentId;
         this.packageId = packageId;
         this.rollbackOnError = true;
-        this.failOnArchive = true;
+        this.failOnArchiveFailure = true;
     }
 
     @DataBoundSetter
@@ -56,11 +56,11 @@ public class XLDeployDeployStep extends AbstractStepImpl {
     }
 
     @DataBoundSetter
-    public void setFailOnArchive(Boolean failOnArchive) {
-        if (failOnArchive == null) {
-            this.failOnArchive = true;
+    public void setFailOnArchiveFailure(Boolean failOnArchiveFailure) {
+        if (failOnArchiveFailure == null) {
+            this.failOnArchiveFailure = true;
         } else {
-            this.failOnArchive = failOnArchive;
+            this.failOnArchiveFailure = failOnArchiveFailure;
         }
     }
 
@@ -114,9 +114,9 @@ public class XLDeployDeployStep extends AbstractStepImpl {
             String resolvedEnvironmentId = envVars.expand(step.environmentId);
             String resolvedPackageId = envVars.expand(step.packageId);
             String resolvedRollbackOnError = envVars.expand(Boolean.toString(step.rollbackOnError));
-            String resolvedFailOnArchive = envVars.expand(Boolean.toString(step.failOnArchive));
+            String resolvedFailOnArchiveFailure = envVars.expand(Boolean.toString(step.failOnArchiveFailure));
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
-            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, Boolean.parseBoolean(resolvedRollbackOnError), Boolean.parseBoolean(resolvedFailOnArchive));
+            JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, Boolean.parseBoolean(resolvedRollbackOnError), Boolean.parseBoolean(resolvedFailOnArchiveFailure));
             Job<?,?> job = this.run.getParent();
             DeployitServer deployitServer = RepositoryUtils.getDeployitServerFromCredentialsId(
                     step.serverCredentials, step.overrideCredentialId, job);

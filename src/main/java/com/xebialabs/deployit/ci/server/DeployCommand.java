@@ -180,7 +180,7 @@ public class DeployCommand {
                 taskService.archive(taskId); // Do whatever you want to do with the file
             }
             catch (Exception e) {
-                if(deploymentOptions.failOnArchive) {
+                if(deploymentOptions.failOnArchiveFailure) {
                     throw new RuntimeException();
                 } else {
                     listener.info("Error while Archiving Task : " + e);
