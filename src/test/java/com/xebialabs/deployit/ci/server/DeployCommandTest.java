@@ -48,7 +48,7 @@ public class DeployCommandTest {
         DeploymentService deploymentService = mock(DeploymentService.class);
         TaskService taskService = mock(TaskService.class);
         RepositoryService repositoryService = mock(RepositoryService.class);
-        JenkinsDeploymentOptions jenkinsOptions = new JenkinsDeploymentOptions("test", VersionKind.Packaged, false, false, false, false);
+        JenkinsDeploymentOptions jenkinsOptions = new JenkinsDeploymentOptions("test", VersionKind.Packaged, false, false, false, false, true);
         JenkinsDeploymentListener jenkinsDeploymentListener = new JenkinsDeploymentListener(new StreamBuildListener(System.out, Charset.defaultCharset()), true);
         DeployCommand deployCommand = new DeployCommand(deploymentService, taskService, repositoryService, jenkinsOptions, jenkinsDeploymentListener);
 
