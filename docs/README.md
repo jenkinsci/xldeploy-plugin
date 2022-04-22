@@ -13,7 +13,7 @@ Deploy](https://docs.digital.ai/bundle/devops-deploy-version-v.10.2) by adding t
 post-build actions to your Jenkins installation:
 
 -   Package your application
--   Publish your deployment package to XL Deploy
+-   Publish your deployment package to Digital.ai Deploy
 -   Deploy your application
 
 These actions can be executed separately or combined sequentially.
@@ -21,7 +21,7 @@ These actions can be executed separately or combined sequentially.
 # Requirements
 
 -   [A supported version of DAI Deploy.](https://support.digital.ai/hc/en-us/articles/360016879780-XebiaLabs-Supported-Product-Versions#support-overview-0-3) 
--   Jenkins LTS versions supported: from 2.289.1 to 2.303.1
+-   Jenkins LTS versions supported: from 2.303.1 to 2.319.2
 -   Java 8
 
 **Note:** In version 6.0.0 and later, the plugin requires the Jenkins
