@@ -37,8 +37,9 @@ public class XLDeployDeployStep extends AbstractStepImpl {
         this.serverCredentials = serverCredentials;
         this.environmentId = environmentId;
         this.packageId = packageId;
-        this.rollbackOnError = true;
+        this.rollbackOnError = null;
         this.failOnArchiveFailure = true;
+
     }
 
     @DataBoundSetter
@@ -48,11 +49,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
 
     @DataBoundSetter
     public void setRollbackOnError(Boolean rollbackOnError) {
-        if (rollbackOnError == null) {
-            this.rollbackOnError = true;
-        } else {
-            this.rollbackOnError = rollbackOnError;
-        }
+        this.rollbackOnError = rollbackOnError;
     }
 
     @DataBoundSetter
@@ -111,9 +108,15 @@ public class XLDeployDeployStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
+
+            XLDeployDeployStep.XLDeployDeployStepDescriptor deployStepDescriptor = new XLDeployDeployStep.XLDeployDeployStepDescriptor();
+            boolean globalRollbackOnError = deployStepDescriptor.getDeployitDescriptor().getGlobalRollbackOnError();
+            String resolvedRollbackOnError = envVars.expand(Boolean.toString(globalRollbackOnError));
+            if (null != step.rollbackOnError)
+                resolvedRollbackOnError = envVars.expand(Boolean.toString(step.rollbackOnError));
+
             String resolvedEnvironmentId = envVars.expand(step.environmentId);
             String resolvedPackageId = envVars.expand(step.packageId);
-            String resolvedRollbackOnError = envVars.expand(Boolean.toString(step.rollbackOnError));
             String resolvedFailOnArchiveFailure = envVars.expand(Boolean.toString(step.failOnArchiveFailure));
             JenkinsDeploymentListener deploymentListener = new JenkinsDeploymentListener(listener, false);
             JenkinsDeploymentOptions deploymentOptions = new JenkinsDeploymentOptions(resolvedEnvironmentId, VersionKind.Other, true, false , false, Boolean.parseBoolean(resolvedRollbackOnError), Boolean.parseBoolean(resolvedFailOnArchiveFailure));
@@ -122,6 +125,7 @@ public class XLDeployDeployStep extends AbstractStepImpl {
                     step.serverCredentials, step.overrideCredentialId, job);
             deployitServer.deploy(resolvedPackageId,resolvedEnvironmentId,deploymentOptions,deploymentListener);
             return null;
+
         }
     }
 }

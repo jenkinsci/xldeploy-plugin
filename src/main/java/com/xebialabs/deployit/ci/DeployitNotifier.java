@@ -157,6 +157,8 @@ public class DeployitNotifier extends Notifier {
 
         private int connectionPoolSize = DeployitServer.DEFAULT_POOL_SIZE;
 
+        private boolean globalRollbackOnError = Boolean.FALSE;
+
         // credentials are actually globally available credentials
         private List<Credential> credentials = new ArrayList<Credential>();
 
@@ -219,6 +221,8 @@ public class DeployitNotifier extends Notifier {
             if (!Strings.isNullOrEmpty(connectionPoolSizeString)) {
                 connectionPoolSize = Integer.parseInt(connectionPoolSizeString);
             }
+            String strRollbackOnError = json.get("globalRollbackOnError").toString();
+            globalRollbackOnError = Boolean.valueOf(strRollbackOnError);
             credentials = req.bindJSONToList(Credential.class, json.get("credentials"));
             save();  //serialize to xml
             credentialServerMap.clear(); // each time global config is changed clear server cache
@@ -254,6 +258,10 @@ public class DeployitNotifier extends Notifier {
 
         public int getConnectionPoolSize() {
             return connectionPoolSize;
+        }
+
+        public boolean getGlobalRollbackOnError() {
+            return globalRollbackOnError;
         }
 
         private FormValidation validateOptionalUrl(String url) {

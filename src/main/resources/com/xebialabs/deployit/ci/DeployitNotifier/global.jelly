@@ -9,6 +9,9 @@
         <f:entry title="${%Connection Pool Size}" field="connectionPoolSize">
             <f:number checkMethod="post" />
         </f:entry>
+        <f:entry title="${%Rollback On Error}" field="globalRollbackOnError">
+            <f:checkbox checkMethod="post" />
+        </f:entry>
         <f:entry title="Credentials" field="credentials">
             <f:repeatable field="credentials" minimum="${1}">
                 <xld:blockWrapper>
