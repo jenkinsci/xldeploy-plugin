@@ -123,22 +123,42 @@ configurations {
 }
 
 ext {
-    xlPlatformVersion = "2017.6.0"
+    xlPlatformVersion = "10.0.14"
+    xlPlatformVersionPackager = "2017.6.0"
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/com.typesafe/config
+    compile ("com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion") {
+            transitive = false;
+    }
+    compile ("com.xebialabs.deployit.engine:engine-xml:$xlPlatformVersion") {
+           transitive = true;
+    }
+    compile ("com.xebialabs.deployit.engine:packager:$xlPlatformVersionPackager") {
+        transitive = false;
+    }
+    compile ("com.xebialabs.deployit:appserver-api:$xlPlatformVersion"){
+        transitive = false;
+    }
+    compile "org.scala-lang:scala-library:2.12.3"
     compile 'com.typesafe:config:1.3.0'
-    compile "com.xebialabs.deployit.engine:packager:$xlPlatformVersion"
-    compile "com.xebialabs.deployit:engine-api:$xlPlatformVersion"
-    compile "com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion"
+    compile "com.thoughtworks.xstream:xstream:1.4.13"
+    compile "commons-codec:commons-codec:1.15"
+    compile "joda-time:joda-time:2.10.6"
+    compile "nl.javadude.scannit:scannit:1.4.1"
+    compile "org.jboss.resteasy:resteasy-jaxrs:3.12.1.Final"
+    compile "org.apache.httpcomponents:httpclient:4.5.13"
+    compile "org.apache.httpcomponents:httpcore:4.4.13"
+    compile "org.apache.httpcomponents:httpmime:4.5.13"
+    compile "javax.xml.bind:jaxb-api:2.3.1"
     compile "org.jdom:jdom2:2.0.5"
     provided 'org.slf4j:slf4j-api:1.7.7'
-    compile "de.schlichtherle.truezip:truezip-driver-file"
-    compile "de.schlichtherle.truezip:truezip-driver-zip"
+    compile "de.schlichtherle.truezip:truezip-driver-file:7.7.10"
+    compile "de.schlichtherle.truezip:truezip-driver-zip:7.7.10"
     compile "de.schlichtherle.truezip:truezip-driver-tar:7.7.10"
-    compile "de.schlichtherle.truezip:truezip-file"
-    compile "de.schlichtherle.truezip:truezip-kernel"
+    compile "de.schlichtherle.truezip:truezip-file:7.7.10"
+    compile "de.schlichtherle.truezip:truezip-kernel:7.7.10"
+
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     jenkinsPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar"
 
