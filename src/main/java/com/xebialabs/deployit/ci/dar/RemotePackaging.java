@@ -113,7 +113,9 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
         }
         return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true).getPath();
     }
-
+    /**
+     * Old Call logic for packager - Once Deploy Fixes D-21539 , will update the call with below logic.
+     */
     public String oldcall() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
