@@ -124,18 +124,19 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
                 .getResourceAsStream("reference.conf");
         Reader reader = new InputStreamReader(ioStream);
         Config config = ConfigFactory.parseReader(reader);
-        DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
-            @Override
-            public MessageDigest apply(){
-                MessageDigest messageDigest = null;
-                try {
-                    messageDigest = MessageDigest.getInstance("SHA1");
-                } catch (NoSuchAlgorithmException e){
-                    logger.info(e.getMessage());
-                }
-                return messageDigest;
-            }
-        },config);
+        DarPackager pkger = new DarPackager(mw);
+//        DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
+//            @Override
+//            public MessageDigest apply(){
+//                MessageDigest messageDigest = null;
+//                try {
+//                    messageDigest = MessageDigest.getInstance("SHA1");
+//                } catch (NoSuchAlgorithmException e){
+//                    logger.info(e.getMessage());
+//                }
+//                return messageDigest;
+//            }
+//        },config);
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
             SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
