@@ -96,26 +96,50 @@ public class RemotePackaging implements Callable<String, RuntimeException> {
     public String call() throws RuntimeException {
         targetDir.mkdirs();
         ManifestWriter mw = new ManifestXmlWriter();
+        DarPackager pkger = new DarPackager(mw);
+        DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
+        if (null == descriptorRegistry) {
+           SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
+        } else {
+            if (descriptorRegistry instanceof Versioned) {
+                Versioned versionedDescriptorRegistry = (Versioned) descriptorRegistry;
+                if (!versionedDescriptorRegistry.getVersion().equals(this.registryVersion)) {
+                    SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
+                }
+            }
+            else {
+                // do nothing for normal remote descriptor registries - those should be reloaded from the UI
+            }
+        }
+        return pkger.buildPackage(deploymentPackage, targetDir.getAbsolutePath(), true).getPath();
+    }
+    /**
+     * Old Call logic for packager - Once Deploy Fixes D-21539 , will update the call with below logic.
+     */
+    public String oldcall() throws RuntimeException {
+        targetDir.mkdirs();
+        ManifestWriter mw = new ManifestXmlWriter();
         InputStream ioStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("reference.conf");
         Reader reader = new InputStreamReader(ioStream);
         Config config = ConfigFactory.parseReader(reader);
-        DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
-            @Override
-            public MessageDigest apply(){
-                MessageDigest messageDigest = null;
-                try {
-                    messageDigest = MessageDigest.getInstance("SHA1");
-                } catch (NoSuchAlgorithmException e){
-                    logger.info(e.getMessage());
-                }
-                return messageDigest;
-            }
-        },config);
+        DarPackager pkger = new DarPackager(mw);
+//        DarPackager pkger = new DarPackager(mw,new Function0<MessageDigest>() {
+//            @Override
+//            public MessageDigest apply(){
+//                MessageDigest messageDigest = null;
+//                try {
+//                    messageDigest = MessageDigest.getInstance("SHA1");
+//                } catch (NoSuchAlgorithmException e){
+//                    logger.info(e.getMessage());
+//                }
+//                return messageDigest;
+//            }
+//        },config);
         DescriptorRegistry descriptorRegistry = DescriptorRegistry.getDescriptorRegistry(booterConfig);
         if (null == descriptorRegistry) {
-           SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
+            SlaveRemoteDescriptorRegistry.boot(descriptors, booterConfig, registryVersion);
         } else {
             if (descriptorRegistry instanceof Versioned) {
                 Versioned versionedDescriptorRegistry = (Versioned) descriptorRegistry;
