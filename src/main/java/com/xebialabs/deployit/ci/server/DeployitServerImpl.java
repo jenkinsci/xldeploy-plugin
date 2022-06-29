@@ -30,13 +30,14 @@ public class DeployitServerImpl implements DeployitServer {
     private BooterConfig booterConfig;
     private DeployitDescriptorRegistry descriptorRegistry;
     private int poolSize;
+    private int socketTimeout;
 
     DeployitServerImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
         BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
             .withConnectionPoolSize(poolSize)
             .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
-            .withSocketTimeout(booterConfig.getSocketTimeout())
+            .withSocketTimeout(socketTimeout)
             .build();
         this.descriptorRegistry = Reflection.newProxy(DeployitDescriptorRegistry.class,
                 new PluginFirstClassloaderInvocationHandler(new DeployitDescriptorRegistryImpl(newBooterConfig)));
@@ -49,6 +50,11 @@ public class DeployitServerImpl implements DeployitServer {
     @Override
     public void setConnectionPoolSize(final int poolSize) {
         this.poolSize = poolSize;
+    }
+
+    @Override
+    public void setSocketTimeout(final int socketTimeout) {
+        this.socketTimeout = socketTimeout;
     }
 
     @Override

@@ -156,6 +156,7 @@ public class DeployitNotifier extends Notifier {
         private String deployitClientProxyUrl;
 
         private int connectionPoolSize = DeployitServer.DEFAULT_POOL_SIZE;
+        private int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
 
         // credentials are actually globally available credentials
         private List<Credential> credentials = new ArrayList<Credential>();
@@ -175,7 +176,7 @@ public class DeployitNotifier extends Notifier {
             String proxyUrl = credential.resolveProxyUrl(deployitClientProxyUrl);
 
             int newConnectionPoolSize = connectionPoolSize > 0 ? connectionPoolSize : DeployitServer.DEFAULT_POOL_SIZE;
-            int socketTimeout = DeployitServer.DEFAULT_SOCKET_TIMEOUT;
+            int newSocketTimeout = socketTimeout > 0 ? socketTimeout : DeployitServer.DEFAULT_SOCKET_TIMEOUT;
 
             String userName = credential.getUsername();
             String password = credential.getPassword().getPlainText();
@@ -187,7 +188,7 @@ public class DeployitNotifier extends Notifier {
                 userName = cred.getUsername();
                 password = cred.getPassword().getPlainText();
             }
-            return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, socketTimeout);
+            return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, newSocketTimeout);
         }
 
         public DeployitServer getDeployitServer(Credential credential, Job<?, ?> project) {
@@ -216,8 +217,12 @@ public class DeployitNotifier extends Notifier {
             deployitServerUrl = json.get("deployitServerUrl").toString();
             deployitClientProxyUrl = json.get("deployitClientProxyUrl").toString();
             String connectionPoolSizeString = json.get("connectionPoolSize").toString();
+            String socketTimeoutString = json.get("socketTimeout").toString();
             if (!Strings.isNullOrEmpty(connectionPoolSizeString)) {
                 connectionPoolSize = Integer.parseInt(connectionPoolSizeString);
+            }
+            if (!Strings.isNullOrEmpty(socketTimeoutString)) {
+                socketTimeout = Integer.parseInt(socketTimeoutString);
             }
             credentials = req.bindJSONToList(Credential.class, json.get("credentials"));
             save();  //serialize to xml
@@ -254,6 +259,10 @@ public class DeployitNotifier extends Notifier {
 
         public int getConnectionPoolSize() {
             return connectionPoolSize;
+        }
+
+        public int getSocketTimeout() {
+            return socketTimeout;
         }
 
         private FormValidation validateOptionalUrl(String url) {
@@ -299,6 +308,22 @@ public class DeployitNotifier extends Notifier {
                 }
             } catch (NumberFormatException e) {
                 return error("%s is not a valid integer.", connectionPoolSize);
+            }
+
+            return ok();
+        }
+
+        @RequirePOST
+        public FormValidation doCheckSocketTimeout(@QueryParameter String socketTimeout) {
+
+            Jenkins.getInstance().checkPermission(Item.CONFIGURE);
+            try {
+                Integer value = Integer.parseInt(socketTimeout);
+                if (value <= 0) {
+                    return error("Socket Timeout may not be negative or zero.");
+                }
+            } catch (NumberFormatException e) {
+                return error("%s is not a valid integer.", socketTimeout);
             }
 
             return ok();
