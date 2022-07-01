@@ -16,6 +16,8 @@ public interface DeployitServer {
 
     void setConnectionPoolSize(int poolSize);
 
+    void setSocketTimeout(int poolSize);
+
     List<String> search(String type);
 
     List<String> search(String type, String namePattern);
