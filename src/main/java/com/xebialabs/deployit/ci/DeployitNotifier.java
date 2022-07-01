@@ -157,7 +157,7 @@ public class DeployitNotifier extends Notifier {
 
         private int connectionPoolSize = DeployitServer.DEFAULT_POOL_SIZE;
 
-        private boolean globalRollbackOnError = Boolean.FALSE;
+        private boolean globalRollbackOnError = Boolean.TRUE;
 
         // credentials are actually globally available credentials
         private List<Credential> credentials = new ArrayList<Credential>();
