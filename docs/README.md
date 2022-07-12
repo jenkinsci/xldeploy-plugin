@@ -41,7 +41,7 @@ or later.
     [Jenkinsfile](https://jenkins.io/doc/book/pipeline/jenkinsfile/)
     (supported in version 6.1.0 and later)
 -   RollbackOnError option to rollback to the nearest successful build on failure. 
-    Defaults to "true" if not specified
+-   Global setting for RollbackOnError which defaults to "true" is introduced. 
 
 For information about configuring and using the plugin, visit the
 [Digital.ai documentation
