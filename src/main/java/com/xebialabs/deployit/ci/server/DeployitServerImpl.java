@@ -34,6 +34,8 @@ public class DeployitServerImpl implements DeployitServer {
 
     DeployitServerImpl(BooterConfig booterConfig) {
         this.booterConfig = booterConfig;
+        this.poolSize=booterConfig.getConnectionPoolSize();
+        this.socketTimeout=booterConfig.getSocketTimeout();
         BooterConfig newBooterConfig = BooterConfig.builder(booterConfig)
             .withConnectionPoolSize(poolSize)
             .withHttpRequestInterceptor(new PreemptiveAuthenticationInterceptor())
