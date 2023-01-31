@@ -199,9 +199,9 @@ dependencies {
 
 release {
     buildTasks = ['publish']
-    tagTemplate = 'xldeploy-plugin-23.1.0'
+    tagTemplate = 'xldeploy-plugin-$version'
     preTagCommitMessage = 'Released Jenkins XL Deploy plugin '
-    tagCommitMessage = 'Tag for xldeploy-plugin-23.1.0'
+    tagCommitMessage = 'Tag for xldeploy-plugin-$version'
     newVersionCommitMessage = 'Set development version to '
 }
 
