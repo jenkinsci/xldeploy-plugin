@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.xebialabs.xl-deploy</groupId>
+	<artifactId>jenkins-dependendencies</artifactId>
+	<packaging>pom</packaging>
+	<version>5.0.0-SNAPSHOT</version>
+
+	<properties>
+		<version.xl-platform>2019.3.8</version.xl-platform>
+		<version.overthere>4.0.0</version.overthere>
+	</properties>
+
+	<repositories>
+		<repository>
+			<id>xebialabs-maven2</id>
+			<url>https://dist.xebialabs.com/public/maven2</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.xebialabs.deployit</groupId>
+			<artifactId>engine-api</artifactId>
+			<version>${version.xl-platform}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.xebialabs.deployit.engine</groupId>
+			<artifactId>engine-xml</artifactId>
+			<version>${version.xl-platform}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.xebialabs.deployit</groupId>
+			<artifactId>udm-plugin-api</artifactId>
+			<version>${version.xl-platform}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.knopflerfish</groupId>
+					<artifactId>framework</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.xebialabs.deployit.engine</groupId>
+			<artifactId>packager</artifactId>
+			<version>${version.xl-platform}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.xebialabs.deployit.engine</groupId>
+			<artifactId>remote-booter</artifactId>
+			<version>${version.xl-platform}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.xebialabs.deployit</groupId>
+			<artifactId>appserver-api</artifactId>
+			<version>${version.xl-platform}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+					<version>2.6.1</version>
+					<configuration>
+						<filesets>
+							<fileset>
+								<directory>./com</directory>
+								<followSymlinks>false</followSymlinks>
+							</fileset>
+						</filesets>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>2.10</version>
+					<configuration>
+						<outputDirectory>.</outputDirectory>
+						<useRepositoryLayout>true</useRepositoryLayout>
+						<excludeTransitive>true</excludeTransitive>
+						<includeGroupIds>com.xebialabs.deployit,com.xebialabs.deployit.engine,com.xebialabs.xl-platform</includeGroupIds>
+						<classifier>sources</classifier>
+						<failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
+						<copyPom>true</copyPom>
+						<overWriteSnapshots>true</overWriteSnapshots>
+						<overWriteReleases>true</overWriteReleases>
+						<overWriteIfNewer>true</overWriteIfNewer>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>generate-resources
+							</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+					</execution>
+				</executions>
+
+			</plugin>
+		</plugins>
+	</build>
+</project>
