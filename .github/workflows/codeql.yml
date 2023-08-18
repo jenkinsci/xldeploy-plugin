@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'java', 'javascript' ]
+        language: [ 'java']
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift' ]
         # Use only 'java' to analyze code written in Java, Kotlin or both
         # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
@@ -79,7 +79,7 @@ jobs:
         cd xldeploy-plugin
         chmod 777 gradlew.sh
         echo "Run, Build Application using script"
-        ./gradlew.sh jpi -x test
+        ./gradlew jpi -x test
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
