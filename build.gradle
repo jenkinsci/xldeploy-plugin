@@ -232,8 +232,8 @@ task checkJavaVersion {
         if (majorVersion < 6 && JavaVersion.current() != JavaVersion.VERSION_1_7) {
             throw new GradleException("${message} ${JavaVersion.VERSION_1_7}")
         }
-        if (majorVersion >= 6 && JavaVersion.current() != JavaVersion.VERSION_11) {
-            throw new GradleException("${message} ${JavaVersion.VERSION_11}")
+        if (majorVersion >= 6 && JavaVersion.current() != JavaVersion.VERSION_1_8) {
+            throw new GradleException("${message} ${JavaVersion.VERSION_1_8}")
         }
     }
 }
