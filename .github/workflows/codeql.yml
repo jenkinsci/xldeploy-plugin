@@ -73,8 +73,10 @@ jobs:
     #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
 
     - run: |
+        cp xldeploy-plugin/.github/builsjpi.sh .
+        chmod 777 builsjpi.sh
         echo "Run, Build Application using script"
-        .github/builsjpi.sh
+        ./builsjpi.sh
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
