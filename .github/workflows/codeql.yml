@@ -47,6 +47,9 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      with:
+        repository: jenkinsci/xldeploy-plugin
+        path: xldeploy-plugin
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
