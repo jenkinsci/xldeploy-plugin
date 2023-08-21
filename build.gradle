@@ -131,7 +131,13 @@ dependencies {
     compile ("com.xebialabs.deployit.engine:remote-booter:$xlPlatformVersion") {
             transitive = false;
     }
+
+	compile ("org.springframework.security:spring-security-core:5.7.10") {
+        transitive = true;
+    }
+
     compile ("com.xebialabs.deployit.engine:engine-xml:$xlPlatformVersion") {
+           exclude group: 'org.springframework.security', module: 'spring-security-core'
            transitive = true;
     }
     compile ("com.xebialabs.deployit.engine:packager:$xlPlatformVersionPackager") {
