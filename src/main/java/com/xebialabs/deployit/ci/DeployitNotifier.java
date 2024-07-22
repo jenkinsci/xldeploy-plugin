@@ -272,7 +272,35 @@ public class DeployitNotifier extends Notifier {
         public boolean getGlobalRollbackOnError() {
             return globalRollbackOnError;
         }
-		
+
+        public void setDeployitServerUrl(String deployitServerUrl) {
+            this.deployitServerUrl = deployitServerUrl;
+        }
+
+        public void setDeployitClientProxyUrl(String deployitClientProxyUrl) {
+            this.deployitClientProxyUrl = deployitClientProxyUrl;
+        }
+
+        public void setConnectionPoolSize(int connectionPoolSize) {
+            this.connectionPoolSize = connectionPoolSize;
+        }
+
+        public void setSocketTimeout(int socketTimeout) {
+            this.socketTimeout = socketTimeout;
+        }
+
+        public boolean isGlobalRollbackOnError() {
+            return globalRollbackOnError;
+        }
+
+        public void setGlobalRollbackOnError(boolean globalRollbackOnError) {
+            this.globalRollbackOnError = globalRollbackOnError;
+        }
+
+        public void setCredentials(List<Credential> credentials) {
+            this.credentials = credentials;
+        }
+
         private FormValidation validateOptionalUrl(String url) {
             try {
                 if (!Strings.isNullOrEmpty(url)) {
