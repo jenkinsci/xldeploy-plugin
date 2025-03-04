@@ -159,6 +159,7 @@ dependencies {
     compile "javax.xml.bind:jaxb-api:2.3.1"
     compile "org.jdom:jdom2:2.0.5"
     provided 'org.slf4j:slf4j-api:1.7.7'
+    compile "org.apache.commons:commons-compress:1.21"
     compile "de.schlichtherle.truezip:truezip-driver-file:7.7.10"
     compile "de.schlichtherle.truezip:truezip-driver-zip:7.7.10"
     compile "de.schlichtherle.truezip:truezip-driver-tar:7.7.10"
