@@ -217,24 +217,25 @@ public class DeployCommand {
         }
 
         StringBuilder sb = new StringBuilder();
-        int stepCount = 0;
-        for (StepState stepInfo : taskService.getSteps(taskId).getSteps()) {
-
-            final String description = stepInfo.getDescription();
-            final String log = stepInfo.getLog();
-            String stepInfoMessage;
-            if (StringUtils.isEmpty(log) || description.equals(log)) {
-                stepInfoMessage = format("%s step #%d %s\t%s", taskId, stepCount, stepInfo.getState(), description);
-            } else {
-                stepInfoMessage = format("%s step #%d %s\t%s\n%s", taskId, stepCount, stepInfo.getState(), description, log);
+        try {
+            int stepCount = 0;
+            for (StepState stepInfo : taskService.getSteps(taskId).getSteps()) {
+                final String description = stepInfo.getDescription();
+                final String log = stepInfo.getLog();
+                String stepInfoMessage;
+                if (StringUtils.isEmpty(log) || description.equals(log)) {
+                    stepInfoMessage = format("%s step #%d %s\t%s", taskId, stepCount, stepInfo.getState(), description);
+                } else {
+                    stepInfoMessage = format("%s step #%d %s\t%s\n%s", taskId, stepCount, stepInfo.getState(), description, log);
+                }
+                listener.info(stepInfoMessage);
+                if (StepExecutionState.FAILED.equals(stepInfo.getState()))
+                    sb.append(stepInfoMessage);
+                stepCount++;
             }
-
-            listener.info(stepInfoMessage);
-            if (StepExecutionState.FAILED.equals(stepInfo.getState()))
-                sb.append(stepInfoMessage);
-            stepCount++;
+        } catch (Exception e) {
+            listener.info(format("Could not retrieve step details for task %s: %s", taskId, e.getMessage()));
         }
-
         if (taskState.getState().isExecutionHalted())
             throw new DeployitPluginException(format("Errors when executing task %s: %s", taskId, sb));
     }
