@@ -23,8 +23,8 @@
 
 package com.xebialabs.deployit.ci;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
 import com.google.common.base.Strings;
 import com.xebialabs.deployit.ci.DeployitPerformer.DeployitPerformerParameters;
@@ -181,14 +181,39 @@ public class DeployitNotifier extends Notifier {
             int newSocketTimeout = socketTimeout > 0 ? socketTimeout : DeployitServer.DEFAULT_SOCKET_TIMEOUT;
 
             String userName = credential.getUsername();
-            String password = credential.getPassword().getPlainText();
+            String password = credential.getEffectivePassword() != null ? credential.getEffectivePassword().getPlainText() : null;
+
+            if (credential.isPAT()) {
+                userName = "";
+            }
+
+            if (Strings.isNullOrEmpty(password)) {
+                throw new IllegalArgumentException(String.format("Credentials for '%s' do not contain a password or PAT token.", credential.getName()));
+            }
+
             if (credential.isUseGlobalCredential()) {
-                StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(credential.getCredentialsId(), itemGroup);
-                if (cred == null) {
+                IdCredentials idCred = Credential.lookupSystemIdCredentials(credential.getCredentialsId(), itemGroup);
+                if (idCred == null) {
                     throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
                 }
-                userName = cred.getUsername();
-                password = cred.getPassword().getPlainText();
+
+                if (credential.isPAT()) {
+                    if (!Credential.isSecretTextCredential(idCred)) {
+                        throw new IllegalArgumentException(String.format("Credentials for '%s' must be Secret Text for PAT authentication.", credential.getCredentialsId()));
+                    }
+                    userName = "";
+                    password = Credential.extractTokenValue(idCred);
+                    if (Strings.isNullOrEmpty(password)) {
+                        throw new IllegalArgumentException(String.format("Credentials for '%s' do not provide a token value.", credential.getCredentialsId()));
+                    }
+                } else {
+                    if (!(idCred instanceof StandardUsernamePasswordCredentials)) {
+                        throw new IllegalArgumentException(String.format("Credentials for '%s' must be Username with password for BASIC authentication.", credential.getCredentialsId()));
+                    }
+                    StandardUsernamePasswordCredentials cred = (StandardUsernamePasswordCredentials) idCred;
+                    userName = cred.getUsername();
+                    password = cred.getPassword().getPlainText();
+                }
             }
             return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, newSocketTimeout);
         }
@@ -374,10 +399,17 @@ public class DeployitNotifier extends Notifier {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
             Jenkins.getInstance().checkPermission(Jenkins.READ);
-            List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+            List<IdCredentials> creds = lookupCredentials(IdCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
-            return new StandardUsernameListBoxModel().withAll(creds);
+
+            ListBoxModel model = new ListBoxModel();
+            for (IdCredentials cred : creds) {
+                if (cred instanceof StandardUsernamePasswordCredentials || Credential.isSecretTextCredential(cred)) {
+                    model.add(cred.getId(), cred.getId());
+                }
+            }
+            return model;
         }
 
         @RequirePOST

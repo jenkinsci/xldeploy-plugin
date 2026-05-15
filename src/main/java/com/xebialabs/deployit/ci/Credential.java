@@ -28,14 +28,15 @@ import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
 import com.google.common.base.Function;
@@ -59,6 +60,11 @@ import jenkins.model.Jenkins;
 
 public class Credential extends AbstractDescribableImpl<Credential> {
 
+    public enum AuthType {
+        BASIC,
+        PAT
+    }
+
     public static final Function<Credential, String> CREDENTIAL_INDEX = new Function<Credential, String>() {
         @Override
         public String apply(Credential input) {
@@ -68,9 +74,11 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     private final String name;
     private final String username;
     private final Secret password;
+    private final Secret patToken;
     private final String credentialsId;
     private final boolean useGlobalCredential;
     private final SecondaryServerInfo secondaryServerInfo;
+    private final AuthType authType;
 
     private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
     private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
@@ -78,13 +86,28 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     private static final Logger LOGGER = Logger.getLogger(Credential.class.getName());
 
     @DataBoundConstructor
-    public Credential(String name, String username, Secret password, String credentialsId, SecondaryServerInfo secondaryServerInfo, boolean useGlobalCredential) {
+    public Credential(String name, String username, Secret password, Secret patToken, String credentialsId, SecondaryServerInfo secondaryServerInfo, boolean useGlobalCredential, String authType) {
         this.name = name;
         this.username = username;
         this.password = password;
+        this.patToken = patToken;
         this.credentialsId = credentialsId;
         this.secondaryServerInfo = secondaryServerInfo;
         this.useGlobalCredential = useGlobalCredential;
+
+        AuthType resolvedAuthType = AuthType.BASIC;
+        if (!Strings.isNullOrEmpty(authType)) {
+            try {
+                resolvedAuthType = AuthType.valueOf(authType);
+            } catch (IllegalArgumentException ignored) {
+                resolvedAuthType = AuthType.BASIC;
+            }
+        }
+        this.authType = resolvedAuthType;
+    }
+
+    public Credential(String name, String username, Secret password, Secret patToken, String credentialsId, SecondaryServerInfo secondaryServerInfo, boolean useGlobalCredential) {
+        this(name, username, password, patToken, credentialsId, secondaryServerInfo, useGlobalCredential, AuthType.BASIC.toString());
     }
 
     public String getCredentialsId() {
@@ -92,7 +115,19 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     }
 
     public String getKey() {
-        return username + ":" + password.getPlainText() + "@" + name + ":" + credentialsId + ":";
+        return username + ":" + password.getPlainText() + "@" + name + ":" + credentialsId + ":" + authType;
+    }
+
+    public String getAuthType() {
+        return authType.toString();
+    }
+
+    public boolean isBasicAuth() {
+        return authType == AuthType.BASIC;
+    }
+
+    public boolean isPAT() {
+        return authType == AuthType.PAT;
     }
 
     public String getName() {
@@ -107,6 +142,17 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return password;
     }
 
+    public Secret getPatToken() {
+        return patToken;
+    }
+
+    public Secret getEffectivePassword() {
+        if (isPAT()) {
+            return patToken != null ? patToken : password;
+        }
+        return password;
+    }
+
     public boolean isUseGlobalCredential() {
         return useGlobalCredential;
     }
@@ -114,11 +160,17 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
         // TODO: also add requirement on host derived from URL ?
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-        List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+        List<IdCredentials> creds = lookupCredentials(IdCredentials.class, context,
                 ACL.SYSTEM,
                 HTTP_SCHEME, HTTPS_SCHEME);
 
-        return new StandardUsernameListBoxModel().withAll(creds);
+        ListBoxModel model = new ListBoxModel();
+        for (IdCredentials cred : creds) {
+            if (cred instanceof StandardUsernamePasswordCredentials || isSecretTextCredential(cred)) {
+                model.add(credentialDisplayName(cred), cred.getId());
+            }
+        }
+        return model;
     }
 
     public String getSecondaryServerUrl() {
@@ -174,6 +226,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         if (secondaryServerInfo == null && that.secondaryServerInfo != null) return false;
         if (secondaryServerInfo != null && !secondaryServerInfo.equals(that.secondaryServerInfo)) return false;
         if (useGlobalCredential && that.useGlobalCredential && !credentialsId.equals(that.credentialsId)) return false;
+        if (authType != that.authType) return false;
         return username.equals(that.username);
     }
 
@@ -184,6 +237,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         result = 31 * result + (password != null ? password.hashCode() : 0);
         result = 31 * result + (useGlobalCredential && credentialsId != null ? credentialsId.hashCode() : 0);
         result = 31 * result + (secondaryServerInfo != null ? secondaryServerInfo.hashCode() : 0);
+        result = 31 * result + (authType != null ? authType.hashCode() : 0);
         return result;
     }
 
@@ -257,6 +311,17 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return result;
     }
 
+    public static IdCredentials lookupSystemIdCredentials(String credentialsId, ItemGroup<?> item) {
+        if (credentialsId == null) {
+            return null;
+        }
+
+        return CredentialsMatchers.firstOrNull(
+                lookupCredentials(IdCredentials.class, item, ACL.SYSTEM, HTTP_SCHEME, HTTPS_SCHEME),
+                CredentialsMatchers.withId(credentialsId)
+        );
+    }
+
     @Extension
     public static final class CredentialDescriptor extends Descriptor<Credential> {
         @Override
@@ -267,11 +332,18 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-            List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+            List<IdCredentials> creds = lookupCredentials(IdCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
 
-            return new StandardUsernameListBoxModel().withAll(creds);
+            ListBoxModel model = new ListBoxModel();
+            for (IdCredentials cred : creds) {
+                if (cred instanceof StandardUsernamePasswordCredentials || isSecretTextCredential(cred)) {
+                    model.add(credentialDisplayName(cred), cred.getId());
+                }
+            }
+
+            return model;
         }
 
         private FormValidation validateOptionalUrl(String url) {
@@ -293,15 +365,15 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
-        public static Credential fromStapler(@QueryParameter String name, @QueryParameter String username, @QueryParameter Secret password,
+        public static Credential fromStapler(@QueryParameter String name, @QueryParameter String username, @QueryParameter Secret password, @QueryParameter Secret patToken,
                                              @QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl,
-                                             @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId, @QueryParameter boolean useGlobalCredential) {
+                                             @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId, @QueryParameter boolean useGlobalCredential, @QueryParameter String authType) {
 
-            return new Credential(name, username, password, credentialsId, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl), useGlobalCredential);
+            return new Credential(name, username, password, patToken, credentialsId, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl), useGlobalCredential, authType);
         }
 
         public FormValidation doValidateUserNamePassword(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String username,
-                                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
+                                                         @QueryParameter Secret password, @QueryParameter Secret patToken, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String authType) throws IOException {
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? deployitServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? deployitClientProxyUrl : secondaryProxyUrl;
@@ -310,7 +382,19 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                     return FormValidation.error("No server URL specified");
                 }
 
-                return validateConnection(serverUrl, proxyUrl, username, password.getPlainText());
+                String effectiveUsername = username;
+                if (!Strings.isNullOrEmpty(authType) && AuthType.PAT.name().equals(authType)) {
+                    effectiveUsername = "";
+                }
+
+                Secret effectivePassword = !Strings.isNullOrEmpty(authType) && AuthType.PAT.name().equals(authType)
+                    ? patToken : password;
+
+                if (effectivePassword == null) {
+                    return FormValidation.error("No password or PAT token specified");
+                }
+
+                return validateConnection(serverUrl, proxyUrl, effectiveUsername, effectivePassword.getPlainText());
             } catch (IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
@@ -319,7 +403,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
 
         @RequirePOST
-        public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+        public FormValidation doValidateCredential(@QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId, @QueryParameter String authType) throws IOException {
             Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             try {
 
@@ -329,15 +413,36 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 if (Strings.isNullOrEmpty(credentialsId)) {
                     return FormValidation.error("No credentials specified");
                 }
-                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
+                IdCredentials idCredentials = lookupSystemIdCredentials(credentialsId);
 
-                if (credentials == null) {
+                if (idCredentials == null) {
                     return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
                 }
                 if (Strings.isNullOrEmpty(serverUrl)) {
                     return FormValidation.error("No server URL specified");
                 }
-                return validateConnection(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
+
+                String effectiveUsername;
+                String effectivePassword;
+                if (!Strings.isNullOrEmpty(authType) && AuthType.PAT.name().equals(authType)) {
+                    if (!isSecretTextCredential(idCredentials)) {
+                        return FormValidation.error("For PAT authentication, select a Secret Text credential.");
+                    }
+                    effectiveUsername = "";
+                    effectivePassword = extractTokenValue(idCredentials);
+                    if (Strings.isNullOrEmpty(effectivePassword)) {
+                        return FormValidation.error("Selected credential does not provide a token value for PAT authentication.");
+                    }
+                } else {
+                    if (!(idCredentials instanceof StandardUsernamePasswordCredentials)) {
+                        return FormValidation.error("Selected credential must be Username with password for BASIC authentication.");
+                    }
+                    StandardUsernamePasswordCredentials credentials = (StandardUsernamePasswordCredentials) idCredentials;
+                    effectiveUsername = credentials.getUsername();
+                    effectivePassword = credentials.getPassword().getPlainText();
+                }
+
+                return validateConnection(serverUrl, proxyUrl, effectiveUsername, effectivePassword);
             } catch (IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
@@ -361,12 +466,70 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             );
         }
 
+                public static IdCredentials lookupSystemIdCredentials(String credentialsId) {
+                    if (credentialsId == null) {
+                    return null;
+                    }
+
+                    return CredentialsMatchers.firstOrNull(
+                        lookupCredentials(IdCredentials.class,
+                            Jenkins.getInstance(),
+                            ACL.SYSTEM,
+                            HTTP_SCHEME,
+                            HTTPS_SCHEME),
+                        CredentialsMatchers.withId(credentialsId)
+                    );
+                }
+
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);
             ServerInfo serverInfo = deployitServer.getServerInfo();
             deployitServer.newCommunicator();
             return FormValidation.ok("Your XL Deploy instance [%s] is alive, and your credentials are valid!", serverInfo.getVersion());
         }
+    }
+
+    private static String credentialDisplayName(IdCredentials cred) {
+        if (cred instanceof StandardUsernamePasswordCredentials) {
+            StandardUsernamePasswordCredentials userPass = (StandardUsernamePasswordCredentials) cred;
+            return userPass.getUsername() + " (" + userPass.getId() + ")";
+        }
+        return cred.getId();
+    }
+
+    public static boolean isSecretTextCredential(IdCredentials credential) {
+        if (credential == null) {
+            return false;
+        }
+
+        try {
+            Method method = credential.getClass().getMethod("getSecret");
+            return Secret.class.isAssignableFrom(method.getReturnType());
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
+    public static String extractTokenValue(IdCredentials credential) {
+        if (credential == null) {
+            return null;
+        }
+
+        if (credential instanceof StandardUsernamePasswordCredentials) {
+            return ((StandardUsernamePasswordCredentials) credential).getPassword().getPlainText();
+        }
+
+        try {
+            Method method = credential.getClass().getMethod("getSecret");
+            Object value = method.invoke(credential);
+            if (value instanceof Secret) {
+                return ((Secret) value).getPlainText();
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+
+        return null;
     }
 
 }
