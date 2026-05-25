@@ -115,7 +115,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     }
 
     public String getKey() {
-        return username + ":" + password.getPlainText() + "@" + name + ":" + credentialsId + ":" + authType;
+        Secret effective = getEffectivePassword();
+        String secretPart = effective != null ? effective.toString() : "";
+        return username + ":" + secretPart + "@" + name + ":" + credentialsId + ":" + authType;
     }
 
     public String getAuthType() {
@@ -222,7 +224,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         final Credential that = (Credential) o;
 
         if (!name.equals(that.name)) return false;
-        if (!password.equals(that.password)) return false;
+        Secret thisEffective = getEffectivePassword();
+        Secret thatEffective = that.getEffectivePassword();
+        if (thisEffective == null ? thatEffective != null : !thisEffective.equals(thatEffective)) return false;
         if (secondaryServerInfo == null && that.secondaryServerInfo != null) return false;
         if (secondaryServerInfo != null && !secondaryServerInfo.equals(that.secondaryServerInfo)) return false;
         if (useGlobalCredential && that.useGlobalCredential && !credentialsId.equals(that.credentialsId)) return false;
@@ -234,7 +238,8 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     public int hashCode() {
         int result = name.hashCode();
         result = 31 * result + (username != null ? username.hashCode() : 0);
-        result = 31 * result + (password != null ? password.hashCode() : 0);
+        Secret effectivePassword = getEffectivePassword();
+        result = 31 * result + (effectivePassword != null ? effectivePassword.hashCode() : 0);
         result = 31 * result + (useGlobalCredential && credentialsId != null ? credentialsId.hashCode() : 0);
         result = 31 * result + (secondaryServerInfo != null ? secondaryServerInfo.hashCode() : 0);
         result = 31 * result + (authType != null ? authType.hashCode() : 0);
@@ -413,7 +418,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 if (Strings.isNullOrEmpty(credentialsId)) {
                     return FormValidation.error("No credentials specified");
                 }
-                IdCredentials idCredentials = lookupSystemIdCredentials(credentialsId);
+                IdCredentials idCredentials = Credential.lookupSystemIdCredentials(credentialsId, Jenkins.getInstance());
 
                 if (idCredentials == null) {
                     return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
@@ -465,21 +470,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                     CredentialsMatchers.withId(credentialsId)
             );
         }
-
-                public static IdCredentials lookupSystemIdCredentials(String credentialsId) {
-                    if (credentialsId == null) {
-                    return null;
-                    }
-
-                    return CredentialsMatchers.firstOrNull(
-                        lookupCredentials(IdCredentials.class,
-                            Jenkins.getInstance(),
-                            ACL.SYSTEM,
-                            HTTP_SCHEME,
-                            HTTPS_SCHEME),
-                        CredentialsMatchers.withId(credentialsId)
-                    );
-                }
 
         private FormValidation validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
             DeployitServer deployitServer = DeployitServerFactory.newInstance(serverUrl, proxyUrl, username, password, 10, DeployitServer.DEFAULT_SOCKET_TIMEOUT);

@@ -181,15 +181,7 @@ public class DeployitNotifier extends Notifier {
             int newSocketTimeout = socketTimeout > 0 ? socketTimeout : DeployitServer.DEFAULT_SOCKET_TIMEOUT;
 
             String userName = credential.getUsername();
-            String password = credential.getEffectivePassword() != null ? credential.getEffectivePassword().getPlainText() : null;
-
-            if (credential.isPAT()) {
-                userName = "";
-            }
-
-            if (Strings.isNullOrEmpty(password)) {
-                throw new IllegalArgumentException(String.format("Credentials for '%s' do not contain a password or PAT token.", credential.getName()));
-            }
+            String password;
 
             if (credential.isUseGlobalCredential()) {
                 IdCredentials idCred = Credential.lookupSystemIdCredentials(credential.getCredentialsId(), itemGroup);
@@ -213,6 +205,14 @@ public class DeployitNotifier extends Notifier {
                     StandardUsernamePasswordCredentials cred = (StandardUsernamePasswordCredentials) idCred;
                     userName = cred.getUsername();
                     password = cred.getPassword().getPlainText();
+                }
+            } else {
+                if (credential.isPAT()) {
+                    userName = "";
+                }
+                password = credential.getEffectivePassword() != null ? credential.getEffectivePassword().getPlainText() : null;
+                if (Strings.isNullOrEmpty(password)) {
+                    throw new IllegalArgumentException(String.format("Credentials for '%s' do not contain a password or PAT token.", credential.getName()));
                 }
             }
             return DeployitServerFactory.newInstance(serverUrl, proxyUrl, userName, password, newConnectionPoolSize, newSocketTimeout);
