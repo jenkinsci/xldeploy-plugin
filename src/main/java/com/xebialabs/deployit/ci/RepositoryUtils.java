@@ -54,7 +54,7 @@ public class RepositoryUtils {
         String secondaryProxyUrl = credential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());
         String secondaryServerUrl = credential.resolveServerUrl(descriptor.getDeployitServerUrl());
         SecondaryServerInfo serverInfo = new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl);
-        credential = new Credential(name, username, password, credentialId, serverInfo, useGlobalCredential);
+        credential = new Credential(name, username, password, null, credentialId, serverInfo, useGlobalCredential);
         return credential;
     }
 
@@ -85,7 +85,7 @@ public class RepositoryUtils {
 
                 StandardUsernamePasswordCredentials cred = Credential.lookupSystemCredentials(overridingCredential.getCredentialsId(), project.getParent());
                 if (null != cred) {
-                    overridingCredential = new Credential(overridingCredential.getName(), cred.getUsername(), cred.getPassword(),
+                        overridingCredential = new Credential(overridingCredential.getName(), cred.getUsername(), cred.getPassword(), null,
                             overridingCredential.getCredentialsId(), serverInfo, false);
                 }
             }

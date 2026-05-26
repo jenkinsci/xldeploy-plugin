@@ -16,6 +16,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -38,7 +39,7 @@ public class RepositoryUtilsTest {
         getFolderStore(f).addCredentials(Domain.global(), credentials);
 
         // Matches what's sent from ui
-        Credential overridingCredentialProvided = new Credential(null, "", null, credentials.getId(), null, true);
+        Credential overridingCredentialProvided = new Credential(null, "", null, null, credentials.getId(), null, true);
         DeployitNotifier.DeployitDescriptor descriptor = new DeployitNotifier.DeployitDescriptor();
 
         DeployitNotifier notifierSpy = spy(new DeployitNotifier("AdminGlobal1", "app1", null, null, null, null, false, null, overridingCredentialProvided));
