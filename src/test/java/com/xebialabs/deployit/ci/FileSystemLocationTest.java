@@ -35,7 +35,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.File;
 
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -43,7 +42,6 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
 
 public class FileSystemLocationTest {
-    private static final String FILE_SEPARATOR = File.separator;
 
     @Mock
     private JenkinsDeploymentListener listener;
@@ -63,7 +61,7 @@ public class FileSystemLocationTest {
     @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
         FileSystemLocation fileSystemLocation = new FileSystemLocation("test.dar","./build/resources/test");
-        assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("build%sresources%stest%stest.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
+        assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is("build/resources/test/test.dar"));
     }
 
     @Test
@@ -84,7 +82,7 @@ public class FileSystemLocationTest {
         EnvVars envVars = new EnvVars();
         envVars.put("NAME","test");
         FileSystemLocation fileSystemLocation = new FileSystemLocation("$NAME.dar","./build/resources/test");
-        assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, envVars), is(format("build%sresources%stest%stest.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
+        assertThat(fileSystemLocation.getDarFileLocation(localFilePath, listener, envVars), is("build/resources/test/test.dar"));
 
     }
 }
