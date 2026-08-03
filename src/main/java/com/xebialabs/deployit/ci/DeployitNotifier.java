@@ -23,6 +23,7 @@
 
 package com.xebialabs.deployit.ci;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
@@ -36,6 +37,7 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
 import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.security.Permission;
@@ -390,7 +392,25 @@ public class DeployitNotifier extends Notifier {
             return ok();
         }
 
-        public ListBoxModel doFillCredentialItems() {
+        /**
+         * Grants access when the caller is a Jenkins administrator, or, when a folder/item
+         * context is available, when the caller holds {@link CredentialsProvider#USE_ITEM} on
+         * that context. Falls back to requiring {@link Jenkins#ADMINISTER} when no
+         * access-controlled context is available (e.g. called outside of an item ancestor).
+         */
+        private void checkCredentialsPermission(ItemGroup context) {
+            if (context instanceof AccessControlled) {
+                AccessControlled ac = (AccessControlled) context;
+                if (!ac.hasPermission(Jenkins.ADMINISTER)) {
+                    ac.checkPermission(CredentialsProvider.USE_ITEM);
+                }
+            } else {
+                Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            }
+        }
+
+        public ListBoxModel doFillCredentialItems(@AncestorInPath ItemGroup context) {
+            checkCredentialsPermission(context);
             ListBoxModel m = new ListBoxModel();
             for (Credential c : credentials)
                 m.add(c.getName(), c.getName());
@@ -398,7 +418,7 @@ public class DeployitNotifier extends Notifier {
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
-            Jenkins.getInstance().checkPermission(Jenkins.READ);
+            checkCredentialsPermission(context);
             List<IdCredentials> creds = lookupCredentials(IdCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);

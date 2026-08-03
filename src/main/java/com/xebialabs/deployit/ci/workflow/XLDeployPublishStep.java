@@ -14,12 +14,14 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -62,8 +64,8 @@ public class XLDeployPublishStep extends AbstractStepImpl {
             return "Publish a deployment package to XLDeploy";
         }
 
-        public ListBoxModel doFillServerCredentialsItems() {
-            return getDeployitDescriptor().doFillCredentialItems();
+        public ListBoxModel doFillServerCredentialsItems(@AncestorInPath ItemGroup context) {
+            return getDeployitDescriptor().doFillCredentialItems(context);
         }
 
         private DeployitDescriptor getDeployitDescriptor() {
