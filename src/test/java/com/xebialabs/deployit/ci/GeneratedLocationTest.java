@@ -35,13 +35,11 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
 
-import static java.lang.String.format;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 public class GeneratedLocationTest {
-    private static final String FILE_SEPARATOR = File.separator;
 
     @Mock
     private JenkinsDeploymentListener listener;
@@ -63,7 +61,7 @@ public class GeneratedLocationTest {
     @Test
     public void shouldReturnPathWithoutChangesIfLocal() {
         generatedLocation.setGeneratedLocation("/tmp/test-local/asd.dar");
-        assertThat(generatedLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is(format("%stmp%stest-local%sasd.dar", FILE_SEPARATOR, FILE_SEPARATOR, FILE_SEPARATOR)));
+        assertThat(generatedLocation.getDarFileLocation(localFilePath, listener, new EnvVars()), is("/tmp/test-local/asd.dar"));
     }
 
     @Test
