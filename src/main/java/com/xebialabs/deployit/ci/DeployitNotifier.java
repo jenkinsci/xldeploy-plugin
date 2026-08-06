@@ -23,6 +23,7 @@
 
 package com.xebialabs.deployit.ci;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
@@ -390,26 +391,43 @@ public class DeployitNotifier extends Notifier {
             return ok();
         }
 
-        public ListBoxModel doFillCredentialItems() {
+        public ListBoxModel doFillCredentialItems(@AncestorInPath Item item) {
             ListBoxModel m = new ListBoxModel();
+            if (!hasCredentialsViewPermission(item)) {
+                return m;
+            }
             for (Credential c : credentials)
                 m.add(c.getName(), c.getName());
             return m;
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
-            Jenkins.getInstance().checkPermission(Jenkins.READ);
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @AncestorInPath Item item) {
+            ListBoxModel model = new ListBoxModel();
+            if (!hasCredentialsViewPermission(item)) {
+                return model;
+            }
             List<IdCredentials> creds = lookupCredentials(IdCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
 
-            ListBoxModel model = new ListBoxModel();
             for (IdCredentials cred : creds) {
                 if (cred instanceof StandardUsernamePasswordCredentials || Credential.isSecretTextCredential(cred)) {
                     model.add(cred.getId(), cred.getId());
                 }
             }
             return model;
+        }
+
+        /**
+         * Outside of a job (item == null) only administrators may enumerate credentials; inside a job the user must be
+         * allowed to see or use its credentials. Callers return an empty list instead of throwing so that a user who is
+         * merely allowed to view a configuration page does not get an error page.
+         */
+        private boolean hasCredentialsViewPermission(Item item) {
+            if (item == null) {
+                return Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER);
+            }
+            return item.hasPermission(Item.EXTENDED_READ) || item.hasPermission(CredentialsProvider.USE_ITEM);
         }
 
         @RequirePOST
