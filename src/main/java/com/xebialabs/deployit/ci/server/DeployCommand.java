@@ -123,20 +123,32 @@ public class DeployCommand {
             return;
         }
 
-        int validationMessagesFound = 0;
+        int validationErrorsFound = 0;
+        int validationWarningsFound = 0;
+        
         for (ConfigurationItem configurationItem : deployment.getDeployeds()) {
             if (!(configurationItem instanceof ValidatedConfigurationItem)) {
                 continue;
             }
             for (ValidationMessage msg : ((ValidatedConfigurationItem) configurationItem).getValidations()) {
-                listener.error(String.format("Validation error found on item '%s' of type '%s' on field '%s': %s, %s", configurationItem.getId(), configurationItem.getType(), msg.getCiId(), msg.getMessage(), configurationItem));
-                listener.error(String.format(" %s", configurationItem));
-                validationMessagesFound++;
+                // Distinguish between ERROR and WARNING level validation messages
+                if (msg.getLevel() != null && "ERROR".equalsIgnoreCase(msg.getLevel().name())) {
+                    listener.error(String.format("Validation error found on item '%s' of type '%s' on field '%s': %s, %s", configurationItem.getId(), configurationItem.getType(), msg.getCiId(), msg.getMessage(), configurationItem));
+                    validationErrorsFound++;
+                } else {
+                    // Log warnings but do not treat as deployment-blocking errors
+                    listener.info(String.format("Validation warning on item '%s' of type '%s' on field '%s': %s", configurationItem.getId(), configurationItem.getType(), msg.getCiId(), msg.getMessage()));
+                    validationWarningsFound++;
+                }
             }
         }
 
-        if (validationMessagesFound > 0) {
-            throw new DeployitPluginException(String.format("Validation errors (%d) have been found. For more information previously reported ERROR messages.", validationMessagesFound));
+        if (validationErrorsFound > 0) {
+            throw new DeployitPluginException(String.format("Validation errors (%d) have been found. For more information previously reported ERROR messages.", validationErrorsFound));
+        }
+        
+        if (validationWarningsFound > 0) {
+            listener.info(String.format("Deployment proceeding with %d validation warning(s). Review the logs above for details.", validationWarningsFound));
         }
 
         listener.debug("deploy");
