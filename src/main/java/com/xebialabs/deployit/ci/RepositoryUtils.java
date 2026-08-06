@@ -10,7 +10,7 @@ import com.xebialabs.deployit.ci.DeployitNotifier.DeployitDescriptor;
 import com.xebialabs.deployit.ci.server.DeployitDescriptorRegistry;
 import com.xebialabs.deployit.ci.server.DeployitServer;
 
-import org.apache.commons.lang.StringUtils;
+import hudson.Util;
 
 import hudson.model.AbstractProject;
 import hudson.model.Hudson;
@@ -76,7 +76,7 @@ public class RepositoryUtils {
         DeployitNotifier notifier = retrieveDeployitNotifierFromProject(project);
         if (null != notifier) {
             overridingCredential = notifier.getOverridingCredential();
-            if (null != overridingCredential && StringUtils.isEmpty(overridingCredential.getUsername())
+            if (null != overridingCredential && Util.fixEmpty(overridingCredential.getUsername()) == null
                     && null != overridingCredential.getCredentialsId()) {
                 DeployitDescriptor descriptor = (DeployitDescriptor) notifier.getDescriptor();
                 String secondaryProxyUrl = overridingCredential.resolveProxyUrl(descriptor.getDeployitClientProxyUrl());

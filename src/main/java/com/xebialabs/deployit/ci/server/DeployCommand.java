@@ -27,7 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import hudson.Util;
 
 import com.google.common.base.Throwables;
 
@@ -235,7 +235,7 @@ public class DeployCommand {
                 final String description = stepInfo.getDescription();
                 final String log = stepInfo.getLog();
                 String stepInfoMessage;
-                if (StringUtils.isEmpty(log) || description.equals(log)) {
+                if (Util.fixEmpty(log) == null || description.equals(log)) {
                     stepInfoMessage = format("%s step #%d %s\t%s", taskId, stepCount, stepInfo.getState(), description);
                 } else {
                     stepInfoMessage = format("%s step #%d %s\t%s\n%s", taskId, stepCount, stepInfo.getState(), description, log);
